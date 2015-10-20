@@ -1,0 +1,6 @@
+django
+djangorestframework
+markdown
+cloudify_rest_client
+celery
+enum34
