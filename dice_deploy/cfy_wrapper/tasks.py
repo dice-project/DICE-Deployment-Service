@@ -47,7 +47,7 @@ def _run_execution(workflow_id, deployment_id):
     _wait_for_execution(client, execution)
 
     # Execute required workflow
-    _update_state(blueprint, Blueprint.State.installing)
+    _update_state(blueprint, Blueprint.State.working)
     execution = client.executions.start(deployment_id, workflow_id)
     _wait_for_execution(client, execution)
 

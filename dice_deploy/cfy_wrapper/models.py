@@ -25,9 +25,8 @@ class Blueprint(Base):
         uploaded         = 2
         ready_to_deploy  = 3
         preparing_deploy = 4
-        installing       = 5
+        working          = 5
         deployed         = 6
-        uninstalling     = 7
 
     # Fields
     id = models.UUIDField(
