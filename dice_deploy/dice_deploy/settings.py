@@ -67,6 +67,7 @@ CELERY_ENABLE_UTC = True
 
 # Cloudify settings
 CFY_MANAGER_URL = "172.16.95.77"
+POOL_SLEEP_INTERVAL = 3 # In seconds
 
 # File upload storage
 MEDIA_ROOT = os.path.join(BASE_DIR, "uploads")

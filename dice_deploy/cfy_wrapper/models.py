@@ -20,7 +20,14 @@ class Base(models.Model):
 
 class Blueprint(Base):
     # Possible states
-    State = Enum("State", "pending uploaded ready_to_deploy deployed")
+    class State(Enum):
+        pending          = 1
+        uploaded         = 2
+        ready_to_deploy  = 3
+        preparing_deploy = 4
+        installing       = 5
+        deployed         = 6
+        uninstalling     = 7
 
     # Fields
     id = models.UUIDField(
@@ -35,4 +42,4 @@ class Blueprint(Base):
 
     @property
     def state_name(self):
-        return Blueprint.State(self.status).name
+        return Blueprint.State(self.state).name

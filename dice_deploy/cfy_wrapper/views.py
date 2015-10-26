@@ -25,7 +25,8 @@ class BlueprintsView(APIView):
         s = BlueprintSerializer(b)
         pipe = (
             tasks.upload_blueprint.si(b.cfy_id) |
-            tasks.create_deployment.si(b.cfy_id)
+            tasks.create_deployment.si(b.cfy_id) |
+            tasks.install.si(b.cfy_id)
         )
         pipe.apply_async()
         return Response(s.data, status = 201)
@@ -42,5 +43,11 @@ class BlueprintIdView(APIView):
         """
         # Delete selected blueprint
         """
-        # TODO: Disfunctional for now
-        return Response(status = 400)
+        b = Blueprint.get(blueprint_id)
+        pipe = (
+            tasks.uninstall.si(b.cfy_id) |
+            tasks.delete_deployment.si(b.cfy_id) |
+            tasks.delete_blueprint.si(b.cfy_id)
+        )
+        pipe.apply_async()
+        return Response(status = 202)
