@@ -35,8 +35,7 @@ class BlueprintIdView(APIView):
         """
         # Return selected blueprint details
         """
-        # TODO: This will explode on missing object
-        s = BlueprintSerializer(Blueprint.objects.get(pk = blueprint_id))
+        s = BlueprintSerializer(Blueprint.get(blueprint_id))
         return Response(s.data)
 
     def delete(self, request, blueprint_id):
