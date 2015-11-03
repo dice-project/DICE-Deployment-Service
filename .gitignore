@@ -1,5 +1,6 @@
 .cloudify
 .vagrant
 *.pyc
-.*.swp
 *.tar.gz
+*.log
+*.pid
