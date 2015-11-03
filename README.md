@@ -3,6 +3,13 @@
 Simple wrapper around Cloudify orchestration tool.
 
 
+*TODO*:
+  - finish section about local development environment
+  - finish Vagrant file for development deploy
+  - add more in-depth information about OpenStack deploy
+  - add flexiant blueprint for deploy
+
+
 ## Developer setup
 
 In order to minimize the effort of getting development environment up
@@ -34,3 +41,10 @@ simply pres `ctrl + c` to interrupt django development server and script
 will take care of celery worker.
 
 For more details about operations, consult `run.sh` souce code.
+
+
+## Deploying wrapper
+
+Blueprint for wrapper's deploy is contained inside `install` folder. Simply
+execute `./up.sh` script and if cloudify environment is properly configured,
+things will magically install itsef.
