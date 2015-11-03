@@ -21,6 +21,12 @@ from .models import Blueprint
 Module with async tasks that should not block main process
 """
 
+@shared_task
+def debug_task():
+    logger.info("##### Received DEBUG task #####")
+    return "##### Received DEBUG task #####"
+
+
 logger = get_task_logger(__name__)
 
 def _get_cfy_client():

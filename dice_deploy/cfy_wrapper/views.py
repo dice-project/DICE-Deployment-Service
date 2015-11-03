@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FileUploadParser
@@ -6,6 +8,13 @@ from . import tasks
 from .models import Blueprint
 from .serializers import BlueprintSerializer
 
+logger = logging.getLogger("views")
+
+class DebugView(APIView):
+    def get(self, request):
+        logger.debug("Executed debug view")
+        tasks.debug_task.delay()
+        return Response({"msg": "DEBUG EXECUTED"})
 
 class BlueprintsView(APIView):
     parser_classes = (MultiPartParser, FileUploadParser)
