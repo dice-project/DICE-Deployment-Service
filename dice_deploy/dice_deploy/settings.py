@@ -89,14 +89,19 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'app.log',
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
-        'django.request': {
-            'handlers':['console'],
-            'propagate': True,
-            'level':'DEBUG'
+        'views': {
+            'handlers': ['console', 'file'],
+            'propagate': False,
+            'level':'DEBUG',
         },
-    }
+    },
 }
 
 
