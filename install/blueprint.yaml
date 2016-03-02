@@ -16,7 +16,7 @@ inputs:
   flavor:
     default: 070005dc-9bd5-4c0c-b2c6-88f81a7b7239
   cfy_manager:
-    default: 172.16.95.94
+    default: 172.16.95.129
 
 node_types:
   dice.nodes.CfyWrapper:

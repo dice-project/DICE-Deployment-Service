@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# Url of dice deployment service
+DICE_DEPLOY="$3"
+
+function usage ()
+{
+  cat <<EOF
+  Usage:
+    $1 ACTION PARAM URL
+
+  Available actions:
+    * create: creates new deployment
+        parameters: blueprint package
+        returns: deployment UUID
+        example: $1 create pi-cluster.tar.gz http://109.231.122.46:8000
+
+    * delete: deletes existing deployment
+        parameters: deployment id
+        example: $1 destroy 14132d9b-d86d-48e9-a24c-deb949d9f3d7 http://109.231.122.46:8000
+
+    * outputs: get deployment parameters
+        parameters: deployment id
+        returns: dict of deployment parameters
+        example: $1 outputs 14132d9b-d86d-48e9-a24c-deb949d9f3d7 http://109.231.122.46:8000
+EOF
+}
+
+function deploy ()
+{
+  echo -n "Creating new deployment ... "
+  out=$(curl -X PUT -s -F "file=@${1}" ${DICE_DEPLOY}/blueprints)
+  uuid=$(echo $out | grep -Eo '"[0-9A-Fa-f-]+"' | grep -Eo '[0-9A-Fa-f-]+')
+  echo "DONE."
+  echo "Deployment UUID: $uuid"
+}
+
+function delete ()
+{
+  echo -n "Deleting deployment ... "
+  curl -X DELETE -s ${DICE_DEPLOY}/blueprints/$1
+  echo "DONE."
+}
+
+function outputs ()
+{
+  echo "Obtaining deployment parameters ..."
+  curl -s ${DICE_DEPLOY}/blueprints/$1/outputs
+  echo ""
+}
+
+# Parameter check
+if [[ $# -ne 3 ]]
+then
+  usage $0
+  exit 0
+fi
+
+case $1 in
+  create)
+    deploy $2
+    ;;
+
+  delete)
+    delete $2
+    ;;
+
+  outputs)
+    outputs $2
+    ;;
+
+  *)
+    echo "Unknown command: '$1'"
+    exit 1
+    ;;
+esac
