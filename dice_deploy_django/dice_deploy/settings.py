@@ -24,6 +24,7 @@ INSTALLED_APPS = (
     "django.contrib.contenttypes",
     "rest_framework",
     "cfy_wrapper",
+    "unit_tests",  # must be app in order for celery-test-service to work
 )
 
 MIDDLEWARE_CLASSES = (
@@ -59,6 +60,13 @@ BROKER_URL = 'amqp://'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_ENABLE_UTC = True
+
+BROKER_CONNECTION_MAX_RETRIES = 0
+BROKER_FAILOVER_STRATEGY = "round-robin"
+BROKER_HEARTBEAT = 10
+CELERY_SEND_EVENTS = True
+
+CELERY_APP_NAME = 'dice_deploy'
 
 # Cloudify settings
 CFY_MANAGER_URL = "172.16.95.77"

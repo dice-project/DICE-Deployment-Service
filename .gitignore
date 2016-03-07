@@ -7,3 +7,5 @@
 .idea/*
 dice_deploy_django/uploads/*
 db.sqlite3
+dice_deploy_django/celery.err
+dice_deploy_django/celery.out
