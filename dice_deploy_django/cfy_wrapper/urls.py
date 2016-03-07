@@ -8,9 +8,9 @@ from .views import (
 
 urlpatterns = [
     url(r"^debug/?$",
-        DebugView.as_view(), name = "debug"),
+        DebugView.as_view(), name="debug"),
     url(r"^blueprints/?$",
-        BlueprintsView.as_view(), name = "blueprints"),
+        BlueprintsView.as_view(), name="blueprints"),
     url(r"^blueprints/(?P<blueprint_id>[0-9a-f-]+)/?$",
-        BlueprintIdView.as_view(), name = "blueprint_id"),
+        BlueprintIdView.as_view(), name="blueprint_id"),
 ]

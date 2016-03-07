@@ -10,11 +10,13 @@ from .serializers import BlueprintSerializer
 
 logger = logging.getLogger("views")
 
+
 class DebugView(APIView):
     def get(self, request):
         logger.debug("Executed debug view")
         tasks.debug_task.delay()
         return Response({"msg": "DEBUG EXECUTED"})
+
 
 class BlueprintsView(APIView):
     parser_classes = (MultiPartParser, FileUploadParser)
@@ -23,14 +25,14 @@ class BlueprintsView(APIView):
         """
         # List all available blueprints
         """
-        s = BlueprintSerializer(Blueprint.objects.all(), many = True)
+        s = BlueprintSerializer(Blueprint.objects.all(), many=True)
         return Response(s.data)
 
     def put(self, request):
         """
         # Upload new blueprint archive
         """
-        b = Blueprint.objects.create(archive = request.data["file"])
+        b = Blueprint.objects.create(archive=request.data["file"])
         s = BlueprintSerializer(b)
         pipe = (
             tasks.upload_blueprint.si(b.cfy_id) |
@@ -38,7 +40,8 @@ class BlueprintsView(APIView):
             tasks.install.si(b.cfy_id)
         )
         pipe.apply_async()
-        return Response(s.data, status = 201)
+        return Response(s.data, status=201)
+
 
 class BlueprintIdView(APIView):
     def get(self, request, blueprint_id):
@@ -59,4 +62,4 @@ class BlueprintIdView(APIView):
             tasks.delete_blueprint.si(b.cfy_id)
         )
         pipe.apply_async()
-        return Response(status = 202)
+        return Response(status=202)

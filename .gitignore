@@ -4,3 +4,6 @@
 *.tar.gz
 *.log
 *.pid
+.idea/*
+dice_deploy_django/uploads/*
+db.sqlite3

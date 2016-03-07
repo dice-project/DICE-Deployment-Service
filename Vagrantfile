@@ -9,7 +9,7 @@ Vagrant.configure(2) do |config|
   config.vm.provision "shell", path: "provision-root.sh"
   config.vm.provision "shell", path: "provision-user.sh", privileged: false
 
-  config.vm.synced_folder "dice_deploy", "/home/vagrant/dice_deploy"
+  config.vm.synced_folder "dice_deploy_django", "/home/vagrant/dice_deploy_django"
 
   config.vm.provider "virtualbox" do |v|
     v.memory = 4096

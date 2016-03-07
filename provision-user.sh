@@ -9,5 +9,5 @@ pip install pip-tools
 
 echo '. venv/bin/activate' >> .profile
 
-cd dice_deploy
+cd dice_deploy_django
 pip-sync

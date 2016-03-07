@@ -14,12 +14,10 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 SECRET_KEY = "np$u5a4u$rh-or%ibtladssbbrf26d(y4k+m_alh@r2hdebgiq"
 
 DEBUG = True
 ALLOWED_HOSTS = []
-
 
 INSTALLED_APPS = (
     "django.contrib.auth",
@@ -43,7 +41,6 @@ REST_FRAMEWORK = {
 ROOT_URLCONF = "dice_deploy.urls"
 WSGI_APPLICATION = "dice_deploy.wsgi.application"
 
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -51,23 +48,21 @@ DATABASES = {
     }
 }
 
-
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-
 # Celery config
 BROKER_URL = 'amqp://'
 CELERY_TASK_SERIALIZER = 'json'
-CELERY_ACCEPT_CONTENT=['json']
+CELERY_ACCEPT_CONTENT = ['json']
 CELERY_ENABLE_UTC = True
 
 # Cloudify settings
 CFY_MANAGER_URL = "172.16.95.77"
-POOL_SLEEP_INTERVAL = 3 # In seconds
+POOL_SLEEP_INTERVAL = 3  # In seconds
 
 # File upload storage
 MEDIA_ROOT = os.path.join(BASE_DIR, "uploads")
@@ -79,9 +74,9 @@ LOGGING = {
 
     'formatters': {
         'verbose': {
-            'format' : "[%(asctime)s] %(levelname)s "
-                       "[%(name)s:%(lineno)s] %(message)s",
-            'datefmt' : "%Y-%m-%d %H:%M:%S"
+            'format': "[%(asctime)s] %(levelname)s "
+                      "[%(name)s:%(lineno)s] %(message)s",
+            'datefmt': "%Y-%m-%d %H:%M:%S"
         },
     },
     'handlers': {
@@ -99,11 +94,10 @@ LOGGING = {
         'views': {
             'handlers': ['console', 'file'],
             'propagate': False,
-            'level':'DEBUG',
+            'level': 'DEBUG',
         },
     },
 }
-
 
 # Local overrides
 try:

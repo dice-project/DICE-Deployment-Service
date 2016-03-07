@@ -6,7 +6,6 @@ import uuid
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
     ]
 
@@ -14,9 +13,13 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Blueprint',
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
+                ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False,
+                                        primary_key=True)),
                 ('state', models.IntegerField(default=1)),
                 ('archive', models.FileField(upload_to=b'blueprints')),
             ],
+            options={
+                'abstract': False,
+            },
         ),
     ]
