@@ -25,13 +25,17 @@ Module with async tasks that should not block main process
 @shared_task
 def debug_task():
     logger.info("##### Received DEBUG task #####")
+    logger.info("IS_TEST_SETTINGS: %s" % settings.IS_TEST_SETTINGS)
     return "##### Received DEBUG task #####"
 
 
-logger = get_task_logger(__name__)
+logger = get_task_logger('tasks')
 
 
 def _get_cfy_client():
+    if settings.MOCKUP_CFY:
+        raise settings.MOCKUP_CFY
+
     return CloudifyClient(settings.CFY_MANAGER_URL)
 
 

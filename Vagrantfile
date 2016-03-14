@@ -6,9 +6,7 @@ Vagrant.configure(2) do |config|
   config.vm.network "private_network", type: "dhcp"
   # django server
   config.vm.network "forwarded_port", guest: 8080, host: 7080
-  # celery flower dashboard (main)
-  config.vm.network "forwarded_port", guest: 5556, host: 8056
-  # celery flower dashboard (tests)
+  # celery flower dashboard
   config.vm.network "forwarded_port", guest: 5555, host: 8055
 
 

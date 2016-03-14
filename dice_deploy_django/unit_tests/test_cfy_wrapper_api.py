@@ -9,10 +9,20 @@ import shutil
 from django.core import management
 import factories
 from cfy_wrapper import serializers
+from rest_framework.test import APIClient
+from django.test import TransactionTestCase
 
 
-class WrapperAPITests(APITestCase):
-    def setUp(self):
+class AccountTests(TransactionTestCase):
+    """
+    Extend TransactionTestCase instead of TestCase so that Celery worker can access the data.
+    With TestCase, data would only exist in memory (as a transaction) and worker could not see it!
+    """
+    client_class = APIClient
+
+    @classmethod
+    def setUpClass(cls):
+        super(AccountTests, cls).setUpClass()
         # prevent data loss due to not setting settings_tests.py as settings module
         try:
             is_test_settings = settings.IS_TEST_SETTINGS
@@ -21,13 +31,21 @@ class WrapperAPITests(APITestCase):
                 'Must run with dice_deploy/settings_tests.py. Aborting to prevent data loss.'
             )
 
+        # start celery test worker
+        management.call_command('celery-service', 'start', '--unit_tests')
+
+    @classmethod
+    def tearDownClass(cls):
+        super(AccountTests, cls).tearDownClass()
+        # purge test queue
+        management.call_command('celery-service', 'purge', '--unit_tests')
+
+    def setUp(self):
+        """ Is run before each test. """
         # clean uploads_tests folder prior starting
         if os.path.exists(settings.MEDIA_ROOT):
             shutil.rmtree(settings.MEDIA_ROOT)
         os.mkdir(settings.MEDIA_ROOT)
-
-        # start celery
-        management.call_command('celery-service', 'start', '--unit_tests')
 
     def tearDown(self):
         shutil.rmtree(settings.MEDIA_ROOT)
@@ -230,3 +248,4 @@ class WrapperAPITests(APITestCase):
         if not data:
             raise AssertionError('Blueprint .tar.gz file could not be found/opened on filesystem')
 
+    # def test_sending

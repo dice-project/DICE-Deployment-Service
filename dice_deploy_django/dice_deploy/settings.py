@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 import os
+from kombu import Queue, Exchange
+from cfy_wrapper.exceptions import CfyMockupSuccess, CfyMockupFail
+
+IS_TEST_SETTINGS = False
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -24,7 +28,7 @@ INSTALLED_APPS = (
     "django.contrib.contenttypes",
     "rest_framework",
     "cfy_wrapper",
-    "unit_tests",  # must be app in order for celery-test-service to work
+    "djcelery",
 )
 
 MIDDLEWARE_CLASSES = (
@@ -60,17 +64,24 @@ BROKER_URL = 'amqp://'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_ENABLE_UTC = True
-
-BROKER_CONNECTION_MAX_RETRIES = 0
-BROKER_FAILOVER_STRATEGY = "round-robin"
-BROKER_HEARTBEAT = 10
-CELERY_SEND_EVENTS = True
-
-CELERY_APP_NAME = 'dice_deploy'
+CELERY_DEFAULT_QUEUE = 'dice_deploy'
+CELERY_QUEUES = (
+    # consumed by main worker
+    Queue('dice_deploy', Exchange('dice_deploy'), routing_key='dice_deploy'),
+    # consumed by test worker (unit tests)
+    Queue('dice_deploy_tests', Exchange('dice_deploy_tests'), routing_key='dice_deploy_tests'),
+)
+CELERYD_POOL_RESTARTS = True
 
 # Cloudify settings
 CFY_MANAGER_URL = "172.16.95.77"
 POOL_SLEEP_INTERVAL = 3  # In seconds
+
+# Cloudify mockup settings
+MOCKUP_CFY_OPTION_NO = None  # don't mockup
+MOCKUP_CFY_OPTION_YES_SUCCESS = CfyMockupSuccess()
+MOCKUP_CFY_OPTION_YES_FAIL = CfyMockupFail()
+MOCKUP_CFY = MOCKUP_CFY_OPTION_NO  # selected option
 
 # File upload storage
 MEDIA_ROOT = os.path.join(BASE_DIR, "uploads")
@@ -97,10 +108,20 @@ LOGGING = {
             'filename': 'app.log',
             'formatter': 'verbose',
         },
+        'file_tasks': {
+            'class': 'logging.FileHandler',
+            'filename': 'tasks.log',
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
         'views': {
             'handlers': ['console', 'file'],
+            'propagate': False,
+            'level': 'DEBUG',
+        },
+        'tasks': {
+            'handlers': ['console', 'file_tasks'],
             'propagate': False,
             'level': 'DEBUG',
         },

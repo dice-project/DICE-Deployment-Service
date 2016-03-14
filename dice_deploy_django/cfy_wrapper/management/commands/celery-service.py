@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
+from djcelery.management.commands import celery
 from django.conf import settings
 import subprocess
 
@@ -22,7 +23,7 @@ class Command(BaseCommand):
         print('unit_tests: %s' % options['unit_tests'])
 
         if options['command'].lower() == 'start':
-            print('Starting celery for app %s' % settings.CELERY_APP_NAME)
+            print('Starting celery')
             p = subprocess.Popen([
                 'sudo',
                 'service',
@@ -35,7 +36,7 @@ class Command(BaseCommand):
             else:
                 print('ERROR: %s\n%s' % (out, err))
         elif options['command'].lower() == 'stop':
-            print('Stopping celery for app %s' % settings.CELERY_APP_NAME)
+            print('Stopping celery')
             p = subprocess.Popen([
                 'sudo',
                 'service',
@@ -47,6 +48,23 @@ class Command(BaseCommand):
                 print('Success')
             else:
                 print('ERROR: %s\n%s' % (out, err))
+        elif options['command'].lower() == 'purge':
+            print('Purging celery')
+            # following is a mimic of manually calling
+            # 'manage.py celery ampq queue.purge <QUEUE_NAME>' which cannot be called with
+            # call_command due to bug in django-celery implementation of management commands...
+            command = celery.Command()
+            args = [
+                'manage.py',
+                'celery',
+                'amqp',
+                'queue.purge',
+                'dice_deploy' if not options['unit_tests'] else 'dice_deploy_tests',
+            ]
+            try:
+                command.run_from_argv(args)
+            except SystemExit:
+                pass
         else:
             raise CommandError('Invalid command argument, got: %s' % options['command'])
 
