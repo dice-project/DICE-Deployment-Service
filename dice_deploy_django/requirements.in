@@ -5,3 +5,4 @@ cloudify_rest_client
 celery
 enum34
 flower
+django-factory-boy

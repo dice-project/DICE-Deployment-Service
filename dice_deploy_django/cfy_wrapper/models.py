@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from rest_framework.exceptions import NotFound
 from enum import Enum
+from django.db import IntegrityError
 
 
 class Base(models.Model):
@@ -42,3 +43,36 @@ class Blueprint(Base):
     @property
     def state_name(self):
         return Blueprint.State(self.state).name
+
+    def pipe_deploy_blueprint(self):
+        """ Defines and starts async pipeline for deploying blueprint to cloudify """
+        from cfy_wrapper import tasks
+        pipe = (
+            tasks.upload_blueprint.si(self.cfy_id) |
+            tasks.create_deployment.si(self.cfy_id) |
+            tasks.install.si(self.cfy_id)
+        )
+        pipe.apply_async()
+
+    def pipe_undeploy_blueprint(self):
+        """ Defines and starts async pipeline for undeploying blueprint from cloudify """
+        from cfy_wrapper import tasks
+        pipe = (
+            tasks.uninstall.si(self.cfy_id) |
+            tasks.delete_deployment.si(self.cfy_id) |
+            tasks.delete_blueprint.si(self.cfy_id)
+        )
+        pipe.apply_async()
+
+
+class Container(Base):
+    # Fields
+    id = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False
+    )
+    blueprint = models.ForeignKey(Blueprint, null=True)
+
+    def delete(self, using=None, keep_parents=False):
+        if self.blueprint is not None:
+            raise IntegrityError('Cannot delete container with existing blueprint')
+        super(Container, self).delete(using, keep_parents)

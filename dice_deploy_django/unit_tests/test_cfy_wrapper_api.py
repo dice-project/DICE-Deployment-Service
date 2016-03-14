@@ -4,12 +4,14 @@ from rest_framework.test import APITestCase
 from django.conf import settings
 from rest_framework.exceptions import NotFound
 import os
-from cfy_wrapper.models import Blueprint
+from cfy_wrapper.models import Blueprint, Container
 import shutil
 from django.core import management
+import factories
+from cfy_wrapper import serializers
 
 
-class AccountTests(APITestCase):
+class WrapperAPITests(APITestCase):
     def setUp(self):
         # prevent data loss due to not setting settings_tests.py as settings module
         try:
@@ -30,33 +32,168 @@ class AccountTests(APITestCase):
     def tearDown(self):
         shutil.rmtree(settings.MEDIA_ROOT)
 
-        # stop celery
-        # management.call_command('celery-service', 'stop', '--unit_tests')
-
-    def test_upload_blueprint(self):
-        """ Test uploading a new blueprint """
+    def test_blueprint_list(self):
         url = reverse('blueprints')
 
-        with open(os.path.join(settings.TEST_FILE_BLUEPRINT_EXAMPLE), 'rb') as f:
-            # example = f.read()
-            data = {'file': f}
-            response = self.client.put(url, data)
+        blue_pending = factories.BlueprintPendingFactory()
+        blue_pending_ser = serializers.BlueprintSerializer(blue_pending).data
+
+        blue_deployed = factories.BlueprintDeployedFactory()
+        blue_deployed_ser = serializers.BlueprintSerializer(blue_deployed).data
+
+        response = self.client.get(url)
+
+        # check HTTP response
+        self.assertEqual(
+            response.status_code, status.HTTP_200_OK,
+            msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
+        )
+
+        self.assertListEqual([blue_pending_ser, blue_deployed_ser], response.data)
+
+    def test_blueprint_details(self):
+        blue_deployed = factories.BlueprintDeployedFactory()
+        blue_deployed_ser = serializers.BlueprintSerializer(blue_deployed).data
+
+        url = reverse('blueprint_id', kwargs={'blueprint_id': blue_deployed.id})
+
+        response = self.client.get(url)
+
+        # check HTTP response
+        self.assertEqual(
+            response.status_code, status.HTTP_200_OK,
+            msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
+        )
+
+        self.assertEqual(blue_deployed_ser, response.data)
+
+    def test_blueprint_remove(self):
+        blue_deployed = factories.BlueprintDeployedFactory()
+        blue_deployed_ser = serializers.BlueprintSerializer(blue_deployed).data
+
+        url = reverse('blueprint_id', kwargs={'blueprint_id': blue_deployed.id})
+
+        response = self.client.delete(url)
+
+        # check HTTP response
+        self.assertEqual(
+            response.status_code, status.HTTP_202_ACCEPTED,
+            msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
+        )
+
+    def test_container_create(self):
+        url = reverse('containers')
+
+        response = self.client.post(url)
 
         # check HTTP response
         self.assertEqual(
             response.status_code, status.HTTP_201_CREATED,
-            msg='Recieved bad status: %d. Data was: %s' % (response.status_code, response.data)
+            msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
         )
-        self.assertDictContainsSubset({'state_name': 'pending'}, response.data)
+        self.assertDictContainsSubset({'blueprint': None}, response.data)
 
-        if 'cfy_id' not in response.data:
-            raise AssertionError('Missing "cfy" key in response')
+        if 'id' not in response.data:
+            raise AssertionError('Missing "id" key in response')
 
         # check DB state
         try:
-            blueprint = Blueprint.get(response.data['cfy_id'])
+            container = Container.get(response.data['id'])
         except NotFound:
-            raise AssertionError('Blueprint was not found in DB, but it should be there.')
+            raise AssertionError('Container was not found in DB, but it should be there.')
+
+    def test_container_remove_empty(self):
+        cont_empty = factories.ContainerEmptyFactory()
+
+        url = reverse('container_id', kwargs={'container_id': cont_empty.id})
+        response = self.client.delete(url)
+
+        # check HTTP response
+        self.assertEqual(
+            response.status_code, status.HTTP_204_NO_CONTENT,
+            msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
+        )
+
+    def test_container_remove_full(self):
+        cont_full = factories.ContainerFullFactory()
+
+        url = reverse('container_id', kwargs={'container_id': cont_full.id})
+        response = self.client.delete(url)
+
+        # check HTTP response
+        self.assertEqual(
+            response.status_code, status.HTTP_400_BAD_REQUEST,
+            msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
+        )
+
+    def test_container_list(self):
+        url = reverse('containers')
+
+        cont_empty = factories.ContainerEmptyFactory()
+        cont_empty_ser = serializers.ContainerSerializer(cont_empty).data
+
+        cont_full = factories.ContainerFullFactory()
+        cont_full_ser = serializers.ContainerSerializer(cont_full).data
+
+        response = self.client.get(url)
+
+        # check HTTP response
+        self.assertEqual(
+            response.status_code, status.HTTP_200_OK,
+            msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
+        )
+
+        self.assertListEqual([cont_empty_ser, cont_full_ser], response.data)
+
+    def test_container_details(self):
+        cont_full = factories.ContainerFullFactory()
+        cont_full_ser = serializers.ContainerSerializer(cont_full).data
+
+        url = reverse('container_id', kwargs={'container_id': cont_full.id})
+        response = self.client.get(url)
+
+        # check HTTP response
+        self.assertEqual(
+            response.status_code, status.HTTP_200_OK,
+            msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
+        )
+
+        self.assertEqual(cont_full_ser, response.data)
+
+    def test_container_details_non_existent(self):
+        cont_full = factories.ContainerFullFactory.build()  # unsaved
+
+        url = reverse('container_id', kwargs={'container_id': cont_full.id})
+        response = self.client.get(url)
+
+        # check HTTP response
+        self.assertEqual(
+            response.status_code, status.HTTP_404_NOT_FOUND,
+            msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
+        )
+
+    def test_container_blueprint_upload_to_empty(self):
+        cont_empty = factories.ContainerEmptyFactory()
+        url = reverse('container_blueprint', kwargs={'container_id': cont_empty.id})
+
+        with open(os.path.join(settings.TEST_FILE_BLUEPRINT_EXAMPLE), 'rb') as f:
+            data = {'file': f}
+            response = self.client.post(url, data)
+
+        # check HTTP response
+        self.assertEqual(
+            response.status_code, status.HTTP_202_ACCEPTED,
+            msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
+        )
+
+        # check DB state
+        try:
+            cont = Container.get(response.data['id'])
+            blueprint = Blueprint.get(response.data['blueprint']['cfy_id'])
+        except NotFound:
+            raise AssertionError('Container or Blueprint was not found in DB, but it should be there.')
+
+        self.assertEqual(cont.blueprint, blueprint)
 
         # check filesystem
         with open(blueprint.archive.path) as f:
@@ -64,4 +201,32 @@ class AccountTests(APITestCase):
         if not data:
             raise AssertionError('Blueprint .tar.gz file could not be found/opened on filesystem')
 
+    def test_container_blueprint_upload_to_full(self):
+        cont_full = factories.ContainerFullFactory()
+        url = reverse('container_blueprint', kwargs={'container_id': cont_full.id})
+
+        with open(os.path.join(settings.TEST_FILE_BLUEPRINT_EXAMPLE), 'rb') as f:
+            data = {'file': f}
+            response = self.client.post(url, data)
+
+        # check HTTP response
+        self.assertEqual(
+            response.status_code, status.HTTP_202_ACCEPTED,
+            msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
+        )
+
+        # check DB state
+        try:
+            cont = Container.get(response.data['id'])
+            blueprint = Blueprint.get(response.data['blueprint']['cfy_id'])
+        except NotFound:
+            raise AssertionError('Container or Blueprint was not found in DB, but it should be there.')
+
+        self.assertEqual(cont.blueprint, blueprint)
+
+        # check filesystem
+        with open(blueprint.archive.path) as f:
+            data = f.read()
+        if not data:
+            raise AssertionError('Blueprint .tar.gz file could not be found/opened on filesystem')
 
