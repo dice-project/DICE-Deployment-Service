@@ -30,6 +30,9 @@ In order to be able to fully utilize application, you'll also need
 Cloudify manager running. Instructions on how to do this will be
 provided soon;)
 
+Basic setting that you need to do is to set cloudify manager url in
+dice_deploy_django/dice_deploy/settings.py, variable CFY_MANAGER_URL.
+
 
 ## Local development workflow
 

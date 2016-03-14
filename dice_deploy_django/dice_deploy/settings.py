@@ -26,13 +26,20 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = (
     "django.contrib.auth",
     "django.contrib.contenttypes",
+    "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework_swagger",
     "cfy_wrapper",
+    "cfy_wrapper_gui",
     "djcelery",
 )
 
 MIDDLEWARE_CLASSES = (
 )
+
+API_DATE_FORMAT = '%Y-%m-%d'
+API_TIME_FORMAT = '%H:%M:%S'
+API_DT_FORMAT = '%sT%s' % (API_DATE_FORMAT, API_TIME_FORMAT)
 
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": (
@@ -40,7 +47,8 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PARSER_CLASSES": (
         "rest_framework.parsers.JSONParser",
-    )
+    ),
+    "DATETIME_FORMAT": API_DT_FORMAT
 }
 
 ROOT_URLCONF = "dice_deploy.urls"
@@ -74,7 +82,7 @@ CELERY_QUEUES = (
 CELERYD_POOL_RESTARTS = True
 
 # Cloudify settings
-CFY_MANAGER_URL = "172.16.95.77"
+CFY_MANAGER_URL = "172.16.95.126"
 POOL_SLEEP_INTERVAL = 3  # In seconds
 
 # Cloudify mockup settings
@@ -127,6 +135,8 @@ LOGGING = {
         },
     },
 }
+
+STATIC_URL = '/static/'
 
 # Local overrides
 try:

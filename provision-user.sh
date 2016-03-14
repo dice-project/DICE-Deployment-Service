@@ -11,3 +11,5 @@ echo '. venv/bin/activate' >> .profile
 
 cd dice_deploy_django
 pip-sync
+bower install
+python manage.py migrate

@@ -1,0 +1,94 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>DICE - Deployment Service</title>
+        <link rel="shortcut icon" type="image/png" href="{% static 'img/dice-fav.jpg' %}"/>
+
+        <!-- CSS -->
+        <link rel="stylesheet" type="text/css" href="{% static 'bower_components/bootstrap/dist/css/bootstrap.min.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'bower_components/angular-ui-notification/dist/angular-ui-notification.min.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/app.css' %}">
+
+        <!-- JAVASCRIPT LIBRARIES -->
+        <script src="{% static 'bower_components/jquery/dist/jquery.min.js' %}"></script>
+        <script src="{% static 'bower_components/bootstrap/dist/js/bootstrap.min.js' %}"></script>
+        <script src="{% static 'bower_components/angular/angular.min.js' %}"></script>
+        <script src="{% static 'bower_components/angular-resource/angular-resource.min.js' %}"></script>
+        <script src="{% static 'bower_components/angular-route/angular-route.min.js' %}"></script>
+        <script src="{% static 'bower_components/angular-modal-service/dst/angular-modal-service.min.js' %}"></script>
+        <script src="{% static 'bower_components/angular-file-upload/dist/angular-file-upload.min.js' %}"></script>
+        <script src="{% static 'bower_components/angular-ui-notification/dist/angular-ui-notification.min.js' %}"></script>
+        <script src="{% static 'bower_components/moment/min/moment.min.js' %}"></script>
+        <script src="{% static 'bower_components/moment/min/moment-with-locales.min.js' %}"></script>
+        <script src="{% static 'bower_components/angular-sanitize/angular-sanitize.min.js' %}"></script>
+
+        <!-- ANGULAR APPLICATION -->
+        <script src="{% static 'js/globals.js' %}"></script>
+        <script src="{% static 'js/routes.js' %}"></script>
+        <script src="{% static 'js/controllers/MainCtrl.js' %}"></script>
+        <script src="{% static 'js/controllers/ContainersCtrl.js' %}"></script>
+        <script src="{% static 'js/services/restServices.js' %}"></script>
+        <script src="{% static 'js/services/popupServices.js' %}"></script>
+        <script src="{% static 'js/directives/directives.js' %}"></script>
+        <script src="{% static 'js/filters/filters.js' %}"></script>
+
+        <script>
+            // CONSTANTS PROVIDED BY DJANGO
+            var BASE_URL = 'http://localhost:7080';
+            var STATIC_URL = '/static';
+            var BLUEPRINT_UPLOAD_URL_TEMPLATE = '/containers/{id}/blueprint';
+            var BLUEPRINT_STATES = {
+                stateNames: [
+                    'pending',
+                    'uploaded',
+                    'ready_to_deploy',
+                    'preparing_deploy',
+                    'working',
+                    'deployed'
+                ],
+                statePrettyNames: [
+                    {prettyName: 'Upload', stateNames: ['pending']},
+                    {prettyName: 'Create Deployment', stateNames: ['uploaded']},
+                    {prettyName: 'Prepare Environment', stateNames: ['ready_to_deploy', 'preparing_deploy']},
+                    {prettyName: 'Deploy', stateNames: ['working']}
+                ],
+                completedStateName: 'deployed'
+            };
+        </script>
+
+    </head>
+    <body ng-app="cfyWrapper" ng-controller="MainCtrl">
+        <div ng-view="" class="dice-content"></div><!-- routes.js takes care for proper routing -->
+
+        <div id="footer">
+            <div id="credits">
+                <div class="container">
+                    <div class="partners row">
+                        <div class="col-sm-4 text-center"><a href="http://www.dice-h2020.eu/" target="_blank">
+                            <img src="{% static 'img/dice-logo.png' %}" height="120px"></a>
+                        </div>
+                        <div class="col-sm-4 text-center"><a href="http://www.xlab.si/" target="_blank">
+                            <img src="{% static 'img/xlab-logo.png' %}" style="padding-top: 40px;"></a>
+                        </div>
+                        <div class="col-sm-4 text-center"><a href="http://www.dice-h2020.eu/" target="_blank">
+                            <img src="{% static 'img/eu-logo.png' %}" height="120px"></a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="text-center comment">The &nbsp;<a
+                                href="http://www.dice-h2020.eu/" target="_blank">The DICE project</a>&nbsp;
+                            is partially funded by the European Union’s Horizon 2020 research and innovation programme under grant agreement No. 644869
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="not-visible" style="display: none;">
+                <iframe name="hidden-iframe"></iframe>
+            </div>
+        </div>
+
+    </body>
+</html>

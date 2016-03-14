@@ -248,4 +248,26 @@ class AccountTests(TransactionTestCase):
         if not data:
             raise AssertionError('Blueprint .tar.gz file could not be found/opened on filesystem')
 
-    # def test_sending
+    def test_container_blueprint_redeploy_empty(self):
+        cont_empty = factories.ContainerEmptyFactory()
+        url = reverse('container_blueprint', kwargs={'container_id': cont_empty.id})
+
+        response = self.client.put(url)
+
+        # check HTTP response
+        self.assertEqual(
+            response.status_code, status.HTTP_404_NOT_FOUND,
+            msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
+        )
+
+    def test_container_blueprint_redeploy_full(self):
+        cont_full = factories.ContainerFullFactory()
+        url = reverse('container_blueprint', kwargs={'container_id': cont_full.id})
+
+        response = self.client.put(url)
+
+        # check HTTP response
+        self.assertEqual(
+            response.status_code, status.HTTP_202_ACCEPTED,
+            msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
+        )

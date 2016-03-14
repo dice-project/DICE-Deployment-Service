@@ -5,10 +5,6 @@ from celery.utils.log import get_task_logger
 
 from cloudify_rest_client.client import CloudifyClient
 from cloudify_rest_client.executions import Execution
-from cloudify_rest_client.exceptions import (
-    DeploymentEnvironmentCreationInProgressError,
-    DeploymentEnvironmentCreationPendingError
-)
 
 from django.conf import settings
 
@@ -65,6 +61,11 @@ def _run_execution(workflow_id, deployment_id):
     _update_state(blueprint, Blueprint.State.working)
     execution = client.executions.start(deployment_id, workflow_id)
     _wait_for_execution(client, execution)
+
+    # Capture deployment outputs
+    blueprint.refresh_from_db()
+    blueprint.outputs = get_outputs(blueprint)
+    blueprint.save()
 
     # We're done
     _update_state(blueprint, Blueprint.State.deployed)
@@ -130,7 +131,7 @@ def delete_deployment(blueprint_id):
 
 
 @shared_task
-def delete_blueprint(blueprint_id):
+def delete_blueprint(blueprint_id, delete_local=True):
     client = _get_cfy_client()
 
     logger.info("Deleting blueprint '{}'.".format(blueprint_id))
@@ -138,7 +139,16 @@ def delete_blueprint(blueprint_id):
     # Next call will block until upload is finished (can take some time)
     client.blueprints.delete(blueprint_id)
 
-    # Delete all traces of this blueprint
     blueprint = Blueprint.get(blueprint_id)
-    blueprint.archive.delete()
-    blueprint.delete()
+    if delete_local:
+        # Delete all traces of this blueprint
+        blueprint.archive.delete()
+        blueprint.delete()
+    else:
+        blueprint.state = Blueprint.State.undeployed
+
+
+def get_outputs(blueprint):
+    client = _get_cfy_client()
+
+    return client.deployments.outputs.get(blueprint.cfy_id)  # outputs in json format

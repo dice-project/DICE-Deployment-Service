@@ -7,3 +7,5 @@ enum34
 flower
 django-factory-boy
 django-celery
+django-rest-swagger
+jsonfield

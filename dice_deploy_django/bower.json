@@ -1,0 +1,32 @@
+{
+  "name": "dice_deploy",
+  "description": "GUI for DICE REST wrapper for Cloudify library.",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "DICE"
+  ],
+  "authors": [
+    "XLAB d.o.o."
+  ],
+  "license": "All Rights Reserved",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "^3.3.6",
+    "angular": "^1.5.0",
+    "angular-route": "^1.5.0",
+    "angular-resource": "^1.5.0",
+    "angular-modal-service": "^0.9.10",
+    "angular-file-upload": "^2.2.0",
+    "angular-ui-notification": "^0.1.0",
+    "moment": "^2.12.0",
+    "angular-sanitize": "^1.5.2"
+  }
+}

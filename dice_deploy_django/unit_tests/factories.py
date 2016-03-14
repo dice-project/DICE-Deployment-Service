@@ -20,11 +20,14 @@ class BlueprintDeployedFactory(factory.DjangoModelFactory):
 
 
 class ContainerEmptyFactory(factory.DjangoModelFactory):
+    description = 'Empty container description'
+
     class Meta:
         model = Container
 
 
 class ContainerFullFactory(factory.DjangoModelFactory):
+    description = 'Full container description'
     blueprint = factory.SubFactory(BlueprintDeployedFactory)
 
     class Meta:

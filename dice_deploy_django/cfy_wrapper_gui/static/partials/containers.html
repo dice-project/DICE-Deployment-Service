@@ -1,0 +1,90 @@
+<div class="container">
+    <div class="row">
+        <h1>Deployment Containers</h1>
+
+        <div class="dice-general-toolbar">
+            <button class="btn btn-success" ng-click="addContainer()">New Container</button>
+        </div>
+
+        <div ng-repeat="cont in containers">
+            <div class="panel panel-default dice-container">
+                <div class="panel-heading">
+                    <div class="dice-container-title">
+                        <span class="glyphicon glyphicon-inbox"></span>
+                        <span style="padding-left: 20px;">{{ cont.description }}</span>
+                        <code class="pull-right dice-container-id">{{ cont.id }}</code>
+                    </div>
+
+                    <div class="dice-container-controls">
+                        <button ng-click="removeContainer(cont)" class="btn btn-danger">
+                            <span class="glyphicon glyphicon-remove"></span> Remove
+                        </button>
+                        <button ng-click="undeployBlueprint(cont)" ng-show="cont.blueprint" class="btn btn-danger">
+                            <span class="glyphicon glyphicon-remove-circle"></span> Undeploy Blueprint
+                        </button>
+                        <button ng-click="redeployBlueprint(cont)" ng-show="cont.blueprint" class="btn btn-default">
+                            <span class="glyphicon glyphicon-repeat"></span> Redeploy
+                        </button>
+
+                        <!-- file upload -->
+                        <div class="file-upload">
+                            <label ng-click="initUploader(cont)" title="Upload input file">
+                                <input type="file" nv-file-select="" uploader="uploader" style="display: none;" />
+                                <div class="btn btn-default">
+                                    <span class="glyphicon glyphicon-upload"></span> Upload Blueprint
+                                </div>
+                            </label>
+                            <div ng-show="(uploader.containerId == cont.id) && uploader.upload_errors" class="file-upload-metadata upload-error">
+                                {{ uploader.upload_errors }}
+                            </div>
+                            <div ng-show="uploader.containerId == cont.id" ng-repeat="item in uploader.queue" class="file-upload-metadata">
+                                <strong>{{ item.file.name }}</strong>
+                                <span ng-show="uploader.isHTML5" nowrap>{{ item.file.size/1024|number:2 }} kB</span>
+
+                                <button type="button" class="btn btn-success btn-xs" ng-click="item.upload()" style="width: 80px">
+                                    <span ng-hide="item.progress"><span class="glyphicon glyphicon-upload"></span> UPLOAD</span>
+                                    <span ng-show="item.progress" class="progress-bar" role="progressbar" ng-style="{ 'width': item.progress + '%' }">{{ item.progress }}%</span>
+                                </button>
+                                <button type="button" class="btn btn-danger btn-xs" ng-click="item.remove()" ng-hide="item.progress == 100">
+                                    <span class="glyphicon glyphicon-stop"></span> CANCEL
+                                </button>
+                                <span ng-show="item.progress == 100">
+                                     Please wait... <i class="fa fa-spinner fa-spin"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <!-- / file upload-->
+
+                    </div>
+                </div>
+
+                <div class="panel-body">
+                    <div ng-show="cont.blueprint">
+                        <code class="pull-right dice-blueprint-id">{{ cont.blueprint.cfy_id }}</code>
+                        <div ng-hide="isBlueprintDeployed(cont.blueprint)">
+                            <blueprint-status curr-state="cont.blueprint.state_name" all-states="blueprintStates" ng-if="cont.blueprint"></blueprint-status>
+                            <span class="dice-blueprint-time">waiting step since: {{ getBlueprintDatetimeStr(cont.blueprint) }}</span>
+                        </div>
+                        <div ng-show="isBlueprintDeployed(cont.blueprint)" class="dice-blueprint-deployed-msg">
+                            <span class="glyphicon glyphicon-ok dice-ok-sign"></span>
+                            <span>Blueprint deployed since {{ getBlueprintDatetimeStr(cont.blueprint) }}. Please find deployment details below.</span>
+
+                            <pre ng-bind-html="cont.blueprint.outputs | json:4 | linky:'_blank'" class="dice-blueprint-outputs"></pre>
+
+                        </div>
+                    </div>
+                    <div ng-hide="cont.blueprint">
+                        Please upload blueprint
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+        <p ng-if="containers.length == 0">
+            There are no containers yet! Please add one using the button above.
+        </p>
+
+    </div>
+</div>

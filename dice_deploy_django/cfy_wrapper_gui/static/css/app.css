@@ -1,0 +1,115 @@
+.dice-container-title{
+    font-size: 22px;
+    padding-bottom: 15px;
+}
+.dice-container-controls{
+    /*padding-left: 40px;*/
+    text-align: center;
+}
+.dice-general-toolbar{
+    padding: 20px;
+}
+.file-upload{
+    display: inline-block;
+}
+.file-upload div{
+    display: inline-block;
+}
+.file-upload .progress-bar{
+    height: 18px;
+    background-color: darkgreen;
+    color: white;
+}
+.file-upload-metadata.upload-error{
+    color: #E77367;
+    font-weight: 700;
+}
+.dice-container-footer{
+    text-align: right;
+}
+.dice-container-footer span{
+    font-weight: bold;
+    color: #aaa;
+}
+#footer{
+    padding-top: 30px;
+}
+div#footer #credits{
+    background-color: #ECEFF1;
+    padding-top: 50px;
+    padding-bottom: 50px;
+}
+div#footer #credits .comment{
+    color: darkgray;
+    padding-top: 20px;
+}
+div#footer #credits .comment a{
+    color: darkgray;
+    font-weight: 700;
+    text-decoration: underline;
+}
+div#footer #partners{
+    padding-top: 80px;
+    padding-bottom: 50px;
+}
+div#footer #partners .subtitle{
+    font-weight: 700;
+}
+.dice-content{
+    min-height: 800px;
+}
+.dice-container-description{
+    padding: 10px;
+    padding-left: 40px;
+    font-style: italic;
+}
+.dice-container-id{
+    font-size: 12px;
+    color: gray;
+    background: transparent;
+}
+.dice-blueprint-id{
+    font-size: 12px;
+    color: lightgray;
+    background: transparent;
+}
+.blueprint-status{
+    border: 1px solid black;
+}
+/* blueprint states */
+.dice-state-not-yet{
+
+}
+.dice-state-already{
+    color: green;
+    background-color: #B1E5B2;
+    border-top-color: #B1E5B2;
+    border-bottom-color: #B1E5B2;
+}
+.dice-state-currently{
+    background-color: #FAD8B0;
+    background-image: linear-gradient(45deg,rgba(255,255,255,.5) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.5) 50%,rgba(255,255,255,.5) 75%,transparent 75%,transparent);
+    animation: progress-bar-stripes 3s linear infinite;
+    background-size: 40px 40px;
+    font-weight: bold;
+}
+.dice-blueprint-deployed-msg{
+    padding-top: 15px;
+}
+.dice-blueprint-deployed-msg span.dice-ok-sign{
+    padding-right: 10px;
+}
+.dice-blueprint-time{
+    font-style: italic;
+    font-size: small;
+    color: gray;
+    padding-left: 15px;
+}
+.dice-blueprint-outputs{
+    margin-top: 20px;
+    background-color: lightblue;
+}
+
+
+
+
