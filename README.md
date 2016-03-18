@@ -53,6 +53,13 @@ For more details about operations, consult `run.sh` souce code.
 
 ## Deploying wrapper
 
-Blueprint for wrapper's deploy is contained inside `install` folder. Simply
-execute `./up.sh` script and if cloudify environment is properly configured,
-things will magically install itsef.
+There are currently two blueprints available that make deploying this tool
+relatively painless. Both blueprints should be uploaded to manager, running on
+platform of choice. Due to some loose ends in Flexiant plugin for Cloudify,
+credentials need to be specified in blueprint.
+
+After any modifications have been made, simply execute `./up.sh`, passing
+selected platform as an argument. Or simply run the script and follow
+instructions.
+
+Removing deploy is as easy as running `./dw.sh`.

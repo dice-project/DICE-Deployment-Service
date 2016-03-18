@@ -1,0 +1,63 @@
+# Installation blueprintf for dice deployment tools
+
+tosca_definitions_version: cloudify_dsl_1_1
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.3m5/types.yaml
+  - https://gitlab.xlab.si/tadej.borovsak/fco-plug/raw/master/plugin.yaml
+
+inputs:
+  webserver_port:
+    default: 8000
+  agent_user:
+    default: ubuntu
+  cfy_manager:
+    default: 109.231.122.110
+
+node_types:
+  dice.nodes.CfyWrapper:
+    derived_from: cloudify.nodes.WebServer
+    properties:
+      manager:
+        description: Cloudify manager instance we wrap
+
+node_templates:
+  vm:
+    type: cloudify.flexiant.nodes.Server
+    properties:
+      auth:
+        username: "username"
+        password: "password"
+        customer: "customer"
+        url: "URL access point"
+        verify_ca_cert: False
+      image: '87978c6d-5ceb-39b2-8e8b-935503ad0307'
+      disk: "30Gb Storage"
+      vdc: '42bb54ac-4090-3caa-b730-e916b27daeff'
+      network: '5264edab-8d29-329d-b4f9-5f8ca17cff78'
+      server_type: '0.5 GB / 1 CPU'
+      agent_key: '288f0541-9921-37a8-a07b-bb47eb27dc10'
+      cloudify_agent:
+        user: { get_input: agent_user }
+
+  web_server:
+    type: dice.nodes.CfyWrapper
+    properties:
+      port: { get_input: webserver_port }
+      manager: { get_input: cfy_manager}
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: vm
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure: scripts/install.sh
+        start: scripts/start.sh
+        stop: scripts/stop.sh
+
+outputs:
+  http_endpoint:
+    description: Web server external endpoint
+    value:
+      concat:
+        - 'http://'
+        - get_attribute: [vm, ip]
