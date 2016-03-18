@@ -1,0 +1,3 @@
+# Make sure that any shell script has correct line endings
+*.sh text eol=lf
+tools/dice-deploy-cli text eol=lf

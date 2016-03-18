@@ -10,6 +10,14 @@ Simple wrapper around Cloudify orchestration tool.
   - add flexiant blueprint for deploy
 
 
+## Important general information
+
+When developing the shell scripts, make sure the line endings that end up in
+deployed file are "\n". There is a .gitattributes file in place that should
+take care of git side of things on checkout. If you add a sensitive file to
+repository, please update .gitattributes as well.
+
+
 ## Developer setup
 
 In order to minimize the effort of getting development environment up
