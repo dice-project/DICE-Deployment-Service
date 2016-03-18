@@ -36,7 +36,7 @@ provided soon;)
 First, we need to ssh to new VM using `vagrant ssh`. This command should
 also activate virtual environment for us.
 
-In order to ease the pain of running development instance of this app,
+In order to ease the pain of running development instance of this application,
 move into `dice_deploy` folder. There is a `run.sh` script that should
 be used to run application.
 
@@ -44,11 +44,11 @@ First, we need to reset application state. Do this by executing
 `./run.sh reset`.
 
 After this is all done, execute `./run.sh`. This will spawn one celery
-worker and then run edvelopment server. To stop worker and server,
+worker and then run development server. To stop worker and server,
 simply pres `ctrl + c` to interrupt django development server and script
 will take care of celery worker.
 
-For more details about operations, consult `run.sh` souce code.
+For more details about operations, consult `run.sh` source code.
 
 
 ## Deploying wrapper
