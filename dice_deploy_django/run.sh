@@ -9,7 +9,7 @@ function run()
 
   # Start server
   echo "Starting django server ..."
-  ./manage.py runserver 0.0.0.0:8080
+  python manage.py runserver 0.0.0.0:8080
 
   # Shutdown worker
   echo Cleaning up ...
@@ -21,8 +21,8 @@ function run()
 function reset()
 {
   rm -rf db.sqlite3 uploads cfy_wrapper/migrations
-  ./manage.py makemigrations cfy_wrapper
-  ./manage.py migrate
+  python manage.py makemigrations cfy_wrapper
+  python manage.py migrate
 }
 
 case $1 in

@@ -4,7 +4,7 @@ set -e
 
 cd /home/ubuntu
 . venv/bin/activate
-cd dice_deploy
+cd dice_deploy_django
 
 ctx logger info "Starting celery worker"
 celery multi start 1 -c 1 -A dice_deploy -l INFO

@@ -53,16 +53,20 @@ function main ()
     --exclude='*.pid' \
     --exclude='dice_deploy/db.sqlite3' \
     --exclude='dice_deploy/uploads' \
-    dice_deploy
+    dice_deploy_django
 
   # Create blueprint archive
   tar -cvzf dd.tar.gz --exclude='*.swp' install
 
   # Deploy
-  echo "cfy blueprints publish-archive -b dice_deploy -l dd.tar.gz -n $blueprint"
-  echo "cfy deployments create -d dice_deploy -b dice_deploy"
-  echo "cfy executions start -d dice_deploy -w install -l"
-  echo "cfy deployments outputs -d dice_deploy"
+  echo "Publishing blueprint"
+  cfy blueprints publish-archive -b dice_deploy -l dd.tar.gz -n $blueprint
+  echo "Creating deploy"
+  cfy deployments create -d dice_deploy -b dice_deploy
+  echo "Starting execution"
+  cfy executions start -d dice_deploy -w install -l
+  echo "Outputs:"
+  cfy deployments outputs -d dice_deploy
 }
 
 check_args $1
