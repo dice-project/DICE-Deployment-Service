@@ -40,9 +40,14 @@ function usage ()
         example: $1 delete 14132d9b-d86d-48e9-a24c-deb949d9f3d7
 
     * outputs: get deployment parameters
-        parameters: deployment id
+        parameters: deployment-uuid
         returns: dict of deployment parameters
-        example: $1 outputs 14132d9b-d86d-48e9-a24c-deb949d9f3d7 http://109.231.122.46:8000
+        example: $1 outputs 14132d9b-d86d-48e9-a24c-deb949d9f3d7
+
+    * status: get deployment status
+        parameters: deployment-uuid
+        returns: the deployment's current status
+        example: $1 status 14132d9b-d86d-48e9-a24c-deb949d9f3d7
 
 EOF
 }
@@ -153,6 +158,24 @@ function outputs ()
   echo ""
 }
 
+# Returns a deployment's status
+function deployment-status ()
+{
+  parameter-check 1 $#
+  service-url-check
+
+  echo "Obtaining deployment status ..."
+  out=$(curl -s -f "${DICE_DEPLOY}/blueprints/${1}/")
+  if [ "$?" != "0" ]
+  then
+    echo "request_failed"
+    echo ""
+    exit 2
+  fi
+  status=$(echo "${out}" | grep -Po '(?<="state_name":")[^"]*')
+  echo "$status"
+}
+
 # Assign the DICE deployment tool service URL to be used
 # in the subsequent tool calls.
 function use ()
@@ -208,6 +231,10 @@ case $1 in
 
   outputs)
     outputs $2
+    ;;
+
+  status)
+    deployment-status $2
     ;;
 
   *)
