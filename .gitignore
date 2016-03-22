@@ -13,3 +13,4 @@ dice_deploy_django/cfy_wrapper_gui/static/bower_components/
 dice_deploy_django/test_db.sqlite3
 !dice_deploy_django/unit_tests/files/*
 
+.dice-deploy-url

@@ -1,47 +1,151 @@
 #!/bin/bash
 
 # Url of dice deployment service
-DICE_DEPLOY="$3"
+DICE_DEPLOY_URL_FILE=".dice-deploy-url"
 
+if [ -e "$DICE_DEPLOY_URL_FILE" ]
+then
+  DICE_DEPLOY=$(cat $DICE_DEPLOY_URL_FILE)
+fi
+
+# Output the usage of the tool
 function usage ()
 {
   cat <<EOF
   Usage:
-    $1 ACTION PARAM URL
+    $1 ACTION PARAM [ PARAM ... ]
 
   Available actions:
-    * create: creates new deployment
-        parameters: blueprint package
-        returns: deployment UUID
-        example: $1 create pi-cluster.tar.gz http://109.231.122.46:8000
+    * use: use the URL as the DICE deployment service URL
+        parameters: url
+        example: $1 use http://109.231.122.46:8000
 
-    * delete: deletes existing deployment
-        parameters: deployment id
-        example: $1 destroy 14132d9b-d86d-48e9-a24c-deb949d9f3d7 http://109.231.122.46:8000
+    * create: creates a new container
+        parameters: description (optional)
+        returns: container-uuid
+        example: $1 create
+        example: $1 create "Smart Energy streaming application"
+
+    * deploy: creates a new deployment in the container
+        parameters: container-uuid package-file-name
+        returns: deployment-uuid
+        example: $1 create 14132d9b-d86d-48e9-a24c-deb949d9f3d7 pi-cluster.tar.gz
+
+    * teardown: uninstalls and deletes an existing deployment
+        parameters: deployment-uuid
+        example: $1 teardown 8f151bb0-db92-48e1-88a0-397258e01f11
+
+    * delete: deletes an existing container
+        parameters: container-uuid
+        example: $1 delete 14132d9b-d86d-48e9-a24c-deb949d9f3d7
 
     * outputs: get deployment parameters
         parameters: deployment id
         returns: dict of deployment parameters
         example: $1 outputs 14132d9b-d86d-48e9-a24c-deb949d9f3d7 http://109.231.122.46:8000
+
 EOF
 }
 
+# Check the number of parameters supplied vs. the number expected.
+# Usage: parameter-check numExpected $#
+function parameter-check ()
+{
+  # Parameter check
+  if [[ $1 -ne $2 ]]
+  then
+    echo "Bad number of arguments - $1 expected."
+    echo ""
+    usage $(basename $0)
+    exit -1
+  fi
+}
+
+# Check if the service URL is set
+function service-url-check ()
+{
+  if [ "$DICE_DEPLOY" == "" ]
+  then
+    echo "DICE deployment service URL not set. Use the use command to set it."
+    echo ""
+    exit 1
+  fi
+}
+
+# Requests creation of a new container
+function create-container ()
+{
+  service-url-check
+
+  COMMENT="$1"
+
+  echo -n "Creating a new container ... "
+  if [ "$COMMENT" != "" ]
+  then
+    COMMENT_CURL_PARAM="--data-urlencode \"description=$COMMENT\""
+  fi
+
+  out=$(curl -s -f -X POST $COMMENT_CURL_PARAM ${DICE_DEPLOY}/containers/)
+  if [ "$?" != "0" ]
+  then
+    echo "The request failed."
+    echo ""
+    exit 2
+  fi
+
+  uuid=$(echo $out | grep -Eo '"[0-9A-Fa-f-]+"' | grep -Eo '[0-9A-Fa-f-]+')
+  echo "DONE."
+  echo "Container UUID: $uuid"
+}
+
+# Creates and deploys a blueprint inside a container. If another
+# blueprint has been deployed in this container, the service tears
+# it down first, then deploys the supplied one.
 function deploy ()
 {
-  echo -n "Creating new deployment ... "
-  out=$(curl -X PUT -s -F "file=@${1}" ${DICE_DEPLOY}/blueprints)
+  parameter-check 2 $#
+  service-url-check
+
+  CONTAINER_UUID="$1"
+  FILE_NAME="$2"
+
+  echo -n "Creating a new deployment ... "
+  out=$(curl -s -f -X POST -F "file=@${FILE_NAME}" ${DICE_DEPLOY}/containers/${CONTAINER_UUID}/blueprint)
+  if [ "$?" != "0" ]
+  then
+    echo "The request failed."
+    echo ""
+    exit 2
+  fi
   uuid=$(echo $out | grep -Eo '"[0-9A-Fa-f-]+"' | grep -Eo '[0-9A-Fa-f-]+')
   echo "DONE."
   echo "Deployment UUID: $uuid"
 }
 
-function delete ()
+# Tears down the deployment of a blueprint in the container. The container
+# remains the same.
+function teardown ()
 {
+  parameter-check 1 $#
+  service-url-check
+
   echo -n "Deleting deployment ... "
-  curl -X DELETE -s ${DICE_DEPLOY}/blueprints/$1
+  curl -X DELETE -s ${DICE_DEPLOY}/blueprints/$1/
   echo "DONE."
 }
 
+# Deletes the container.
+function delete-container ()
+{
+  parameter-check 1 $#
+  service-url-check
+
+  echo -n "Deleting deployment ... "
+  curl -X DELETE -s ${DICE_DEPLOY}/containers/$1/
+  echo "DONE."
+}
+
+# Returns the outputs of the deploy.
 function outputs ()
 {
   echo "Obtaining deployment parameters ..."
@@ -49,20 +153,57 @@ function outputs ()
   echo ""
 }
 
+# Assign the DICE deployment tool service URL to be used
+# in the subsequent tool calls.
+function use ()
+{
+  # Parameter check
+  if [[ $# -ne 1 ]]
+  then
+    usage $(basename $0)
+    exit 0
+  fi
+
+  echo "Using $1 as the URL for the DICE deployment tool service"
+  curl -s -f "$1"/containers > /dev/null
+  if [ "$?" != "0" ]
+  then
+    echo "Connection to $1 failed. We will not use this URL."
+    echo ""
+    exit -1
+  fi
+
+  echo "$1" > $DICE_DEPLOY_URL_FILE
+
+  echo ""
+}
+
 # Parameter check
-if [[ $# -ne 3 ]]
+if [[ "$#" == "0"  ]]
 then
-  usage $0
+  usage $(basename $0)
   exit 0
 fi
 
 case $1 in
+  use)
+    use $2
+    ;;
+
   create)
-    deploy $2
+    create-container $2
+    ;;
+
+  deploy)
+    deploy $2 $3
+    ;;
+
+  teardown)
+    teardown $2
     ;;
 
   delete)
-    delete $2
+    delete-container $2
     ;;
 
   outputs)
@@ -71,6 +212,8 @@ case $1 in
 
   *)
     echo "Unknown command: '$1'"
+    echo ""
+    usage $(basename $0)
     exit 1
     ;;
 esac
