@@ -140,6 +140,9 @@ LOGGING = {
 
 STATIC_URL = '/static/'
 
+# angular configuration
+ANGULAR_ENDPOINT = 'http://localhost:7080'
+
 # Local overrides
 try:
     from dice_deploy.local_settings import *

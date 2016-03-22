@@ -37,8 +37,8 @@
 
         <script>
             // CONSTANTS PROVIDED BY DJANGO
-            var BASE_URL = 'http://localhost:7080';
-            var STATIC_URL = '/static';
+            var BASE_URL = "{{ BASE_URL }}";
+            var STATIC_URL = "{{ NG_STATIC_URL }}";
             var BLUEPRINT_UPLOAD_URL_TEMPLATE = '/containers/{id}/blueprint';
             var BLUEPRINT_STATES = {
                 stateNames: [
