@@ -13,7 +13,14 @@ sudo apt-get update
 sudo apt-get install -y \
   rabbitmq-server       \
   python-virtualenv     \
-  python-dev
+  python-dev            \
+  npm                   \
+  git
+sudo npm install -g bower
+if [ ! -f /usr/bin/node ]; then
+    sudo ln -s /usr/bin/nodejs /usr/bin/node
+fi
+
 
 # User part
 cd /home/ubuntu
@@ -33,6 +40,9 @@ tar -xvf dice_deploy.tar.gz
 ctx logger info "Installing application dependencies"
 cd dice_deploy_django
 pip-sync
+
+ctx logger info "Installing bower"
+echo 3 | bower install
 
 ctx logger info "Adjusting settings"
 manager=$(ctx node properties manager)

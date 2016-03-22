@@ -35,6 +35,8 @@ node_templates:
       rules:
         - remote_ip_prefix: 0.0.0.0/0
           port: { get_property: [ web_server, port ] }
+        - remote_ip_prefix: 0.0.0.0/0
+          port: 22
 
   vm:
     type: cloudify.openstack.nodes.Server
