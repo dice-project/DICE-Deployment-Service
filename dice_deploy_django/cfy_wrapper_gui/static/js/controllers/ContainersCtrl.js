@@ -25,8 +25,9 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
         name: 'excelFilter',
         fn: function(item /*{File|FileLikeObject}*/, options) {
             var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
-            var typeGzip = 'x-gzip';
-            var allowedTypes = '|' + typeGzip + '|';
+            var typeXGzip = 'x-gzip';
+            var typeGzip = 'gzip';
+            var allowedTypes = '|' + typeXGzip + '|' + typeGzip + '|';
             var isTypeOK = allowedTypes.indexOf(type) !== -1;
 
             var sizeLimitMB = 20.0;
