@@ -1,28 +1,29 @@
 <div class="container">
     <div class="row">
-        <h1>Deployment Containers</h1>
+        <h1 class="dice-title">DICE Deployment Containers</h1>
 
         <div class="dice-general-toolbar">
-            <button class="btn btn-success" ng-click="addContainer()">New Container</button>
+            <button class="pull-right btn dice-btn-success" ng-click="addContainer()">New Container</button>
         </div>
+
 
         <div ng-repeat="cont in containers">
             <div class="panel panel-default dice-container">
                 <div class="panel-heading">
                     <div class="dice-container-title">
                         <span class="glyphicon glyphicon-inbox"></span>
-                        <span style="padding-left: 20px;">{{ cont.description }}</span>
+                        <span class="dice-container-description">{{ cont.description }}</span>
                         <code class="pull-right dice-container-id">{{ cont.id }}</code>
                     </div>
 
                     <div class="dice-container-controls">
-                        <button ng-click="removeContainer(cont)" class="btn btn-danger">
+                        <button ng-click="removeContainer(cont)" class="btn dice-btn-danger">
                             <span class="glyphicon glyphicon-remove"></span> Remove
                         </button>
-                        <button ng-click="undeployBlueprint(cont)" ng-show="cont.blueprint" class="btn btn-danger">
+                        <button ng-click="undeployBlueprint(cont)" ng-show="cont.blueprint" class="btn dice-btn-danger">
                             <span class="glyphicon glyphicon-remove-circle"></span> Undeploy Blueprint
                         </button>
-                        <button ng-click="redeployBlueprint(cont)" ng-show="cont.blueprint" class="btn btn-default">
+                        <button ng-click="redeployBlueprint(cont)" ng-show="cont.blueprint" class="btn dice-btn-default">
                             <span class="glyphicon glyphicon-repeat"></span> Redeploy
                         </button>
 
@@ -30,7 +31,7 @@
                         <div class="file-upload">
                             <label ng-click="initUploader(cont)" title="Upload input file">
                                 <input type="file" nv-file-select="" uploader="uploader" style="display: none;" />
-                                <div class="btn btn-default">
+                                <div class="btn dice-btn-default">
                                     <span class="glyphicon glyphicon-upload"></span> Upload Blueprint
                                 </div>
                             </label>
@@ -41,11 +42,11 @@
                                 <strong>{{ item.file.name }}</strong>
                                 <span ng-show="uploader.isHTML5" nowrap>{{ item.file.size/1024|number:2 }} kB</span>
 
-                                <button type="button" class="btn btn-success btn-xs" ng-click="item.upload()" style="width: 80px">
+                                <button type="button" class="btn dice-btn-success btn-xs" ng-click="item.upload()" style="width: 80px">
                                     <span ng-hide="item.progress"><span class="glyphicon glyphicon-upload"></span> UPLOAD</span>
                                     <span ng-show="item.progress" class="progress-bar" role="progressbar" ng-style="{ 'width': item.progress + '%' }">{{ item.progress }}%</span>
                                 </button>
-                                <button type="button" class="btn btn-danger btn-xs" ng-click="item.remove()" ng-hide="item.progress == 100">
+                                <button type="button" class="btn dice-btn-danger btn-xs" ng-click="item.remove()" ng-hide="item.progress == 100">
                                     <span class="glyphicon glyphicon-stop"></span> CANCEL
                                 </button>
                                 <span ng-show="item.progress == 100">
@@ -67,9 +68,27 @@
                         </div>
                         <div ng-show="isBlueprintDeployed(cont.blueprint)" class="dice-blueprint-deployed-msg">
                             <span class="glyphicon glyphicon-ok dice-ok-sign"></span>
-                            <span>Blueprint deployed since {{ getBlueprintDatetimeStr(cont.blueprint) }}. Please find deployment details below.</span>
+                            <span class="dice-success">Blueprint successfully deployed</span>
+                            <div class="dice-success-timestamp">since {{ getBlueprintDatetimeStr(cont.blueprint) }}</div>
 
+                            <!-- uncomment to show full outputs json
                             <pre ng-bind-html="cont.blueprint.outputs | json:4 | linky:'_blank'" class="dice-blueprint-outputs"></pre>
+                            -->
+
+                            <table class="table table-bordered dice-outputs-table">
+                                <thead>
+                                    <tr>
+                                        <th>OUTPUT NAME</th>
+                                        <th>VALUE</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="(name, value) in cont.blueprint.outputs.outputs">
+                                        <td>{{ name }}</td>
+                                        <td ng-bind-html="value | linky:'_blank'"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
 
                         </div>
                     </div>

@@ -1,13 +1,20 @@
+/* http://paletton.com/#uid=63q0h0kcVOX7CTdakR0foNahLLO */
+a{
+    color: #227DA0;
+}
+.dice-title{
+    padding-top: 30px;
+}
 .dice-container-title{
     font-size: 22px;
     padding-bottom: 15px;
 }
 .dice-container-controls{
-    /*padding-left: 40px;*/
-    text-align: center;
+    text-align: right;
 }
 .dice-general-toolbar{
-    padding: 20px;
+    padding-top: 20px;
+    padding-bottom: 20px;
 }
 .file-upload{
     display: inline-block;
@@ -23,6 +30,12 @@
 .file-upload-metadata.upload-error{
     color: #E77367;
     font-weight: 700;
+}
+.dice-container {
+    margin-top: 50px;
+}
+.dice-container .panel-heading{
+    background-color: #84DEC5;
 }
 .dice-container-footer{
     text-align: right;
@@ -59,18 +72,18 @@ div#footer #partners .subtitle{
     min-height: 800px;
 }
 .dice-container-description{
-    padding: 10px;
-    padding-left: 40px;
-    font-style: italic;
+    padding-left: 15px;
+    font-size: 30px;
+    color: #228A6D
 }
 .dice-container-id{
     font-size: 12px;
-    color: gray;
+    color: #B2EADB;
     background: transparent;
 }
 .dice-blueprint-id{
     font-size: 12px;
-    color: lightgray;
+    color: #B2EADB;
     background: transparent;
 }
 .blueprint-status{
@@ -81,23 +94,26 @@ div#footer #partners .subtitle{
 
 }
 .dice-state-already{
-    color: green;
-    background-color: #B1E5B2;
-    border-top-color: #B1E5B2;
-    border-bottom-color: #B1E5B2;
+    color: white;
+    background-color: #84DEC5;
+    border-color: #228A6D;
 }
 .dice-state-currently{
-    background-color: #FAD8B0;
+    background-color: #FFCE98;
     background-image: linear-gradient(45deg,rgba(255,255,255,.5) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.5) 50%,rgba(255,255,255,.5) 75%,transparent 75%,transparent);
     animation: progress-bar-stripes 3s linear infinite;
     background-size: 40px 40px;
     font-weight: bold;
+    border-top-color: #FFBB72;
+    border-bottom-color: #FFBB72;
+    margin-left: 0px!important;
 }
 .dice-blueprint-deployed-msg{
     padding-top: 15px;
 }
 .dice-blueprint-deployed-msg span.dice-ok-sign{
     padding-right: 10px;
+    color: #84DEC5;
 }
 .dice-blueprint-time{
     font-style: italic;
@@ -109,7 +125,37 @@ div#footer #partners .subtitle{
     margin-top: 20px;
     background-color: lightblue;
 }
-
+.dice-outputs-table{
+    margin-top: 15px;
+}
+.dice-outputs-table thead{
+    background-color: #86C4DB;
+    color: white;
+}
+.dice-success{
+    color: #84DEC5;
+    font-weight: bolder;
+}
+.dice-btn-danger{
+    background-color: #FFBB72;
+    border-color: #FFBB72;
+    color: white;
+}
+.dice-btn-default{
+    background-color: #B2EADB;
+    border-color: #B2EADB;
+    color: white;
+}
+.dice-btn-success{
+    background-color: #71D9BC;
+    border-color: #71D9BC;
+    color: white;
+}
+.dice-success-timestamp{
+    color: lightgray;
+    font-style: italic;
+    padding-left: 28px;
+}
 
 
 
