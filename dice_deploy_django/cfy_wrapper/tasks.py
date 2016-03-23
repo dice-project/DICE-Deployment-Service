@@ -47,66 +47,93 @@ def _update_state(blueprint, state):
     blueprint.save()
 
 
-def _run_execution(workflow_id, deployment_id):
-    client = _get_cfy_client()
+def _run_execution(workflow_id, deployment_id, blueprint_state_flow):
     blueprint = Blueprint.get(deployment_id)
 
-    # Wait for environment to be prepared
-    _update_state(blueprint, Blueprint.State.preparing_deploy)
-    execution = next(e for e in client.executions.list(deployment_id)
-                     if e.workflow_id == "create_deployment_environment")
-    _wait_for_execution(client, execution)
+    try:
+        client = _get_cfy_client()
 
-    # Execute required workflow
-    _update_state(blueprint, Blueprint.State.working)
-    execution = client.executions.start(deployment_id, workflow_id)
-    _wait_for_execution(client, execution)
+        # Wait for environment to be prepared
+        _update_state(blueprint, blueprint_state_flow[0])
+        execution = next(e for e in client.executions.list(deployment_id)
+                         if e.workflow_id == "create_deployment_environment")
+        _wait_for_execution(client, execution)
 
-    # Capture deployment outputs
+        # Execute required workflow
+        _update_state(blueprint, blueprint_state_flow[1])
+        execution = client.executions.start(deployment_id, workflow_id)
+        _wait_for_execution(client, execution)
+
+        # Capture deployment outputs
+        blueprint.refresh_from_db()
+        blueprint.outputs = get_outputs(blueprint)
+        blueprint.save()
+
+        # We're done
+        _update_state(blueprint, blueprint_state_flow[2])
+    except Exception, e:
+        _handle_exception('_run_execution(%s)' % workflow_id, blueprint, e)
+
+
+def _handle_exception(task_name, blueprint, exception_obj):
+    logger.error('Exeption in %s: %s' % (task_name, exception_obj))
     blueprint.refresh_from_db()
-    blueprint.outputs = get_outputs(blueprint)
+    blueprint.state = Blueprint.State.error.value
     blueprint.save()
-
-    # We're done
-    _update_state(blueprint, Blueprint.State.deployed)
+    raise exception_obj
 
 
 @shared_task
 def upload_blueprint(blueprint_id):
     blueprint = Blueprint.get(blueprint_id)
-    client = _get_cfy_client()
-    archive_path = os.path.join(settings.MEDIA_ROOT, blueprint.archive.name)
+    try:
+        client = _get_cfy_client()
+        archive_path = os.path.join(settings.MEDIA_ROOT, blueprint.archive.name)
 
-    logger.info("Uploading blueprint archive '{}'.".format(archive_path))
+        logger.info("Uploading blueprint archive '{}'.".format(archive_path))
 
-    # Next call will block until upload is finished (can take some time)
-    client.blueprints.publish_archive(archive_path, blueprint.cfy_id)
+        # Next call will block until upload is finished (can take some time)
+        client.blueprints.publish_archive(archive_path, blueprint.cfy_id)
 
-    # Update blueprint status
-    blueprint.refresh_from_db()
-    blueprint.state = Blueprint.State.uploaded.value
-    blueprint.save()
+        # Update blueprint status
+        blueprint.refresh_from_db()
+        blueprint.state = Blueprint.State.uploaded.value
+        blueprint.save()
+    except Exception, e:
+        _handle_exception('upload_blueprint', blueprint, e)
 
 
 @shared_task
 def create_deployment(blueprint_id):
-    client = _get_cfy_client()
-
-    logger.info("Creating deployment '{}'.".format(blueprint_id))
-
-    # Next call will block until upload is finished (can take some time)
-    client.deployments.create(blueprint_id, blueprint_id)
-
-    # Update blueprint status
     blueprint = Blueprint.get(blueprint_id)
-    blueprint.state = Blueprint.State.ready_to_deploy.value
-    blueprint.save()
+    try:
+        client = _get_cfy_client()
+
+        logger.info("Creating deployment '{}'.".format(blueprint_id))
+
+        # Next call will block until upload is finished (can take some time)
+        client.deployments.create(blueprint_id, blueprint_id)
+
+        # Update blueprint status
+        blueprint.refresh_from_db()
+        blueprint.state = Blueprint.State.ready_to_deploy.value
+        blueprint.save()
+    except Exception, e:
+        _handle_exception('create_deployment', blueprint, e)
 
 
 @shared_task
 def install(blueprint_id):
     logger.info("Installing '{}'.".format(blueprint_id))
-    _run_execution("install", blueprint_id)
+    _run_execution(
+        "install",
+        blueprint_id,
+        blueprint_state_flow=[
+            Blueprint.State.preparing_deploy,
+            Blueprint.State.working,
+            Blueprint.State.deployed
+        ]
+    )
 
 
 @shared_task
@@ -118,45 +145,61 @@ def uninstall(blueprint_id):
     blueprint.state = Blueprint.State.uninstalling.value
     blueprint.save()
 
-    _run_execution("uninstall", blueprint_id)
+    _run_execution(
+        "uninstall",
+        blueprint_id,
+        blueprint_state_flow=[
+            Blueprint.State.uninstalling,
+            Blueprint.State.uninstalling,
+            Blueprint.State.deleting_deployment
+        ]
+    )
 
 
 @shared_task
 def delete_deployment(blueprint_id):
-    client = _get_cfy_client()
-
-    logger.info("Deleting deployment '{}'.".format(blueprint_id))
-
-    # Update blueprint status
     blueprint = Blueprint.get(blueprint_id)
-    blueprint.state = Blueprint.State.deleting_deployment.value
-    blueprint.save()
+    try:
+        client = _get_cfy_client()
 
-    # Next call will block until upload is finished (can take some time)
-    client.deployments.delete(blueprint_id)
+        logger.info("Deleting deployment '{}'.".format(blueprint_id))
+
+        # Update blueprint status
+        blueprint.refresh_from_db()
+        blueprint.state = Blueprint.State.deleting_deployment.value
+        blueprint.save()
+
+        # Next call will block until upload is finished (can take some time)
+        client.deployments.delete(blueprint_id)
+    except Exception, e:
+        _handle_exception('delete_deployment', blueprint, e)
 
 
 @shared_task
 def delete_blueprint(blueprint_id, delete_local=True):
-    client = _get_cfy_client()
-
-    logger.info("Deleting blueprint '{}'. delete_local={}".format(blueprint_id, delete_local))
-
     # Update blueprint status
     blueprint = Blueprint.get(blueprint_id)
     blueprint.state = Blueprint.State.deleting_deployment.value
     blueprint.save()
 
-    # Next call will block until upload is finished (can take some time)
-    client.blueprints.delete(blueprint_id)
+    try:
+        client = _get_cfy_client()
 
-    blueprint = Blueprint.get(blueprint_id)
-    if delete_local:
-        # Delete all traces of this blueprint
-        blueprint.archive.delete()
-        blueprint.delete()
-    else:
-        blueprint.state = Blueprint.State.undeployed
+        logger.info("Deleting blueprint '{}'. delete_local={}".format(blueprint_id, delete_local))
+
+        # Next call will block until upload is finished (can take some time)
+        client.blueprints.delete(blueprint_id)
+
+        blueprint = Blueprint.get(blueprint_id)
+        if delete_local:
+            # Delete all traces of this blueprint
+            blueprint.archive.delete()
+            blueprint.delete(keep_parents=True)
+        else:
+            blueprint.state = Blueprint.State.undeployed
+            blueprint.save()
+    except Exception, e:
+        _handle_exception('delete_blueprint', blueprint, e)
 
 
 def get_outputs(blueprint):

@@ -19,7 +19,7 @@ urlpatterns = [
         BlueprintsView.as_view(), name="blueprints"),
     url(r"^blueprints/(?P<blueprint_id>[0-9a-f-]+)/?$",
         BlueprintIdView.as_view(), name="blueprint_id"),
-    url(r"^blueprints/(?P<blueprint_id>[0-9a-f-]+)/outputs?$",
+    url(r"^blueprints/(?P<blueprint_id>[0-9a-f-]+)/outputs/?$",
         BlueprintOutputsView.as_view(), name="blueprint_outputs"),
     # container
     url(r"^containers/?$",
