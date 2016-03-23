@@ -7,7 +7,7 @@ cd /home/ubuntu
 cd dice_deploy_django
 
 ctx logger info "Starting celery worker"
-celery multi start 1 -c 1 -A dice_deploy -l INFO
+celery multi start 1 -c 1 -A dice_deploy -Q dice_deploy -l INFO
 
 ctx logger info "Starting server"
 port=$(ctx node properties port)

@@ -42,7 +42,7 @@ cd dice_deploy_django
 pip-sync
 
 ctx logger info "Installing bower"
-echo 3 | bower install
+bower install
 
 ctx logger info "Adjusting settings"
 manager=$(ctx node properties manager)
