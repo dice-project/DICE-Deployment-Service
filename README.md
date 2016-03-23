@@ -14,9 +14,9 @@ Simple wrapper around Cloudify orchestration tool.
 ## Important general information
 
 When developing the shell scripts, make sure the line endings that end up in
-deployed file are "\n". There is a .gitattributes file in place that should
-take care of git side of things on checkout. If you add a sensitive file to
-repository, please update .gitattributes as well.
+deployed file are "\n" i.e. LF and not CRLF. There is a .gitattributes file 
+in place that should take care of git side of things on checkout. If you add 
+a sensitive file to repository, please update .gitattributes as well.
 
 
 ## Developer setup
@@ -33,6 +33,31 @@ provided soon;)
 
 Basic setting that you need to do is to set cloudify manager url in
 dice_deploy_django/dice_deploy/settings.py, variable CFY_MANAGER_URL.
+
+#### Running Celery
+We use Celery framework for asynchronous command execution. There are upstart 
+services used to simplify management of Celery framework. Namely:
+ - `sudo service celery-service start|status|stop|restart` - manages worker that consumes messages from main queue
+ - `sudo service celery-dashboard start|status|stop|restart` - runs web server on port 5555 where you can see message queue
+ - `sudo service celery-test-service start|status|stop|restart` - manages worker that consumes messages from test queue
+Vagrant installs these services automatically, but you can do it manually
+ by simply copying .conf files from install/upstart-services folder to your
+ /etc/init folder. Also make sure that you configure parameters in each
+ of the .conf files. Log files can be found in /var/log/upstart folder.
+ 
+ To remove all messages from Celery queues, use Django management command
+  `python manage.py celery-service purge`. To run it, you must be in
+ dice_deploy_django folder with active virtualenvironment.
+ 
+#### Debugging Celery Tasks
+To debug asynchronous Celery tasks it is best to use celery-dashboard service.
+There you can see all task messages and their statuses. Note that celery-dashboard
+service stores all Celery messages into internal database and displays them from there.
+It keeps them even after they are dissmissed from the Celery queue. To
+clear all messages simply restart celery-dashboard service.
+
+There is also log file (tasks.log) in dice_deploy_django folder where tasks
+write to.
 
 
 ## Local development workflow
@@ -145,3 +170,13 @@ Finally, we can also delete the container.
 $ ./dice-deploy-cli delete 02bba363-fb85-4a54-8a2f-f1a11a25ad9d
 Deleting container ... DONE.
 ```
+
+
+## Web GUI
+
+Dice deployment REST API comes with simple AngularJS web GUI. Source code
+resides in `dice_deploy_django/cfy_wrapper_gui/static`. It is a single-page
+website with main page served by Django and subpagas managed by AngularJS.
+Please use bower to install Javascript libraries. Simply run
+`bower install` while being in project directory. Gui can be accessed at
+http://localhost:7080 if using Vagrant default setup.

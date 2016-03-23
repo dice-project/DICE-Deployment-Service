@@ -91,7 +91,7 @@ class Blueprint(Base):
         from cfy_wrapper import tasks
 
         # prevent undeploying when I'm not even deployed
-        if self.state != self.State.deployed:
+        if self.state != self.State.deployed.value:
             return self.pipe_deploy_blueprint()
 
         # update my state immediately

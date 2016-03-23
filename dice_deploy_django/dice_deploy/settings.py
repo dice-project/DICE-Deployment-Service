@@ -141,7 +141,7 @@ LOGGING = {
 STATIC_URL = '/static/'
 
 # angular configuration
-ANGULAR_ENDPOINT = 'http://localhost:7080'
+ANGULAR_ENDPOINT = '/'
 
 # Local overrides
 try:
