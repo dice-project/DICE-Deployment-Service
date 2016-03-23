@@ -1,7 +1,7 @@
 django
 djangorestframework
 markdown
-cloudify_rest_client
+cloudify_rest_client==3.2.1
 celery
 enum34
 flower

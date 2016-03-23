@@ -13,9 +13,11 @@ Vagrant.configure(2) do |config|
   config.vm.provision "shell", path: "provision-root.sh"
   config.vm.provision "shell", path: "provision-user.sh", privileged: false
 
-  # setup and run celery upstart service
+  # setup and run celery upstart services
   config.vm.provision "shell", inline: "cp /vagrant/install/upstart-services/* /etc/init/"
+  config.vm.provision "shell", inline: "find /etc/init/celery-* | xargs dos2unix"
   config.vm.provision "shell", inline: "service celery-service start"
+  config.vm.provision "shell", inline: "service celery-dashboard start"
 
   config.vm.synced_folder "dice_deploy_django", "/home/vagrant/dice_deploy_django"
 
