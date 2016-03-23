@@ -112,6 +112,12 @@ def install(blueprint_id):
 @shared_task
 def uninstall(blueprint_id):
     logger.info("Uninstalling '{}'.".format(blueprint_id))
+
+    # Update blueprint status
+    blueprint = Blueprint.get(blueprint_id)
+    blueprint.state = Blueprint.State.uninstalling.value
+    blueprint.save()
+
     _run_execution("uninstall", blueprint_id)
 
 
@@ -121,20 +127,25 @@ def delete_deployment(blueprint_id):
 
     logger.info("Deleting deployment '{}'.".format(blueprint_id))
 
-    # Next call will block until upload is finished (can take some time)
-    client.deployments.delete(blueprint_id)
-
     # Update blueprint status
     blueprint = Blueprint.get(blueprint_id)
-    blueprint.state = Blueprint.State.uploaded.value
+    blueprint.state = Blueprint.State.deleting_deployment.value
     blueprint.save()
+
+    # Next call will block until upload is finished (can take some time)
+    client.deployments.delete(blueprint_id)
 
 
 @shared_task
 def delete_blueprint(blueprint_id, delete_local=True):
     client = _get_cfy_client()
 
-    logger.info("Deleting blueprint '{}'.".format(blueprint_id))
+    logger.info("Deleting blueprint '{}'. delete_local={}".format(blueprint_id, delete_local))
+
+    # Update blueprint status
+    blueprint = Blueprint.get(blueprint_id)
+    blueprint.state = Blueprint.State.deleting_deployment.value
+    blueprint.save()
 
     # Next call will block until upload is finished (can take some time)
     client.blueprints.delete(blueprint_id)

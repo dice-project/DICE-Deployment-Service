@@ -62,10 +62,31 @@
                 <div class="panel-body">
                     <div ng-show="cont.blueprint">
                         <code class="pull-right dice-blueprint-id">{{ cont.blueprint.cfy_id }}</code>
-                        <div ng-hide="isBlueprintDeployed(cont.blueprint)">
-                            <blueprint-status curr-state="cont.blueprint.state_name" all-states="blueprintStates" ng-if="cont.blueprint"></blueprint-status>
+
+
+                        <div ng-show="isBlueprintBeingDeployed(cont.blueprint)">
+                            <blueprint-status curr-state="cont.blueprint.state_name" all-states="blueprintDeployStates" ng-if="cont.blueprint"></blueprint-status>
                             <span class="dice-blueprint-time">waiting step since: {{ getBlueprintDatetimeStr(cont.blueprint) }}</span>
                         </div>
+
+                        <div ng-show="isBlueprintBeingUndeployed(cont.blueprint)">
+                            <blueprint-status curr-state="cont.blueprint.state_name" all-states="blueprintUndeployStates" ng-if="cont.blueprint"></blueprint-status>
+                            <span class="dice-blueprint-time">waiting step since: {{ getBlueprintDatetimeStr(cont.blueprint) }}</span>
+                        </div>
+
+                        <div ng-show="isBlueprintUndeployed(cont.blueprint)">
+                            <span class="glyphicon glyphicon-warning-sign dice-warning-sign"></span>
+                            <span class="dice-warning">Blueprint is here, but is not deployed.</span>
+                            <div class="dice-success-timestamp">since {{ getBlueprintDatetimeStr(cont.blueprint) }}</div>
+                        </div>
+
+                        <div ng-show="isBlueprintError(cont.blueprint)">
+                            <span class="glyphicon glyphicon-exclamation-sign dice-error-sign"></span>
+                            <span class="dice-error">Blueprint has error state.</span>
+                            <div class="dice-success-timestamp">since {{ getBlueprintDatetimeStr(cont.blueprint) }}</div>
+                        </div>
+
+
                         <div ng-show="isBlueprintDeployed(cont.blueprint)" class="dice-blueprint-deployed-msg">
                             <span class="glyphicon glyphicon-ok dice-ok-sign"></span>
                             <span class="dice-success">Blueprint successfully deployed</span>

@@ -40,7 +40,7 @@
             var BASE_URL = "{{ BASE_URL }}";
             var STATIC_URL = "{{ NG_STATIC_URL }}";
             var BLUEPRINT_UPLOAD_URL_TEMPLATE = '/containers/{id}/blueprint';
-            var BLUEPRINT_STATES = {
+            var BLUEPRINT_DEPLOY_STATES = {
                 stateNames: [
                     'pending',
                     'uploaded',
@@ -57,6 +57,22 @@
                 ],
                 completedStateName: 'deployed'
             };
+            var BLUEPRINT_UNDEPLOY_STATES = {
+                stateNames: [
+                    'uninstalling',
+                    'deleting_deployment',
+                    'deleting_blueprint',
+                    'undeployed'
+                ],
+                statePrettyNames: [
+                    {prettyName: 'Uninstalling', stateNames: ['uninstalling']},
+                    {prettyName: 'Deleting Deployment', stateNames: ['deleting_deployment']},
+                    {prettyName: 'Deleting Blueprint', stateNames: ['deleting_blueprint']},
+                    {prettyName: 'Undeployed', stateNames: ['undeployed']}
+                ],
+                completedStateName: 'undeployed'
+            };
+            var BLUEPRINT_ERROR_STATE = 'error';
         </script>
 
     </head>

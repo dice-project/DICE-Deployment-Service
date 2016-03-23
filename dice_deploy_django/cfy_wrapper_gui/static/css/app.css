@@ -111,9 +111,17 @@ div#footer #partners .subtitle{
 .dice-blueprint-deployed-msg{
     padding-top: 15px;
 }
-.dice-blueprint-deployed-msg span.dice-ok-sign{
+.dice-ok-sign{
     padding-right: 10px;
     color: #84DEC5;
+}
+.dice-warning-sign{
+    padding-right: 10px;
+    color: #FFBB72;
+}
+.dice-error-sign{
+    padding-right: 10px;
+    color: red;
 }
 .dice-blueprint-time{
     font-style: italic;
@@ -134,6 +142,14 @@ div#footer #partners .subtitle{
 }
 .dice-success{
     color: #84DEC5;
+    font-weight: bolder;
+}
+.dice-warning{
+    color: #FFBB72;
+    font-weight: bolder;
+}
+.dice-error{
+    color: red;
     font-weight: bolder;
 }
 .dice-btn-danger{

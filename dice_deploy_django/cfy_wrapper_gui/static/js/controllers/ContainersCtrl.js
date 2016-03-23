@@ -133,7 +133,25 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     };
     $scope.isBlueprintDeployed = function(blueprint){
         if(!blueprint) return false;
-        return blueprint.state_name == BLUEPRINT_STATES.completedStateName;
+        return blueprint.state_name == BLUEPRINT_DEPLOY_STATES.completedStateName;
+    };
+    $scope.isBlueprintUndeployed = function(blueprint){
+        if(!blueprint) return false;
+        return blueprint.state_name == BLUEPRINT_UNDEPLOY_STATES.completedStateName;
+    };
+    $scope.isBlueprintBeingDeployed = function(blueprint){
+        if(!blueprint) return false;
+        if($scope.isBlueprintDeployed(blueprint)) return false;
+        return BLUEPRINT_DEPLOY_STATES.stateNames.indexOf(blueprint.state_name) >= 0;
+    };
+    $scope.isBlueprintBeingUndeployed = function(blueprint){
+        if(!blueprint) return false;
+        if($scope.isBlueprintUndeployed(blueprint)) return false;
+        return BLUEPRINT_UNDEPLOY_STATES.stateNames.indexOf(blueprint.state_name) >= 0;
+    };
+    $scope.isBlueprintError = function(blueprint){
+        if(!blueprint) return false;
+        return blueprint.state_name == BLUEPRINT_ERROR_STATE;
     };
     $scope.getBlueprintDatetimeStr = function(blueprint){
         if(blueprint) {
@@ -154,7 +172,8 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     // ON LOAD
     //
 	$scope.getContainers();
-    $scope.blueprintStates = jQuery.extend({}, BLUEPRINT_STATES);
+    $scope.blueprintDeployStates = jQuery.extend({}, BLUEPRINT_DEPLOY_STATES);
+    $scope.blueprintUndeployStates = jQuery.extend({}, BLUEPRINT_UNDEPLOY_STATES);
 
     //
     // PERIODIC

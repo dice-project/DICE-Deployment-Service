@@ -23,14 +23,20 @@ class Base(models.Model):
 class Blueprint(Base):
     # Possible states
     class State(Enum):
-        error = -2
-        undeployed = -1
+        # deployment flow
         pending = 1
         uploaded = 2
         ready_to_deploy = 3
         preparing_deploy = 4
         working = 5
         deployed = 6
+        # undeploymen flow
+        uninstalling = 101
+        deleting_deployment = 102
+        deleting_blueprint = 103
+        # special states
+        undeployed = 0  # exists on gui, but not on cfy manageer
+        error = -1
 
     # Fields
     id = models.UUIDField(
@@ -53,6 +59,11 @@ class Blueprint(Base):
     def pipe_deploy_blueprint(self):
         """ Defines and starts async pipeline for deploying blueprint to cloudify """
         from cfy_wrapper import tasks
+
+        # update my state immediately
+        self.state = Blueprint.State.pending.value
+        self.save()
+
         pipe = (
             tasks.upload_blueprint.si(self.cfy_id) |
             tasks.create_deployment.si(self.cfy_id) |
@@ -63,6 +74,11 @@ class Blueprint(Base):
     def pipe_undeploy_blueprint(self):
         """ Defines and starts async pipeline for undeploying blueprint from cloudify """
         from cfy_wrapper import tasks
+
+        # update my state immediately
+        self.state = Blueprint.State.uninstalling.value
+        self.save()
+
         pipe = (
             tasks.uninstall.si(self.cfy_id) |
             tasks.delete_deployment.si(self.cfy_id) |
@@ -73,6 +89,15 @@ class Blueprint(Base):
     def pipe_redeploy_blueprint(self):
         """ Defines and starts async pipeline for redeploying blueprint on cloudify """
         from cfy_wrapper import tasks
+
+        # prevent undeploying when I'm not even deployed
+        if self.state != self.State.deployed:
+            return self.pipe_deploy_blueprint()
+
+        # update my state immediately
+        self.state = Blueprint.State.uninstalling.value
+        self.save()
+
         pipe = (
             # undeploy
             tasks.uninstall.si(self.cfy_id) |
