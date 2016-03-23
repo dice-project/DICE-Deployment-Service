@@ -13,6 +13,8 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
         $timeout(function(){
             $scope.uploader.clearQueue();
             $scope.syncContainers();
+            // start syncing again
+            $scope.preventSync = false;
         }, 500);  // some delay to show progressbar
     };
     $scope.initUploader = function(cont){
@@ -20,6 +22,8 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
         $scope.uploader.upload_errors = undefined;
         $scope.uploader.url = BLUEPRINT_UPLOAD_URL_TEMPLATE.replace('{id}', cont.id);
         $scope.uploader.containerId = cont.id;
+        // prevent syncing while file picker is opened to prevent loss of selection
+        $scope.preventSync = true;
     };
     $scope.uploader.filters.push({
         name: 'excelFilter',
@@ -39,6 +43,10 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     });
     $scope.uploader.onWhenAddingFileFailed = function(item /*{File|FileLikeObject}*/, filter, options) {
         $scope.uploader.upload_errors = 'Only .tar.gz files (<20 MB) can be uploaded';
+    };
+    $scope.uploader.onAfterAddingFile = function(){
+        // start syncing again
+        $scope.preventSync = false;
     };
 
 
@@ -151,8 +159,14 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     //
     // PERIODIC
     //
+    $scope.preventSync = false;
     $interval(function(){
-        $scope.syncContainers();
+        if(!$scope.preventSync){
+            $scope.syncContainers();
+        }else{
+            console.log('Sync prevented');
+        }
+
     }, 10000);
 
 });
