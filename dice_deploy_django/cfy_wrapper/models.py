@@ -82,7 +82,7 @@ class Blueprint(Base):
         pipe = (
             tasks.uninstall.si(self.cfy_id) |
             tasks.delete_deployment.si(self.cfy_id) |
-            tasks.delete_blueprint.si(self.cfy_id)
+            tasks.delete_blueprint.si(self.cfy_id, delete_local=False)
         )
         pipe.apply_async()
 
@@ -117,11 +117,15 @@ class Container(Base):
         primary_key=True, default=uuid.uuid4, editable=False
     )
     description = models.CharField(max_length=512, blank=True, null=True)
-    blueprint = models.ForeignKey(Blueprint, null=True)
+    blueprint = models.ForeignKey(Blueprint, null=True, blank=True, on_delete=models.SET_NULL)
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
 
     def delete(self, using=None, keep_parents=False):
-        if self.blueprint is not None:
-            raise IntegrityError('Cannot delete container with existing blueprint')
+        if self.blueprint:
+            if self.blueprint.state in [Blueprint.State.undeployed.value,
+                                        Blueprint.State.error.value]:
+                self.blueprint.delete()
+            else:
+                raise IntegrityError('Cannot delete container with existing blueprint')
         super(Container, self).delete(using, keep_parents)

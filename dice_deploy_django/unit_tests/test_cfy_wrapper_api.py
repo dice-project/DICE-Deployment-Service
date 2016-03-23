@@ -271,3 +271,12 @@ class AccountTests(TransactionTestCase):
             response.status_code, status.HTTP_202_ACCEPTED,
             msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
         )
+
+    def test_delete_blueprint_but_not_container(self):
+        cont_full = factories.ContainerFullFactory()
+        blueprint = cont_full.blueprint
+        blueprint.delete()
+
+        cont_full.refresh_from_db()
+        self.assertNotEqual(None, cont_full)
+
