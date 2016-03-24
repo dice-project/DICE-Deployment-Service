@@ -17,7 +17,8 @@ DATABASES = {
 }
 
 TEST_FILES_DIR = os.path.join(BASE_DIR, 'unit_tests', 'files')
-TEST_FILE_BLUEPRINT_EXAMPLE = os.path.join(TEST_FILES_DIR, 'blueprints', 'example_blueprint.tar.gz')
+TEST_FILE_BLUEPRINT_EXAMPLE_GZIP = os.path.join(TEST_FILES_DIR, 'blueprints', 'example_blueprint.tar.gz')
+TEST_FILE_BLUEPRINT_EXAMPLE_YAML = os.path.join(TEST_FILES_DIR, 'blueprints', 'example_blueprint.yaml')
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "uploads_tests")
 

@@ -43,7 +43,8 @@ class Blueprint(Base):
         primary_key=True, default=uuid.uuid4, editable=False
     )
     state = models.IntegerField(default=State.pending.value)
-    archive = models.FileField(upload_to="blueprints")
+    archive = models.FileField(upload_to="blueprints_targz", blank=True, null=True)
+    yaml = models.FileField(upload_to="blueprints_yaml", blank=True, null=True)
     outputs = JSONField(blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)

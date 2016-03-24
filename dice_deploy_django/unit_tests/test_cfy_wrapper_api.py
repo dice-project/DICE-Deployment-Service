@@ -56,7 +56,7 @@ class AccountTests(TransactionTestCase):
         blue_pending = factories.BlueprintPendingFactory()
         blue_pending_ser = serializers.BlueprintSerializer(blue_pending).data
 
-        blue_deployed = factories.BlueprintDeployedFactory()
+        blue_deployed = factories.BlueprintArchiveDeployedFactory()
         blue_deployed_ser = serializers.BlueprintSerializer(blue_deployed).data
 
         response = self.client.get(url)
@@ -70,7 +70,7 @@ class AccountTests(TransactionTestCase):
         self.assertListEqual([blue_pending_ser, blue_deployed_ser], response.data)
 
     def test_blueprint_details(self):
-        blue_deployed = factories.BlueprintDeployedFactory()
+        blue_deployed = factories.BlueprintArchiveDeployedFactory()
         blue_deployed_ser = serializers.BlueprintSerializer(blue_deployed).data
 
         url = reverse('blueprint_id', kwargs={'blueprint_id': blue_deployed.id})
@@ -86,7 +86,7 @@ class AccountTests(TransactionTestCase):
         self.assertEqual(blue_deployed_ser, response.data)
 
     def test_blueprint_remove(self):
-        blue_deployed = factories.BlueprintDeployedFactory()
+        blue_deployed = factories.BlueprintArchiveDeployedFactory()
         blue_deployed_ser = serializers.BlueprintSerializer(blue_deployed).data
 
         url = reverse('blueprint_id', kwargs={'blueprint_id': blue_deployed.id})
@@ -133,7 +133,7 @@ class AccountTests(TransactionTestCase):
         )
 
     def test_container_remove_full(self):
-        cont_full = factories.ContainerFullFactory()
+        cont_full = factories.ContainerFullGzipFactory()
 
         url = reverse('container_id', kwargs={'container_id': cont_full.id})
         response = self.client.delete(url)
@@ -150,7 +150,7 @@ class AccountTests(TransactionTestCase):
         cont_empty = factories.ContainerEmptyFactory()
         cont_empty_ser = serializers.ContainerSerializer(cont_empty).data
 
-        cont_full = factories.ContainerFullFactory()
+        cont_full = factories.ContainerFullGzipFactory()
         cont_full_ser = serializers.ContainerSerializer(cont_full).data
 
         response = self.client.get(url)
@@ -164,7 +164,7 @@ class AccountTests(TransactionTestCase):
         self.assertListEqual([cont_empty_ser, cont_full_ser], response.data)
 
     def test_container_details(self):
-        cont_full = factories.ContainerFullFactory()
+        cont_full = factories.ContainerFullGzipFactory()
         cont_full_ser = serializers.ContainerSerializer(cont_full).data
 
         url = reverse('container_id', kwargs={'container_id': cont_full.id})
@@ -179,7 +179,7 @@ class AccountTests(TransactionTestCase):
         self.assertEqual(cont_full_ser, response.data)
 
     def test_container_details_non_existent(self):
-        cont_full = factories.ContainerFullFactory.build()  # unsaved
+        cont_full = factories.ContainerFullGzipFactory.build()  # unsaved
 
         url = reverse('container_id', kwargs={'container_id': cont_full.id})
         response = self.client.get(url)
@@ -190,11 +190,11 @@ class AccountTests(TransactionTestCase):
             msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
         )
 
-    def test_container_blueprint_upload_to_empty(self):
+    def test_container_blueprint_upload_gzip_to_empty(self):
         cont_empty = factories.ContainerEmptyFactory()
         url = reverse('container_blueprint', kwargs={'container_id': cont_empty.id})
 
-        with open(os.path.join(settings.TEST_FILE_BLUEPRINT_EXAMPLE), 'rb') as f:
+        with open(os.path.join(settings.TEST_FILE_BLUEPRINT_EXAMPLE_GZIP), 'rb') as f:
             data = {'file': f}
             response = self.client.post(url, data)
 
@@ -212,6 +212,8 @@ class AccountTests(TransactionTestCase):
             raise AssertionError('Container or Blueprint was not found in DB, but it should be there.')
 
         self.assertEqual(cont.blueprint, blueprint)
+        self.assertTrue(bool(blueprint.archive))
+        self.assertFalse(bool(blueprint.yaml))
 
         # check filesystem
         with open(blueprint.archive.path) as f:
@@ -219,11 +221,42 @@ class AccountTests(TransactionTestCase):
         if not data:
             raise AssertionError('Blueprint .tar.gz file could not be found/opened on filesystem')
 
-    def test_container_blueprint_upload_to_full(self):
-        cont_full = factories.ContainerFullFactory()
+    def test_container_blueprint_upload_yaml_to_empty(self):
+        cont_empty = factories.ContainerEmptyFactory()
+        url = reverse('container_blueprint', kwargs={'container_id': cont_empty.id})
+
+        with open(os.path.join(settings.TEST_FILE_BLUEPRINT_EXAMPLE_YAML), 'rb') as f:
+            data = {'file': f}
+            response = self.client.post(url, data)
+
+        # check HTTP response
+        self.assertEqual(
+            response.status_code, status.HTTP_202_ACCEPTED,
+            msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
+        )
+
+        # check DB state
+        try:
+            cont = Container.get(response.data['id'])
+            blueprint = Blueprint.get(response.data['blueprint']['cfy_id'])
+        except NotFound:
+            raise AssertionError('Container or Blueprint was not found in DB, but it should be there.')
+
+        self.assertEqual(cont.blueprint, blueprint)
+        self.assertFalse(bool(blueprint.archive))
+        self.assertTrue(bool(blueprint.yaml))
+
+        # check filesystem
+        with open(blueprint.yaml.path) as f:
+            data = f.read()
+        if not data:
+            raise AssertionError('Blueprint .yaml file could not be found/opened on filesystem')
+
+    def test_container_blueprint_upload_gzip_to_full(self):
+        cont_full = factories.ContainerFullGzipFactory()
         url = reverse('container_blueprint', kwargs={'container_id': cont_full.id})
 
-        with open(os.path.join(settings.TEST_FILE_BLUEPRINT_EXAMPLE), 'rb') as f:
+        with open(os.path.join(settings.TEST_FILE_BLUEPRINT_EXAMPLE_GZIP), 'rb') as f:
             data = {'file': f}
             response = self.client.post(url, data)
 
@@ -241,12 +274,45 @@ class AccountTests(TransactionTestCase):
             raise AssertionError('Container or Blueprint was not found in DB, but it should be there.')
 
         self.assertEqual(cont.blueprint, blueprint)
+        self.assertTrue(bool(blueprint.archive))
+        self.assertFalse(bool(blueprint.yaml))
 
         # check filesystem
         with open(blueprint.archive.path) as f:
             data = f.read()
         if not data:
             raise AssertionError('Blueprint .tar.gz file could not be found/opened on filesystem')
+
+    def test_container_blueprint_upload_yaml_to_full(self):
+        cont_full = factories.ContainerFullGzipFactory()
+        url = reverse('container_blueprint', kwargs={'container_id': cont_full.id})
+
+        with open(os.path.join(settings.TEST_FILE_BLUEPRINT_EXAMPLE_YAML), 'rb') as f:
+            data = {'file': f}
+            response = self.client.post(url, data)
+
+        # check HTTP response
+        self.assertEqual(
+            response.status_code, status.HTTP_202_ACCEPTED,
+            msg='Recieved bad status: %d. Response was: %s' % (response.status_code, response.data)
+        )
+
+        # check DB state
+        try:
+            cont = Container.get(response.data['id'])
+            blueprint = Blueprint.get(response.data['blueprint']['cfy_id'])
+        except NotFound:
+            raise AssertionError('Container or Blueprint was not found in DB, but it should be there.')
+
+        self.assertEqual(cont.blueprint, blueprint)
+        self.assertFalse(bool(blueprint.archive))
+        self.assertTrue(bool(blueprint.yaml))
+
+        # check filesystem
+        with open(blueprint.yaml.path) as f:
+            data = f.read()
+        if not data:
+            raise AssertionError('Blueprint .yaml file could not be found/opened on filesystem')
 
     def test_container_blueprint_redeploy_empty(self):
         cont_empty = factories.ContainerEmptyFactory()
@@ -261,7 +327,7 @@ class AccountTests(TransactionTestCase):
         )
 
     def test_container_blueprint_redeploy_full(self):
-        cont_full = factories.ContainerFullFactory()
+        cont_full = factories.ContainerFullGzipFactory()
         url = reverse('container_blueprint', kwargs={'container_id': cont_full.id})
 
         response = self.client.put(url)
@@ -273,7 +339,7 @@ class AccountTests(TransactionTestCase):
         )
 
     def test_delete_blueprint_but_not_container(self):
-        cont_full = factories.ContainerFullFactory()
+        cont_full = factories.ContainerFullGzipFactory()
         blueprint = cont_full.blueprint
         blueprint.delete()
 

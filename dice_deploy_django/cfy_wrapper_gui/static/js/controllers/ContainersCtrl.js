@@ -26,23 +26,17 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
         $scope.preventSync = true;
     };
     $scope.uploader.filters.push({
-        name: 'excelFilter',
+        name: 'contentTypeFilter',
         fn: function(item /*{File|FileLikeObject}*/, options) {
-            var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
-            var typeXGzip = 'x-gzip';
-            var typeGzip = 'gzip';
-            var allowedTypes = '|' + typeXGzip + '|' + typeGzip + '|';
-            var isTypeOK = allowedTypes.indexOf(type) !== -1;
-
             var sizeLimitMB = 20.0;
             var sizeMB = item.size/1024/1024;
             var isSizeOK = sizeMB < sizeLimitMB;
 
-            return isTypeOK && isSizeOK;
+            return isSizeOK;
         }
     });
     $scope.uploader.onWhenAddingFileFailed = function(item /*{File|FileLikeObject}*/, filter, options) {
-        $scope.uploader.upload_errors = 'Only .tar.gz files (<20 MB) can be uploaded';
+        $scope.uploader.upload_errors = 'Only .tar.gz and .yaml files (<20 MB) can be uploaded';
     };
     $scope.uploader.onAfterAddingFile = function(){
         // start syncing again

@@ -10,6 +10,7 @@ from django.db import IntegrityError
 from . import tasks
 from .models import Blueprint, Container
 from .serializers import BlueprintSerializer, ContainerSerializer
+from .forms import BlueprintUploadForm
 
 logger = logging.getLogger("views")
 
@@ -142,24 +143,30 @@ class ContainerBlueprint(APIView):
               required: true
               type: file
         """
-        cont = Container.get(container_id)
-        blueprint_old = cont.blueprint
-        blueprint_new = Blueprint.objects.create(archive=request.data["file"])
+        file_uploaded = request.data.get('file')
+        form = BlueprintUploadForm(files={'archive': file_uploaded, 'yaml': file_uploaded})
 
-        # bind new blueprint to this container
-        cont.blueprint = blueprint_new
-        cont.save()
+        if form.is_valid():
+            cont = Container.get(container_id)
+            blueprint_old = cont.blueprint
+            blueprint_new = form.instance
 
-        # deploy the new blueprint
-        blueprint_new.pipe_deploy_blueprint()
+            # bind new blueprint to this container
+            cont.blueprint = blueprint_new
+            cont.save()
 
-        # undeploy the old blueprint
-        if blueprint_old:
-            # TODO: keep container-blueprint binding to old blueprint until cloudify undeploys it
-            blueprint_old.pipe_undeploy_blueprint()
+            # deploy the new blueprint
+            blueprint_new.pipe_deploy_blueprint()
 
-        cont_ser = ContainerSerializer(cont).data
-        return Response(cont_ser, status=status.HTTP_202_ACCEPTED)
+            # undeploy the old blueprint
+            if blueprint_old:
+                # TODO: keep container-blueprint binding to old blueprint until cloudify undeploys it
+                blueprint_old.pipe_undeploy_blueprint()
+
+            cont_ser = ContainerSerializer(cont).data
+            return Response(cont_ser, status=status.HTTP_202_ACCEPTED)
+
+        return Response({'msg': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, container_id):
         """
