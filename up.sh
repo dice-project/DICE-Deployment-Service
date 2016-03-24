@@ -55,6 +55,10 @@ function main ()
     --exclude='dice_deploy/uploads' \
     dice_deploy_django
 
+  ## Package the upstart configuration
+  #tar -cvzf install/upstart-services.tar.gz \
+  #  install/upstart-services
+
   # Create blueprint archive
   tar -cvzf dd.tar.gz --exclude='*.swp' install
 

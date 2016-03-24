@@ -37,6 +37,10 @@ ctx logger info "Copying application sources"
 ctx download-resource dice_deploy.tar.gz /home/ubuntu/dice_deploy.tar.gz
 tar -xvf dice_deploy.tar.gz
 
+#ctx download-resource upstart-services.tar.gz /home/ubuntu/upstart-services.tar.gz
+#tar -xvf upstart-services.tar.gz
+#sudo cp /home/ubuntu/install/upstart-services/* /etc/init/
+
 ctx logger info "Installing application dependencies"
 cd dice_deploy_django
 pip-sync
@@ -48,7 +52,7 @@ ctx logger info "Adjusting settings"
 manager=$(ctx node properties manager)
 echo "CFY_MANAGER_URL = \"${manager}\"" > dice_deploy/local_settings.py
 
-ctx logger info "Reseting database"
+ctx logger info "Resetting database"
 bash run.sh reset
 
 ctx logger info "Install gunicorn"
