@@ -218,7 +218,7 @@ case $1 in
     ;;
 
   deploy)
-    deploy $2 $3
+    deploy $2 "$3"
     ;;
 
   teardown)
