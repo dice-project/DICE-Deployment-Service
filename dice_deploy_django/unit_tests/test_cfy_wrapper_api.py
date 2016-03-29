@@ -11,6 +11,7 @@ import factories
 from cfy_wrapper import serializers
 from rest_framework.test import APIClient
 from django.test import TransactionTestCase
+import tarfile
 
 
 class AccountTests(TransactionTestCase):
@@ -47,8 +48,14 @@ class AccountTests(TransactionTestCase):
             shutil.rmtree(settings.MEDIA_ROOT)
         os.mkdir(settings.MEDIA_ROOT)
 
+        # clean tmp folder prior starting
+        if os.path.exists(settings.TEST_FILES_TMP_DIR):
+            shutil.rmtree(settings.TEST_FILES_TMP_DIR)
+        os.mkdir(settings.TEST_FILES_TMP_DIR)
+
     def tearDown(self):
-        shutil.rmtree(settings.MEDIA_ROOT)
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+        shutil.rmtree(settings.TEST_FILES_TMP_DIR, ignore_errors=True)
 
     def test_blueprint_list(self):
         url = reverse('blueprints')
@@ -345,4 +352,19 @@ class AccountTests(TransactionTestCase):
 
         cont_full.refresh_from_db()
         self.assertNotEqual(None, cont_full)
+
+    def test_generate_gzip_file(self):
+        blueprint = factories.BlueprintYamlDeployedFactory()
+
+        archive_filename = blueprint.generate_archive()
+
+        # check that created archive file has some size
+        self.assertTrue(os.path.getsize(archive_filename) > 0, 'Archive size should not be zero')
+
+        # check that created archive exists and is a valid .tar.gz
+        try:
+            with tarfile.open(archive_filename, 'r:gz') as tar:
+                self.assertIsNotNone(tar)
+        except tarfile.TarError, e:
+            raise AssertionError('Expected a valid .tar.gz archive, but got error: %s' % e)
 

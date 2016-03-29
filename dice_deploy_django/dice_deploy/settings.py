@@ -18,6 +18,9 @@ IS_TEST_SETTINGS = False
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# folder from which all files/dirs are to be packed with yaml when sending to cfy manager
+BLUEPRINT_PACKAGE_DIR = os.path.join(BASE_DIR, 'dice_deploy', 'blueprint_package')
+
 SECRET_KEY = "np$u5a4u$rh-or%ibtladssbbrf26d(y4k+m_alh@r2hdebgiq"
 
 DEBUG = True

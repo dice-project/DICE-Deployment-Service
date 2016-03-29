@@ -4,6 +4,10 @@ from rest_framework.exceptions import NotFound
 from enum import Enum
 from django.db import IntegrityError
 from jsonfield import JSONField
+import utils
+import shutil
+import os
+from django.conf import settings
 
 
 class Base(models.Model):
@@ -56,6 +60,33 @@ class Blueprint(Base):
     @property
     def state_name(self):
         return Blueprint.State(self.state).name
+
+    def generate_archive(self):
+        """
+        Generate archive for this blueprint. Does nothing if archive was originally uploaded
+        instead of yaml.
+        NOTE: This overrides previously generated archive
+        :return: filepath to the generated file
+        """
+        if bool(self.yaml):
+            # generate archive
+            f_tmp = utils.generate_archive_from_yaml(self.yaml.file)
+
+            # store it under same archive name as the old one if exists ...
+            if bool(self.archive):
+                archive_filename = self.archive.name
+                os.remove(archive_filename)
+                shutil.copy(f_tmp.name, archive_filename)
+            # ... or create new one
+            else:
+                archive_filename = os.path.join('generated_archives', str(uuid.uuid4()) + '.tar.gz')
+                archive_filename_full = os.path.join(settings.MEDIA_ROOT, archive_filename)
+                os.makedirs(os.path.dirname(archive_filename_full))
+                shutil.copy(f_tmp.name, archive_filename_full)
+                self.archive = archive_filename
+                self.save()
+
+        return os.path.join(settings.MEDIA_ROOT, self.archive.name)
 
     def pipe_deploy_blueprint(self):
         """ Defines and starts async pipeline for deploying blueprint to cloudify """

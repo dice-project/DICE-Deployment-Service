@@ -21,7 +21,7 @@ class BlueprintArchiveDeployedFactory(factory.DjangoModelFactory):
 
 class BlueprintYamlDeployedFactory(factory.DjangoModelFactory):
     state = Blueprint.State.deployed.value
-    archive = factory.django.FileField(from_path=settings.TEST_FILE_BLUEPRINT_EXAMPLE_YAML)
+    yaml = factory.django.FileField(from_path=settings.TEST_FILE_BLUEPRINT_EXAMPLE_YAML)
 
     class Meta:
         model = Blueprint

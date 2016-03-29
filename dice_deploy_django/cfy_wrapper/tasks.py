@@ -88,7 +88,7 @@ def upload_blueprint(blueprint_id):
     blueprint = Blueprint.get(blueprint_id)
     try:
         client = _get_cfy_client()
-        archive_path = os.path.join(settings.MEDIA_ROOT, blueprint.archive.name)
+        archive_path = blueprint.generate_archive()
 
         logger.info("Uploading blueprint archive '{}'.".format(archive_path))
 
@@ -194,6 +194,8 @@ def delete_blueprint(blueprint_id, delete_local=True):
         if delete_local:
             # Delete all traces of this blueprint
             blueprint.archive.delete()
+            if bool(blueprint.yaml):
+                blueprint.yaml.delete()
             blueprint.delete(keep_parents=True)
         else:
             blueprint.state = Blueprint.State.undeployed
