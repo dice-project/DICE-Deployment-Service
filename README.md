@@ -2,15 +2,6 @@
 
 Simple wrapper around Cloudify orchestration tool.
 
-
-*TODO*:
-  - finish section about local development environment
-  - finish Vagrant file for development deploy
-  - add more in-depth information about OpenStack deploy
-  - add flexiant blueprint for deploy
-  - update the CLI tool description: polling blueprint status, outputs
-
-
 ## Important general information
 
 When developing the shell scripts, make sure the line endings that end up in
@@ -130,7 +121,7 @@ We now have a container known with the UUID `02bba363-fb85-4a54-8a2f-f1a11a25ad9
 We can use it to push a blueprint.
 
 ```bash
-$ ./dice-deploy-cli deploy 1b0b97f6-2240-472e-a49d-7362fdc7a638 ../example.tar.gz 
+$ ./dice-deploy-cli deploy b0e1b028-8a8c-408c-b619-206257c20481 ../example.tar.gz 
 Creating a new deployment ... DONE.
 Deployment UUID: b0e1b028-8a8c-408c-b619-206257c20481
 ```
@@ -140,19 +131,28 @@ process. A subsequent call to the same command will have replaced the blueprint,
 first uninstalling the existing blueprint and then creating and deploying the
 new one.
 
-Once the blueprint deploys, we can obtain the deployment's outputs. The outputs
-are the values, which depend on the configuration of the blueprint and the
-dynamic values such as dynamically assigned addresses or ports:
+At any time that we have a valid deployment UUID we can check for the status of
+the deployment. 
 
 ```bash
-$ ./dice-deploy-cli outputs b0e1b028-8a8c-408c-b619-206257c20481 | python -mjson.tool
+$ ./dice-deploy-cli status b0e1b028-8a8c-408c-b619-206257c20481
+Obtaining deployment status ...
+uploaded
+```
+
+Once the blueprint deploys, the returned status will be `deployed`. At this 
+point we can obtain the deployment's outputs. The outputs
+are the values, which depend on the configuration of the blueprint and the
+dynamic values such as dynamically assigned addresses or ports. Please note
+that the command expects the container's ID, not the inner deployment's:
+
+```bash
+$ ./dice-deploy-cli outputs 02bba363-fb85-4a54-8a2f-f1a11a25ad9d | python -mjson.tool
 {
-  "storm_nimbus_gui": {
-       "Description": "URL of the Storm nimbus gui",
-       "Value": "http://172.16.95.145:8080" }
-  "zookeeper_endpoint":{
-      "Description": "Debugging endpoint to see if zookeeper lives",
-      "Value": "172.16.95.148:2181" }
+  "outputs": {
+    "storm_nimbus_gui": "http://172.16.95.145:8080",
+    "zookeeper_endpoint": "172.16.95.148:2181"
+  }
 }
 ```
 

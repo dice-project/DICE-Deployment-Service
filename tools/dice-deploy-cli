@@ -3,6 +3,9 @@
 # Url of dice deployment service
 DICE_DEPLOY_URL_FILE=".dice-deploy-url"
 
+# constants
+CST_BLUEPRINT_ID_FIELD=cfy_id
+
 if [ -e "$DICE_DEPLOY_URL_FILE" ]
 then
   DICE_DEPLOY=$(cat $DICE_DEPLOY_URL_FILE)
@@ -40,9 +43,9 @@ function usage ()
         example: $1 delete 14132d9b-d86d-48e9-a24c-deb949d9f3d7
 
     * outputs: get deployment parameters
-        parameters: deployment-uuid
+        parameters: container-uuid
         returns: dict of deployment parameters
-        example: $1 outputs 14132d9b-d86d-48e9-a24c-deb949d9f3d7
+        example: $1 outputs 8f151bb0-db92-48e1-88a0-397258e01f11
 
     * status: get deployment status
         parameters: deployment-uuid
@@ -103,6 +106,50 @@ function create-container ()
   echo "Container UUID: $uuid"
 }
 
+# Requests the details of the container
+function container-info ()
+{
+  parameter-check 1 $#
+  service-url-check
+
+  CONTAINER_UUID="$1"
+
+  echo -n "Obtaining the contaner details ..."
+  out=$(curl -s -f ${DICE_DEPLOY}/containers/${CONTAINER_UUID}/)
+
+  if [ "$?" != "0" ]
+  then
+    echo "The request failed."
+    echo ""
+    exit 2
+  fi
+  echo "DONE."
+  echo $out
+}
+
+# For a container with a deployment, this extracts the
+# deployment id
+function extract-deploy-id ()
+{
+  parameter-check 1 $#
+  service-url-check
+
+  CONTAINER_UUID="$1"
+  out=$(container-info $1 | tail -n 1)
+  ids=$(echo $out | grep -Po '(?<="'$CST_BLUEPRINT_ID_FIELD'":")[^"]*')
+
+  # grep isn't good at discerning between nested-in ids and the
+  # ids of the parent, so this is a hack to get the right one out
+  for id in $ids
+  do
+    if [ "$id" != "$CONTAINER_UUID" ]
+    then
+      echo $id
+      return
+    fi
+  done
+}
+
 # Creates and deploys a blueprint inside a container. If another
 # blueprint has been deployed in this container, the service tears
 # it down first, then deploys the supplied one.
@@ -122,7 +169,8 @@ function deploy ()
     echo ""
     exit 2
   fi
-  uuid=$(echo $out | grep -Eo '"[0-9A-Fa-f-]+"' | grep -Eo '[0-9A-Fa-f-]+')
+  
+  uuid=$(echo $out | grep -Po '(?<="'$CST_BLUEPRINT_ID_FIELD'":")[^"]*')
   echo "DONE."
   echo "Deployment UUID: $uuid"
 }
@@ -153,9 +201,21 @@ function delete-container ()
 # Returns the outputs of the deploy.
 function outputs ()
 {
-  echo "Obtaining deployment parameters ..."
-  curl -s ${DICE_DEPLOY}/blueprints/$1/outputs
-  echo ""
+  parameter-check 1 $#
+  service-url-check
+
+  DEPLOYMENT_UUID=$(extract-deploy-id $1)
+
+  echo -n "Obtaining deployment parameters ... "
+  out=$(curl -s -f ${DICE_DEPLOY}/blueprints/$DEPLOYMENT_UUID/outputs)
+  if [ "$?" != "0" ]
+  then
+    echo "The request failed."
+    echo ""
+    exit 1
+  fi
+  echo "DONE."
+  echo $out
 }
 
 # Returns a deployment's status
@@ -227,6 +287,14 @@ case $1 in
 
   delete)
     delete-container $2
+    ;;
+
+  container-info)
+    container-info $2
+    ;;
+
+  extract-deploy-id)
+    extract-deploy-id $2
     ;;
 
   outputs)
