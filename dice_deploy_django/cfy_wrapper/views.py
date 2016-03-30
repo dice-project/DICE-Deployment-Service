@@ -67,7 +67,7 @@ class BlueprintOutputsView(APIView):
         """
         blueprint = Blueprint.get(blueprint_id)
         outputs = tasks.get_outputs(blueprint)
-        return Response({'msg': json.dumps(outputs)})
+        return Response({'outputs': outputs})
 
 
 class ContainersView(APIView):

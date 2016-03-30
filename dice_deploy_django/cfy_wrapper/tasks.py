@@ -206,5 +206,5 @@ def delete_blueprint(blueprint_id, delete_local=True):
 
 def get_outputs(blueprint):
     client = _get_cfy_client()
-
-    return client.deployments.outputs.get(blueprint.cfy_id)  # outputs in json format
+    outputs_raw = client.deployments.outputs.get(blueprint.cfy_id)
+    return outputs_raw.get('outputs', {})
