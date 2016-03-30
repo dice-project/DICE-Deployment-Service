@@ -198,7 +198,7 @@ def delete_blueprint(blueprint_id, delete_local=True):
                 blueprint.yaml.delete()
             blueprint.delete(keep_parents=True)
         else:
-            blueprint.state = Blueprint.State.undeployed
+            blueprint.state = Blueprint.State.undeployed.value
             blueprint.save()
     except Exception, e:
         _handle_exception('delete_blueprint', blueprint, e)
