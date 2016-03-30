@@ -7,6 +7,9 @@
         <title>DICE - Deployment Service</title>
         <link rel="shortcut icon" type="image/png" href="{% static 'img/dice-fav.jpg' %}"/>
 
+        <!-- FONTS -->
+        <link href='https://fonts.googleapis.com/css?family=Exo' rel='stylesheet' type='text/css'>
+
         <!-- CSS -->
         <link rel="stylesheet" type="text/css" href="{% static 'bower_components/bootstrap/dist/css/bootstrap.min.css' %}">
         <link rel="stylesheet" type="text/css" href="{% static 'bower_components/angular-ui-notification/dist/angular-ui-notification.min.css' %}">
@@ -76,27 +79,34 @@
 
     </head>
     <body ng-app="cfyWrapper" ng-controller="MainCtrl">
+
+        <div id="header">
+            <div class="container">
+                <img src="{% static 'img/Dice_logo_white.png' %}">
+                <span class="title-font">Deployment Containers</span>
+            </div>
+        </div>
+
         <div ng-view="" class="dice-content"></div><!-- routes.js takes care for proper routing -->
 
         <div id="footer">
             <div id="credits">
                 <div class="container">
                     <div class="partners row">
-                        <div class="col-sm-4 text-center"><a href="http://www.dice-h2020.eu/" target="_blank">
-                            <img src="{% static 'img/dice-logo.png' %}" height="120px"></a>
+                        <div class="col-sm-2 col-md-1 text-left">
+                            <img src="{% static 'img/EU-logo.png' %}">
                         </div>
-                        <div class="col-sm-4 text-center"><a href="http://www.xlab.si/" target="_blank">
-                            <img src="{% static 'img/xlab-logo.png' %}" style="padding-top: 40px;"></a>
+                        <div class="col-sm-4 comment">
+                            The DICE project is partially funded by the European Union’s Horizon 2020 research and innovation programme under grant agreement No. 644869
                         </div>
-                        <div class="col-sm-4 text-center"><a href="http://www.dice-h2020.eu/" target="_blank">
-                            <img src="{% static 'img/eu-logo.png' %}" height="120px"></a>
+                        <div class="col-sm-12 col-md-3 text-center"><a href="http://www.dice-h2020.eu/" target="_blank">
+                            <img src="{% static 'img/Dice_logo_blue.png' %}"></a>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="text-center comment">The &nbsp;<a
-                                href="http://www.dice-h2020.eu/" target="_blank">The DICE project</a>&nbsp;
-                            is partially funded by the European Union’s Horizon 2020 research and innovation programme under grant agreement No. 644869
+                        <div class="col-sm-12 col-md-4 text-right"><a href="http://www.xlab.si/" target="_blank">
+                            <img src="{% static 'img/xlab_logo.png' %}" style="margin-top: 9px;"></a>
                         </div>
+
+
                     </div>
                 </div>
             </div>

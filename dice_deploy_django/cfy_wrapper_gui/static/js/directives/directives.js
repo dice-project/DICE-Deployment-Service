@@ -23,13 +23,18 @@ app.directive('blueprintStatus', function() {
                 };
              */
 		},
-		template: "<div class='btn-group dice-state-group' ></div>", // We need a div to attach to
+		template: "<div class='dice-blueprint-statusbar'></div>", // We need a div to attach to
 		link: function(scope, elem) {
 
-            function createSingleStateElement(state_pretty_name, cssClass){
-                var el = angular.element('<button class="btn btn-default dice-state-single">' +
-                    state_pretty_name + '</button>');
-                el.addClass(cssClass);
+            function createSingleStateElement(idx, state_pretty_name, cssClasses){
+                var el = angular.element('<div class="dice-blueprint-state"><span class="dice-blueprint-state-num">' +
+                    (idx + 1) + '</span>' + state_pretty_name + '</div>');
+                cssClasses.forEach(function(cssClass){el.addClass(cssClass)});
+                return el;
+            }
+            function createSeparatorElement(cssClasses){
+                var el = angular.element('<div class="dice-blueprint-separator"></div>');
+                cssClasses.forEach(function(cssClass){el.addClass(cssClass)});
                 return el;
             }
 
@@ -49,15 +54,30 @@ app.directive('blueprintStatus', function() {
 
             var stateGroupDiv = $(elem).children()[0];
             for(var i=0; i<scope.allStates.statePrettyNames.length; i++){
-                var cssClass = 'dice-state-not-yet';
+                var isFinalState = i == scope.allStates.statePrettyNames.length - 1;
+                var cssClasses = [];
+                var separatorCssClasses = [];
                 if(i < currIdx){
-                    cssClass = 'dice-state-already';
+                    cssClasses.push('dice-blueprint-state-already');
+                    separatorCssClasses.push('dice-blueprint-separator-already');
                 }else if(i == currIdx){
-                    cssClass = 'dice-state-currently';
+                    cssClasses.push('dice-blueprint-state-currently');
+                    separatorCssClasses.push('dice-blueprint-separator-currently');
+                }else{
+                    cssClasses.push('dice-blueprint-state-not-yet');
+                    separatorCssClasses.push('dice-blueprint-separator-not-yet');
                 }
 
-                createSingleStateElement(scope.allStates.statePrettyNames[i].prettyName, cssClass).
+                if(isFinalState){
+                    cssClasses.push('dice-blueprint-state-final');
+                }
+
+                createSingleStateElement(i, scope.allStates.statePrettyNames[i].prettyName, cssClasses).
                 appendTo(stateGroupDiv);
+
+                if(!isFinalState) {
+                    createSeparatorElement(separatorCssClasses).appendTo(stateGroupDiv);
+                }
             }
 
 		}

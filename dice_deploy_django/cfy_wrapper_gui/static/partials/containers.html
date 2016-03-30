@@ -1,38 +1,40 @@
 <div class="container">
     <div class="row">
-        <h1 class="dice-title">DICE Deployment Containers</h1>
 
         <div class="dice-general-toolbar">
-            <button class="pull-right btn dice-btn-success" ng-click="addContainer()">New Container</button>
+            <button class="pull-right dice-btn dice-btn-add" ng-click="addContainer()" title="Create empty container">
+                <span class="glyphicon glyphicon-plus"></span>
+                New Container
+            </button>
         </div>
 
 
         <div ng-repeat="cont in containers">
-            <div class="panel panel-default dice-container">
-                <div class="panel-heading">
-                    <div class="dice-container-title">
-                        <span class="glyphicon glyphicon-inbox"></span>
-                        <span class="dice-container-description">{{ cont.description }}</span>
-                        <code class="pull-right dice-container-id">{{ cont.id }}</code>
-                    </div>
+            <div class="dice-container">
 
-                    <div class="dice-container-controls">
-                        <button ng-click="removeContainer(cont)" class="btn dice-btn-danger">
-                            <span class="glyphicon glyphicon-remove"></span> Remove
-                        </button>
-                        <button ng-click="undeployBlueprint(cont)" ng-show="cont.blueprint" class="btn dice-btn-danger">
-                            <span class="glyphicon glyphicon-remove-circle"></span> Undeploy Blueprint
-                        </button>
-                        <button ng-click="redeployBlueprint(cont)" ng-show="cont.blueprint" class="btn dice-btn-default">
-                            <span class="glyphicon glyphicon-repeat"></span> Redeploy
-                        </button>
+                <div class="dice-container-title">
+                    <span class="dice-container-graphic"></span>
+                    <span class="title-font dice-container-description">{{ cont.description }}</span>
+                    <div class="pull-right dice-container-id-div">
+                        <span class="dice-container-id">{{ cont.id }}</span>
+                        <span class="dice-container-remove" ng-click="removeContainer(cont)" title="Remove container"></span>
+                    </div>
+                </div>
+
+                <div class="dice-container-controls">
+                        <div ng-click="undeployBlueprint(cont)" ng-show="cont.blueprint" class="dice-btn dice-btn-default dice-btn-icon dice-btn-undeploy">
+                            Undeploy Blueprint
+                        </div>
+                        <div ng-click="redeployBlueprint(cont)" ng-show="cont.blueprint" class="dice-btn dice-btn-default dice-btn-icon dice-btn-redeploy">
+                            Redeploy
+                        </div>
 
                         <!-- file upload -->
                         <div class="file-upload">
                             <label ng-click="initUploader(cont)" title="Upload input file">
                                 <input type="file" nv-file-select="" uploader="uploader" style="display: none;" />
-                                <div class="btn dice-btn-default">
-                                    <span class="glyphicon glyphicon-upload"></span> Upload Blueprint
+                                <div class="dice-btn dice-btn-default dice-btn-icon dice-btn-upload">
+                                    Upload Blueprint
                                 </div>
                             </label>
                             <div ng-show="(uploader.containerId == cont.id) && uploader.upload_errors" class="file-upload-metadata upload-error">
@@ -57,21 +59,20 @@
                         <!-- / file upload-->
 
                     </div>
-                </div>
 
-                <div class="panel-body">
+                <div class="dice-container-body">
                     <div ng-show="cont.blueprint">
-                        <code class="pull-right dice-blueprint-id">{{ cont.blueprint.cfy_id }}</code>
-
 
                         <div ng-show="isBlueprintBeingDeployed(cont.blueprint)">
+                            <div class="loadbar loadbar-deploy"></div>
                             <blueprint-status curr-state="cont.blueprint.state_name" all-states="blueprintDeployStates" ng-if="cont.blueprint"></blueprint-status>
-                            <span class="dice-blueprint-time">waiting step since: {{ getBlueprintDatetimeStr(cont.blueprint) }}</span>
+                            <div class="dice-blueprint-time">Waiting step since: {{ getBlueprintDatetimeStr(cont.blueprint) }}</div>
                         </div>
 
                         <div ng-show="isBlueprintBeingUndeployed(cont.blueprint)">
+                            <div class="loadbar loadbar-undeploy"></div>
                             <blueprint-status curr-state="cont.blueprint.state_name" all-states="blueprintUndeployStates" ng-if="cont.blueprint"></blueprint-status>
-                            <span class="dice-blueprint-time">waiting step since: {{ getBlueprintDatetimeStr(cont.blueprint) }}</span>
+                            <div class="dice-blueprint-time">Waiting step since: {{ getBlueprintDatetimeStr(cont.blueprint) }}</div>
                         </div>
 
                         <div ng-show="isBlueprintUndeployed(cont.blueprint)">
@@ -83,30 +84,32 @@
                         <div ng-show="isBlueprintError(cont.blueprint)">
                             <span class="glyphicon glyphicon-exclamation-sign dice-error-sign"></span>
                             <span class="dice-error">Blueprint has error state.</span>
-                            <div class="dice-success-timestamp">since {{ getBlueprintDatetimeStr(cont.blueprint) }}</div>
+                            <div class="dice-blueprint-time dice-time-under-msg">Since {{ getBlueprintDatetimeStr(cont.blueprint) }}</div>
                         </div>
 
 
                         <div ng-show="isBlueprintDeployed(cont.blueprint)" class="dice-blueprint-deployed-msg">
                             <span class="glyphicon glyphicon-ok dice-ok-sign"></span>
                             <span class="dice-success">Blueprint successfully deployed</span>
-                            <div class="dice-success-timestamp">since {{ getBlueprintDatetimeStr(cont.blueprint) }}</div>
+                            <div class="dice-blueprint-time dice-time-under-msg">Since {{ getBlueprintDatetimeStr(cont.blueprint) }}</div>
 
                             <!-- uncomment to show full outputs json
                             <pre ng-bind-html="cont.blueprint.outputs | json:4 | linky:'_blank'" class="dice-blueprint-outputs"></pre>
                             -->
 
                             <table class="table table-bordered dice-outputs-table">
-                                <thead>
+                                <thead class="dice-outputs-thead">
                                     <tr>
-                                        <th>OUTPUT NAME</th>
-                                        <th>VALUE</th>
+                                        <th>Output Name</th>
+                                        <th>Value</th>
+                                        <th>Description</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody class="dice-outputs-tbody">
                                     <tr ng-repeat="(name, value) in cont.blueprint.outputs.outputs">
                                         <td>{{ name }}</td>
                                         <td ng-bind-html="value | linky:'_blank'"></td>
+                                        <td>Parameter description</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -118,7 +121,11 @@
                     </div>
                 </div>
 
-
+                <div class="dice-container-footer">
+                    Blueprint ID:
+                    <span ng-show="cont.blueprint" class="dice-blueprint-id">{{ cont.blueprint.cfy_id }}</span>
+                    <span ng-hide="cont.blueprint" class="dice-blueprint-id">/</span>
+                </div>
 
             </div>
         </div>

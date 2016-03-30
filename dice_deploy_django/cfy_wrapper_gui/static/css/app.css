@@ -1,6 +1,25 @@
-/* http://paletton.com/#uid=63q0h0kcVOX7CTdakR0foNahLLO */
+body{
+    font-family: 'Roboto Condensed', sans-serif;
+    background-image: url("../img/body_bg.png");
+}
+.title-font{
+    font-family: 'Exo', sans-serif;
+}
 a{
     color: #227DA0;
+}
+#header{
+    background-color: #004894;
+    color: white;
+}
+#header img{
+    padding: 10px 0;
+}
+#header .title-font{
+    font-size: 23px;
+    position: relative;
+    top: 8px;
+    left: 15px;
 }
 .dice-title{
     padding-top: 30px;
@@ -8,13 +27,24 @@ a{
 .dice-container-title{
     font-size: 22px;
     padding-bottom: 15px;
+    padding-top: 15px;
+    background-color: #25496f;
+    color: #eceff1;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
 }
 .dice-container-controls{
     text-align: right;
+    background-color: #eceff1;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    padding-right: 40px;
+    border-left: 1px solid #c3d7e2;
+    border-right: 1px solid #c3d7e2;
 }
 .dice-general-toolbar{
     padding-top: 20px;
-    padding-bottom: 20px;
+    padding-bottom: 50px;
 }
 .file-upload{
     display: inline-block;
@@ -37,29 +67,19 @@ a{
 .dice-container .panel-heading{
     background-color: #84DEC5;
 }
-.dice-container-footer{
-    text-align: right;
-}
-.dice-container-footer span{
-    font-weight: bold;
-    color: #aaa;
-}
 #footer{
-    padding-top: 30px;
+    border-top: 1px solid #c3d7e2;
+    margin-top: 180px;
+    font-size: 13px;
 }
 div#footer #credits{
     background-color: #ECEFF1;
-    padding-top: 50px;
-    padding-bottom: 50px;
+    padding-top: 40px;
+    padding-bottom: 40px;
 }
-div#footer #credits .comment{
-    color: darkgray;
-    padding-top: 20px;
-}
-div#footer #credits .comment a{
-    color: darkgray;
-    font-weight: 700;
-    text-decoration: underline;
+div#footer .comment{
+    padding-left: 30px;
+    margin-bottom: 20px;
 }
 div#footer #partners{
     padding-top: 80px;
@@ -71,20 +91,32 @@ div#footer #partners .subtitle{
 .dice-content{
     min-height: 800px;
 }
+.dice-container-graphic{
+    background-color: #eceff1;
+    margin-left: 2px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 3px;
+}
 .dice-container-description{
     padding-left: 15px;
-    font-size: 30px;
-    color: #228A6D
+    font-size: 20px;
+}
+.dice-container-id-div{
+    min-width: 300px;
 }
 .dice-container-id{
     font-size: 12px;
-    color: #B2EADB;
     background: transparent;
+    color: #a1afbe;
 }
-.dice-blueprint-id{
-    font-size: 12px;
-    color: #B2EADB;
-    background: transparent;
+.dice-container-remove{
+    background-image: url("../img/icn_remove.png");
+    background-repeat: no-repeat;
+    padding-left: 12px;
+    background-position: 0px 9px;
+    margin-left: 10px;
+    cursor: pointer;
 }
 .blueprint-status{
     border: 1px solid black;
@@ -108,12 +140,12 @@ div#footer #partners .subtitle{
     border-bottom-color: #FFBB72;
     margin-left: 0px!important;
 }
-.dice-blueprint-deployed-msg{
-    padding-top: 15px;
-}
 .dice-ok-sign{
     padding-right: 10px;
-    color: #84DEC5;
+    color: #5f91c5;
+    font-size: 30px;
+    position: relative;
+    top: 13px;
 }
 .dice-warning-sign{
     padding-right: 10px;
@@ -121,27 +153,43 @@ div#footer #partners .subtitle{
 }
 .dice-error-sign{
     padding-right: 10px;
-    color: red;
+    color: #eb0944;
+    font-size: 30px;
+    position: relative;
+    top: 13px;
 }
 .dice-blueprint-time{
-    font-style: italic;
     font-size: small;
-    color: gray;
-    padding-left: 15px;
+    color: #25496f;
+}
+.dice-time-under-msg{
+    padding-left: 44px;
 }
 .dice-blueprint-outputs{
     margin-top: 20px;
     background-color: lightblue;
 }
 .dice-outputs-table{
-    margin-top: 15px;
+    margin-top: 40px;
+    width: 70%;
+    border-color: #c3d7e2;
 }
 .dice-outputs-table thead{
-    background-color: #86C4DB;
+    background-color: #5f91c5;
     color: white;
 }
+.dice-outputs-table tbody{
+    background-color: white;
+    color: #617a94;
+    border-color: #c3d7e2;
+}
+.dice-outputs-table tbody.dice-outputs-tbody td, .dice-outputs-table thead.dice-outputs-thead th{
+    padding-left: 20px;
+    font-weight: normal;
+    border-color: #c3d7e2;
+}
 .dice-success{
-    color: #84DEC5;
+    color: #5f91c5;
     font-weight: bolder;
 }
 .dice-warning{
@@ -149,17 +197,12 @@ div#footer #partners .subtitle{
     font-weight: bolder;
 }
 .dice-error{
-    color: red;
+    color: #eb0944;
     font-weight: bolder;
 }
 .dice-btn-danger{
     background-color: #FFBB72;
     border-color: #FFBB72;
-    color: white;
-}
-.dice-btn-default{
-    background-color: #B2EADB;
-    border-color: #B2EADB;
     color: white;
 }
 .dice-btn-success{
@@ -172,6 +215,127 @@ div#footer #partners .subtitle{
     font-style: italic;
     padding-left: 28px;
 }
-
-
-
+.dice-btn{
+    border-radius: 2px;
+    padding: 9px 20px;
+    color: white;
+    background-color: #004894;
+    border-color: #004894;
+    font-size: 15px;
+    display: inline-block;
+    font-weight: normal;
+    font-family: 'Roboto Condensed', sans-serif;
+    cursor: pointer;
+}
+.dice-btn-icon{
+    background-repeat: no-repeat;
+    background-position: 10px center;
+    padding-left: 30px;
+}
+.dice-btn-add span.glyphicon{
+    font-size: 12px;
+    position: relative;
+    top: -1px;
+}
+.dice-btn-default{
+    background-color: #a1afbe;
+    border-color: #a1afbe;
+    color: white;
+}
+.dice-btn-undeploy{
+    background-image: url("../img/icn_remove.png");
+}
+.dice-btn-redeploy{
+    background-image: url("../img/icn_redeploy.png");
+}
+.dice-btn-upload{
+    background-image: url("../img/icn_upload.png");
+}
+.dice-container-body{
+    background-color: white;
+    padding: 20px;
+    border: 1px solid #c3d7e2;
+}
+.dice-container-footer{
+    background-color: #eceff1;
+    border: 1px solid #c3d7e2;
+    border-top: none;
+    padding: 3px 20px;
+    color: #a1afbe;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+    font-size: 11px;
+}
+.dice-blueprint-statusbar{
+    padding-top: 8px;
+    padding-bottom: 20px;
+    margin-left: 12px;
+}
+.dice-blueprint-state{
+    background-color: gray;
+    display: inline;
+    padding: 12px 30px;
+    padding-left: 20px;
+    color: white;
+    background-repeat: no-repeat;
+    margin-left: -12px;
+    border: 1px solid #c3d7e2;
+    border-right: none;
+}
+.dice-blueprint-state-already{
+    background-color: #5f91c5;
+}
+.dice-blueprint-state-currently{
+    background-color: #c3d7e2;
+}
+.dice-blueprint-state-not-yet{
+    background-color: #eceff1;
+    color: #c3d7e2;
+}
+.dice-blueprint-state-final{
+    border-right: 1px solid #c3d7e2;
+}
+.dice-blueprint-separator{
+    display: inline;
+    padding-left: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    margin-left: -4px;
+    z-index: 100;
+    position: relative;
+    background-repeat: no-repeat;
+}
+.dice-blueprint-separator-already{
+    background-image: url("../img/step_arrow_done_with_border.png");
+}
+.dice-blueprint-separator-currently{
+    background-image: url("../img/step_arrow_in-progress.png");
+}
+.dice-blueprint-separator-not-yet{
+    background-image: url("../img/step_arrow_waiting.png");
+}
+.dice-blueprint-state-num{
+    padding-right: 40px;
+    font-weight: bold;
+    font-size: 20px;
+    position: relative;
+    top: 2px;
+}
+.loadbar{
+    padding-top: 5px;
+    background-color: #5f91c5;
+    background-image: linear-gradient(45deg,rgba(255,255,255,.5) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.5) 50%,rgba(255,255,255,.5) 75%,transparent 75%,transparent);
+    animation: progress-bar-stripes 3s linear infinite;
+    animation-direction: reverse;
+    background-size: 40px 40px;
+    font-weight: bold;
+    border-top-color: #FFBB72;
+    border-bottom-color: #FFBB72;
+    margin-left: 0px!important;
+}
+.loadbar-deploy{
+    width: 744px;
+}
+.loadbar-undeploy{
+    width: 575px;
+}
