@@ -4,7 +4,7 @@
 DICE_DEPLOY_URL_FILE=".dice-deploy-url"
 
 # constants
-CST_BLUEPRINT_ID_FIELD=cfy_id
+CST_BLUEPRINT_ID_FIELD="id"
 
 if [ -e "$DICE_DEPLOY_URL_FILE" ]
 then
@@ -33,6 +33,10 @@ function usage ()
         parameters: container-uuid package-file-name
         returns: deployment-uuid
         example: $1 create 14132d9b-d86d-48e9-a24c-deb949d9f3d7 pi-cluster.tar.gz
+
+    * wait-deploy: after calling deploy, this will block until deploy finishes
+        parameters: container-uuid
+        example: $1 wait-deploy 14132d9b-d86d-48e9-a24c-deb949d9f3d7
 
     * teardown: uninstalls and deletes an existing deployment
         parameters: deployment-uuid
@@ -175,6 +179,24 @@ function deploy ()
   echo "Deployment UUID: $uuid"
 }
 
+# Blocks until the deployment in the given container has the status deployed.
+function wait-deploy ()
+{
+  parameter-check 1 $#
+  service-url-check
+
+  CONTAINER_UUID="$1"
+  DEPLOYMENT_UUID=$(extract-deploy-id $CONTAINER_UUID)
+
+  status=$(deployment-status $DEPLOYMENT_UUID | tail -n 1)
+  while [[ ( "$status" != "deployed" ) && ( "$status" != "request_failed" ) ]]
+  do
+    echo "Current status: $status"
+    sleep 5
+    status=$(deployment-status $DEPLOYMENT_UUID | tail -n 1)
+  done
+}
+
 # Tears down the deployment of a blueprint in the container. The container
 # remains the same.
 function teardown ()
@@ -206,15 +228,14 @@ function outputs ()
 
   DEPLOYMENT_UUID=$(extract-deploy-id $1)
 
-  echo -n "Obtaining deployment parameters ... "
+  #echo -n "Obtaining deployment parameters ... "
   out=$(curl -s -f ${DICE_DEPLOY}/blueprints/$DEPLOYMENT_UUID/outputs)
   if [ "$?" != "0" ]
   then
-    echo "The request failed."
-    echo ""
+    echo "{ \"msg\": \"The request failed.\" }"
     exit 1
   fi
-  echo "DONE."
+  #echo "DONE."
   echo $out
 }
 
@@ -279,6 +300,10 @@ case $1 in
 
   deploy)
     deploy $2 "$3"
+    ;;
+
+  wait-deploy)
+    wait-deploy $2
     ;;
 
   teardown)
