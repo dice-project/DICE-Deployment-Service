@@ -78,7 +78,7 @@
                         <div ng-show="isBlueprintUndeployed(cont.blueprint)">
                             <span class="glyphicon glyphicon-warning-sign dice-warning-sign"></span>
                             <span class="dice-warning">Blueprint is here, but is not deployed.</span>
-                            <div class="dice-success-timestamp">since {{ getBlueprintDatetimeStr(cont.blueprint) }}</div>
+                            <div class="dice-blueprint-time dice-time-under-msg">Since {{ getBlueprintDatetimeStr(cont.blueprint) }}</div>
                         </div>
 
                         <div ng-show="isBlueprintError(cont.blueprint)">

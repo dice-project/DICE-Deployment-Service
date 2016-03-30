@@ -149,7 +149,10 @@ div#footer #partners .subtitle{
 }
 .dice-warning-sign{
     padding-right: 10px;
-    color: #FFBB72;
+    color: lightgray;
+    font-size: 30px;
+    position: relative;
+    top: 13px;
 }
 .dice-error-sign{
     padding-right: 10px;
@@ -193,7 +196,7 @@ div#footer #partners .subtitle{
     font-weight: bolder;
 }
 .dice-warning{
-    color: #FFBB72;
+    color: black;
     font-weight: bolder;
 }
 .dice-error{
