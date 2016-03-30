@@ -9,7 +9,7 @@ class BlueprintSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Blueprint
-        fields = ("state_name", "cfy_id", "modified_date", "outputs")
+        fields = ("state_name", "id", "modified_date", "outputs")
 
 
 class ContainerSerializer(serializers.ModelSerializer):

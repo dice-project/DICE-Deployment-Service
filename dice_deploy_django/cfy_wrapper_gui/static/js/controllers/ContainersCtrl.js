@@ -68,7 +68,7 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
 	};
 
     $scope.undeployBlueprint = function(cont){
-        PopupServices.popupConfirm('Are you sure that you want to UNDEPLOY BLUEPRINT with id <br><code>' + cont.blueprint.cfy_id + '</code>?').then(function(){
+        PopupServices.popupConfirm('Are you sure that you want to UNDEPLOY BLUEPRINT with id <br><code>' + cont.blueprint.id + '</code>?').then(function(){
 			RestServices.blueprint.delete(cont.blueprint, function(){
                 $scope.syncContainers();
 			}, $scope.showServerError);
@@ -76,7 +76,7 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     };
 
     $scope.redeployBlueprint = function(cont){
-        PopupServices.popupConfirm('Are you sure that you want to REDEPLOY BLUEPRINT with id <br><code>' + cont.blueprint.cfy_id + '</code>?').then(function(){
+        PopupServices.popupConfirm('Are you sure that you want to REDEPLOY BLUEPRINT with id <br><code>' + cont.blueprint.id + '</code>?').then(function(){
 			RestServices.containerBlueprint.put(cont, function(){
                 $scope.syncContainers();
 			}, $scope.showServerError);

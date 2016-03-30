@@ -6,8 +6,8 @@ app.factory('RestServices', function ($resource) {
             put: {method: 'PUT'}
         }),
         blueprints: $resource(BASE_URL + '/blueprints', {}, {}),
-        blueprint: $resource(BASE_URL + '/blueprints/:cfy_id', {'id': '@cfy_id'}, {}),
-        output: $resource(BASE_URL + '/blueprints/:cfy_id/outputs', {'id': '@cfy_id'}, {})
+        blueprint: $resource(BASE_URL + '/blueprints/:id', {'id': '@id'}, {}),
+        output: $resource(BASE_URL + '/blueprints/:id/outputs', {'id': '@id'}, {})
     };
 });
 

@@ -214,7 +214,7 @@ class AccountTests(TransactionTestCase):
         # check DB state
         try:
             cont = Container.get(response.data['id'])
-            blueprint = Blueprint.get(response.data['blueprint']['cfy_id'])
+            blueprint = Blueprint.get(response.data['blueprint']['id'])
         except NotFound:
             raise AssertionError('Container or Blueprint was not found in DB, but it should be there.')
 
@@ -245,7 +245,7 @@ class AccountTests(TransactionTestCase):
         # check DB state
         try:
             cont = Container.get(response.data['id'])
-            blueprint = Blueprint.get(response.data['blueprint']['cfy_id'])
+            blueprint = Blueprint.get(response.data['blueprint']['id'])
         except NotFound:
             raise AssertionError('Container or Blueprint was not found in DB, but it should be there.')
 
@@ -276,7 +276,7 @@ class AccountTests(TransactionTestCase):
         # check DB state
         try:
             cont = Container.get(response.data['id'])
-            blueprint = Blueprint.get(response.data['blueprint']['cfy_id'])
+            blueprint = Blueprint.get(response.data['blueprint']['id'])
         except NotFound:
             raise AssertionError('Container or Blueprint was not found in DB, but it should be there.')
 
@@ -307,7 +307,7 @@ class AccountTests(TransactionTestCase):
         # check DB state
         try:
             cont = Container.get(response.data['id'])
-            blueprint = Blueprint.get(response.data['blueprint']['cfy_id'])
+            blueprint = Blueprint.get(response.data['blueprint']['id'])
         except NotFound:
             raise AssertionError('Container or Blueprint was not found in DB, but it should be there.')
 
