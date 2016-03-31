@@ -1,6 +1,8 @@
 body{
-    font-family: 'Roboto Condensed', sans-serif;
-    background-image: url("../img/body_bg.png");
+    font-family: 'Roboto', sans-serif;
+    background: #fff url("../img/body_bg.png") top center no-repeat;
+    background-size: cover;
+
 }
 .title-font{
     font-family: 'Exo', sans-serif;
@@ -28,6 +30,7 @@ a{
     font-size: 22px;
     padding-bottom: 15px;
     padding-top: 15px;
+    padding-right: 18px;
     background-color: #25496f;
     color: #eceff1;
     border-top-left-radius: 2px;
@@ -37,8 +40,8 @@ a{
     text-align: right;
     background-color: #eceff1;
     padding-top: 15px;
-    padding-bottom: 15px;
-    padding-right: 40px;
+    padding-bottom: 10px;
+    padding-right: 15px;
     border-left: 1px solid #c3d7e2;
     border-right: 1px solid #c3d7e2;
 }
@@ -62,7 +65,7 @@ a{
     font-weight: 700;
 }
 .dice-container {
-    margin-top: 50px;
+    margin-top: 45px;
 }
 .dice-container .panel-heading{
     background-color: #84DEC5;
@@ -78,8 +81,10 @@ div#footer #credits{
     padding-bottom: 40px;
 }
 div#footer .comment{
-    padding-left: 30px;
+    padding-left: 10px;
     margin-bottom: 20px;
+    font-family: "Arial Narrow";
+    max-width: 210px;
 }
 div#footer #partners{
     padding-top: 80px;
@@ -319,15 +324,15 @@ div#footer #partners .subtitle{
 }
 .dice-blueprint-state-num{
     padding-right: 40px;
-    font-weight: bold;
     font-size: 20px;
     position: relative;
     top: 2px;
 }
 .loadbar{
-    padding-top: 5px;
-    background-color: #5f91c5;
-    background-image: linear-gradient(45deg,rgba(255,255,255,.5) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.5) 50%,rgba(255,255,255,.5) 75%,transparent 75%,transparent);
+    padding-top: 10px;
+    background-color: #25496f;
+    /*background-image: linear-gradient(45deg,rgba(255,255,255,.5) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.5) 50%,rgba(255,255,255,.5) 75%,transparent 75%,transparent);*/
+    background-image: linear-gradient(45deg,rgba(95, 145, 197, 0.5) 25%,transparent 25%,transparent 50%,rgba(95, 145, 197, 0.5) 50%,rgba(95, 145, 197, 0.5) 75%,transparent 75%,transparent);
     animation: progress-bar-stripes 3s linear infinite;
     animation-direction: reverse;
     background-size: 40px 40px;
@@ -337,8 +342,12 @@ div#footer #partners .subtitle{
     margin-left: 0px!important;
 }
 .loadbar-deploy{
-    width: 744px;
+    width: 732px;
 }
 .loadbar-undeploy{
-    width: 575px;
+    width: 569px;
+}
+.dice-eu-logo{
+    display: -webkit-inline-box;
+    display: -moz-inline-box;
 }

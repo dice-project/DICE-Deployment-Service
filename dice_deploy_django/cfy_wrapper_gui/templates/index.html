@@ -9,6 +9,7 @@
 
         <!-- FONTS -->
         <link href='https://fonts.googleapis.com/css?family=Exo' rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Roboto|Roboto+Condensed' rel='stylesheet' type='text/css'>
 
         <!-- CSS -->
         <link rel="stylesheet" type="text/css" href="{% static 'bower_components/bootstrap/dist/css/bootstrap.min.css' %}">
@@ -93,17 +94,16 @@
             <div id="credits">
                 <div class="container">
                     <div class="partners row">
-                        <div class="col-sm-2 col-md-1 text-left">
+                        <div class="col-sm-5 col-md-4 text-left dice-eu-logo">
                             <img src="{% static 'img/eu-logo.png' %}">
+                            <div class="comment">The DICE project is partially funded by the European Union’s Horizon 2020 research and innovation programme under grant agreement No. 644869</div>
                         </div>
-                        <div class="col-sm-4 comment">
-                            The DICE project is partially funded by the European Union’s Horizon 2020 research and innovation programme under grant agreement No. 644869
+
+                        <div class="col-sm-3 col-md-4 text-center"><a href="http://www.dice-h2020.eu/" target="_blank">
+                            <img class="img-responsive" src="{% static 'img/dice_logo_blue.png' %}"></a>
                         </div>
-                        <div class="col-sm-12 col-md-3 text-center"><a href="http://www.dice-h2020.eu/" target="_blank">
-                            <img src="{% static 'img/dice_logo_blue.png' %}"></a>
-                        </div>
-                        <div class="col-sm-12 col-md-4 text-right"><a href="http://www.xlab.si/" target="_blank">
-                            <img src="{% static 'img/xlab_logo.png' %}" style="margin-top: 9px;"></a>
+                        <div class="col-sm-3 col-md-4 text-right"><a href="http://www.xlab.si/" target="_blank">
+                            <img class="img-responsive" src="{% static 'img/xlab_logo.png' %}" style="margin-top: 9px;"></a>
                         </div>
 
 
