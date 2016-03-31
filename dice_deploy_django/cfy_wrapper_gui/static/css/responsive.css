@@ -1,0 +1,15 @@
+@media screen and (max-width: 991px){
+    .dice-blueprint-state{
+        padding-left: 30px;
+        padding-right: 10px;
+    }
+    .dice-blueprint-state-num{
+        padding-right: 20px;
+    }
+    .loadbar-deploy{
+        width: 613px;
+    }
+    .loadbar-undeploy{
+        width: 479px;
+    }
+}
