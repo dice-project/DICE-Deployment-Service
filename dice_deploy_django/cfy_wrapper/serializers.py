@@ -1,6 +1,6 @@
 from rest_framework import serializers, fields
 
-from .models import Blueprint, Container
+from .models import Blueprint, Container, Input
 
 
 class BlueprintSerializer(serializers.ModelSerializer):
@@ -19,3 +19,10 @@ class ContainerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Container
         fields = ("id", "description", "blueprint", "modified_date")
+
+
+class InputSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Input
+        fields = ("key", "value", "description")

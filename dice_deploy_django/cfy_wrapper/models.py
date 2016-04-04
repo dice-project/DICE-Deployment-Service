@@ -161,3 +161,9 @@ class Container(Base):
             else:
                 raise IntegrityError('Cannot delete container with existing blueprint')
         super(Container, self).delete(using, keep_parents)
+
+
+class Input(models.Model):
+    key = models.CharField(max_length=256, primary_key=True)
+    value = models.CharField(max_length=256)
+    description = models.CharField(max_length=512, blank=True, null=True)

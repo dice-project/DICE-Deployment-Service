@@ -1,15 +1,13 @@
 import logging
-import json
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FileUploadParser
 from rest_framework import status
 from django.db import IntegrityError
 
 from . import tasks
-from .models import Blueprint, Container
-from .serializers import BlueprintSerializer, ContainerSerializer
+from .models import Blueprint, Container, Input
+from .serializers import BlueprintSerializer, ContainerSerializer, InputSerializer
 from .forms import BlueprintUploadForm
 
 logger = logging.getLogger("views")
@@ -26,7 +24,6 @@ class DebugView(APIView):
 
 
 class BlueprintsView(APIView):
-    parser_classes = (MultiPartParser, FileUploadParser)
 
     def get(self, request):
         """
@@ -184,6 +181,43 @@ class ContainerBlueprint(APIView):
         return Response(cont_ser, status=status.HTTP_202_ACCEPTED)
 
 
+class InputsView(APIView):
+
+    def get(self, request):
+        """
+        List all available inputs.
+        ---
+        serializer: cfy_wrapper.serializers.InputSerializer
+        """
+        s = InputSerializer(Input.objects.all(), many=True)
+        return Response(s.data)
+
+    def post(self, request):
+        """
+        Create new input.
+        ---
+        serializer: cfy_wrapper.serializers.InputSerializer
+        parameters:
+            - name: key
+              description: input unique name
+              required: true
+              type: string
+            - name: value
+              description: input value
+              required: true
+              type: string
+            - name: description
+              description: input description
+              required: false
+              type: string
+        post:
+            consumes:
+                - application/json
+        """
+        s = InputSerializer(data=request.data)
+        if s.is_valid(raise_exception=True):
+            s.save()
+        return Response(data=s.data, status=status.HTTP_201_CREATED)
 
 
 

@@ -50,6 +50,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PARSER_CLASSES": (
         "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.FormParser",
         "rest_framework.parsers.MultiPartParser",
         "rest_framework.parsers.FileUploadParser",
     ),
@@ -73,7 +74,7 @@ USE_L10N = True
 USE_TZ = True
 
 # Celery config
-BROKER_URL = 'amqp://'
+BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_ENABLE_UTC = True

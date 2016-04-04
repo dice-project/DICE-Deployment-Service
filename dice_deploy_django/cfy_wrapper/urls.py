@@ -7,7 +7,8 @@ from .views import (
     ContainersView,
     ContainerIdView,
     ContainerBlueprint,
-    BlueprintOutputsView
+    BlueprintOutputsView,
+    InputsView
 )
 
 urlpatterns = [
@@ -28,4 +29,7 @@ urlpatterns = [
         ContainerIdView.as_view(), name="container_id"),
     url(r"^containers/(?P<container_id>[0-9a-f-]+)/blueprint?$",
         ContainerBlueprint.as_view(), name="container_blueprint"),
+    # inputs
+    url(r"^inputs/?$",
+        InputsView.as_view(), name="inputs"),
 ]
