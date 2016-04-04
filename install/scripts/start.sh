@@ -7,14 +7,17 @@ cd /home/ubuntu
 cd dice_deploy_django
 
 ctx logger info "Starting celery worker"
-celery multi start 1 -c 1 -A dice_deploy -Q dice_deploy -l INFO
-#nohup celery worker -A dice_deploy -Q dice_deploy -n worker-main & 
+celery multi start main-worker@localhost \
+    --app=dice_deploy \
+    --queues=dice_deploy \
+    --broker='amqp://guest:guest@localhost:5672//' \
+    --without-gossip --without-mingle --events \
+    --config=dice_deploy.settings \
+    -c 1 \
+    -l INFO
 
-#ctx logger info "Starting celery dashboard"
-##sudo service celery-dashboard start
-#nohup celery flower --port=5555 &
-
-sleep 4
+# make sure that celery has enough time to create queue and everything
+sleep 10
 
 ctx logger info "Starting server"
 port=$(ctx node properties port)

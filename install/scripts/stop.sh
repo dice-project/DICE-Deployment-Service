@@ -7,8 +7,7 @@ cd /home/ubuntu
 cd dice_deploy_django
 
 ctx logger info "Stopping celery workers"
-celery multi stop 1
-#killall -3 celery
+celery multi stop main-worker@localhost
 
 ctx logger info "Stopping Server"
 kill $(cat gunicorn.pid)
