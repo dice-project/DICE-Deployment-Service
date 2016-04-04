@@ -14,6 +14,7 @@ do
 	done
 done
 
-cfy executions start -d dice_deploy -w uninstall
-cfy deployments delete -d dice_deploy
-cfy blueprints delete -b dice_deploy
+DEPLOY_NAME=dice_deploy
+cfy executions start -d $DEPLOY_NAME -w uninstall
+cfy deployments delete -d $DEPLOY_NAME
+cfy blueprints delete -b $DEPLOY_NAME

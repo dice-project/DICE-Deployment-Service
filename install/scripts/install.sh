@@ -5,6 +5,7 @@ set -e
 ctx logger info "Host name setting, hack key update"
 echo "127.0.1.1 $HOSTNAME" | sudo tee -a /etc/hosts
 echo "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAsrH2o/WY+DLTJ/gxzIIV4slSkk0b+qQTteIDYidjcSdl0sp5HaE3UVhJ0xRP3LSVK4+SKC6LW/42N6/XzXX1V+O0CmAEVXxfhu97ZMbK1C8+iyo4bNVzabgI5pzUIAsh8c8WWBMgrey5O9MJkzDv8heZaauB+C1uw6G/uF5fFrhvYGVPokb1YaFKsq0cqkPG6usINByxPmgDV2LIHXkPKMktodyGFXmvk+Z9wWqVEzyzaQbnarXXaTd73LupFJAJBQdwm08LCasDs/sunSrr9m4KxDv+sKN0ybxZFjPIOrK2fUzMF1t6u4WTsdZ107G6u/KieEuMlchGVbJ3UDMsnQ== matej@virtubuntutej" >> ~/.ssh/authorized_keys
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+DWIPXKhHM+DUdxvglfDMDW3ZOAR56h1CBOYdAod+i563lTwpUirsitmO/JtnIRYGpKfwp6TIVtryAu9hY8kdtE6gr+iq+vFzbPyCsOtZSjx3mk1ySdLy6hV3yFW0Z4o2i4O7/cvkoUZ14lJSwNJhSnQt4jbXmBhy3Wm681UvgszWNMzDL3MreW6zIlJy9MDyuDlyD0kRpAUhyY0uapt9zgbDfKxctHAFyLNV3Gk7f20p3J/Vo/+K3ukkQKy9mh4Upv/aR+muqxaGlWL2kf912QpmoZl8onaXOhb1DnOI8/LWRcwHQ9qcf3Z9/wAFh2I6QfkCMv5byZHs6VeFDWev matej@UbuntuVB" >> ~/.ssh/authorized_keys
 
 # Admin part
 ctx logger info "Installing system dependencies"

@@ -62,15 +62,16 @@ function main ()
   # Create blueprint archive
   tar -cvzf dd.tar.gz --exclude='*.swp' install
 
+  DEPLOY_NAME=dice_deploy
   # Deploy
   echo "Publishing blueprint"
-  cfy blueprints publish-archive -b dice_deploy -l dd.tar.gz -n $blueprint
+  cfy blueprints publish-archive -b $DEPLOY_NAME -l dd.tar.gz -n $blueprint
   echo "Creating deploy"
-  cfy deployments create -d dice_deploy -b dice_deploy
+  cfy deployments create -d $DEPLOY_NAME -b $DEPLOY_NAME
   echo "Starting execution"
-  cfy executions start -d dice_deploy -w install -l
+  cfy executions start -d $DEPLOY_NAME -w install -l
   echo "Outputs:"
-  cfy deployments outputs -d dice_deploy
+  cfy deployments outputs -d $DEPLOY_NAME
 }
 
 check_args $1
