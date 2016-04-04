@@ -158,11 +158,6 @@ class ContainerBlueprint(APIView):
             # deploy the new blueprint
             blueprint_new.pipe_deploy_blueprint()
 
-            # undeploy the old blueprint
-            if blueprint_old:
-                # TODO: keep container-blueprint binding to old blueprint until cloudify undeploys it
-                blueprint_old.pipe_undeploy_blueprint()
-
             cont_ser = ContainerSerializer(cont).data
             return Response(cont_ser, status=status.HTTP_202_ACCEPTED)
 
