@@ -9,7 +9,8 @@ from .views import (
     ContainerIdNodesView,
     ContainerBlueprint,
     BlueprintOutputsView,
-    InputsView
+    InputsView,
+    InputIdView
 )
 
 urlpatterns = [
@@ -35,4 +36,6 @@ urlpatterns = [
     # inputs
     url(r"^inputs/?$",
         InputsView.as_view(), name="inputs"),
+    url(r"^inputs/(?P<input_key>[0-9a-z_\-]+)?$",
+        InputIdView.as_view(), name="input_id"),
 ]

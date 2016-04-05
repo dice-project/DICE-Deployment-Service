@@ -4,10 +4,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.db import IntegrityError
+from django.shortcuts import get_object_or_404
 
 from . import tasks, utils
 from .models import Blueprint, Container, Input
-from .serializers import BlueprintSerializer, ContainerSerializer, InputSerializer
+from .serializers import BlueprintSerializer, ContainerSerializer, InputSerializer, \
+    InputUpdateSerializer
 from .forms import BlueprintUploadForm
 
 logger = logging.getLogger("views")
@@ -247,6 +249,40 @@ class InputsView(APIView):
         if s.is_valid(raise_exception=True):
             s.save()
         return Response(data=s.data, status=status.HTTP_201_CREATED)
+
+
+class InputIdView(APIView):
+    def get(self, request, input_key):
+        """
+        Retrieve input
+        ---
+        serializer: cfy_wrapper.serializers.InputSerializer
+        """
+        input = get_object_or_404(Input, pk=input_key)
+        s = InputSerializer(input)
+        return Response(s.data)
+
+    def delete(self, request, input_key):
+        """
+        Delete input
+        ---
+        """
+        input = get_object_or_404(Input, pk=input_key)
+        input.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def patch(self, request, input_key):
+        """
+        Update input value and description. Key cannot be updated.
+        ---
+        serializer: cfy_wrapper.serializers.InputUpdateSerializer
+        """
+        input = get_object_or_404(Input, pk=input_key)
+        s = InputUpdateSerializer(data=request.data, instance=input)
+        if s.is_valid(raise_exception=True):
+            s.save()
+        return Response(s.data)
+
 
 
 

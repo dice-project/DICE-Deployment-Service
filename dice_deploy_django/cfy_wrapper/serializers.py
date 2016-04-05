@@ -1,3 +1,4 @@
+import re
 from rest_framework import serializers, fields
 
 from .models import Blueprint, Container, Input
@@ -22,7 +23,19 @@ class ContainerSerializer(serializers.ModelSerializer):
 
 
 class InputSerializer(serializers.ModelSerializer):
+    def validate_key(self, key):
+        if not re.compile('[0-9a-z_\-]+').match(key):
+            raise serializers.ValidationError('Key must be lowercase alphanumeric.')
+        return key
 
     class Meta:
         model = Input
         fields = ("key", "value", "description")
+
+
+class InputUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Input
+        fields = ("key", "value", "description")
+        read_only_fields = ("key",)
