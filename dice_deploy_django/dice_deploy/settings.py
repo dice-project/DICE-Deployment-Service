@@ -91,6 +91,11 @@ CELERYD_POOL_RESTARTS = True
 CFY_MANAGER_URL = "172.16.95.126"
 POOL_SLEEP_INTERVAL = 3  # In seconds
 
+# what name to pick for .yaml file (when generating archive from uploaded yaml)
+YAML_NAME = 'blueprint.yaml'
+# what name to pick for archive top folder (when generating archive from uploaded yaml)
+ARCHIVE_FOLDER_NAME = 'dice-generated-archive'
+
 # Cloudify mockup settings
 MOCKUP_CFY_OPTION_NO = None  # don't mockup
 MOCKUP_CFY_OPTION_YES_SUCCESS = CfyMockupSuccess()

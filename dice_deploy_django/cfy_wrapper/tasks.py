@@ -9,10 +9,9 @@ from cloudify_rest_client.executions import Execution
 
 from django.conf import settings
 
-import os
 import time
 
-from .models import Blueprint
+from .models import Blueprint, Input
 
 """
 Module with async tasks that should not block main process
@@ -106,7 +105,11 @@ def create_deployment(blueprint_id):
         logger.info("Creating deployment '{}'.".format(blueprint_id))
 
         # Next call will block until upload is finished (can take some time)
-        client.deployments.create(blueprint_id, blueprint_id)
+        client.deployments.create(
+            blueprint_id,
+            blueprint_id,
+            inputs=Input.get_inputs_values_as_dict()
+        )
 
         # Update blueprint status
         blueprint.refresh_from_db()

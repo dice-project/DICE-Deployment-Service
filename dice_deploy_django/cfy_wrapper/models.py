@@ -81,7 +81,10 @@ class Blueprint(Base):
             else:
                 archive_filename = os.path.join('generated_archives', str(uuid.uuid4()) + '.tar.gz')
                 archive_filename_full = os.path.join(settings.MEDIA_ROOT, archive_filename)
-                os.makedirs(os.path.dirname(archive_filename_full))
+                try:
+                    os.makedirs(os.path.dirname(archive_filename_full))
+                except OSError:
+                    pass
                 shutil.copy(f_tmp.name, archive_filename_full)
                 self.archive = archive_filename
                 self.save()
@@ -167,3 +170,20 @@ class Input(models.Model):
     key = models.CharField(max_length=256, primary_key=True)
     value = models.CharField(max_length=256)
     description = models.CharField(max_length=512, blank=True, null=True)
+
+    @staticmethod
+    def get_inputs_declaration_as_dict():
+        """
+        Reads all Inputs from database and forms a dict with their declaration.
+        :return: dict that should be added to blueprint.yaml
+        """
+        return {str(el.key): {str('description'): str(el.description) if el.description else ''}
+                for el in Input.objects.all()}
+
+    @staticmethod
+    def get_inputs_values_as_dict():
+        """
+        Reads all Inputs from database and forms a dict of key-value pairs.
+        :return: dict that should be passed to create_deployment cfy call
+        """
+        return {el.key: el.value for el in Input.objects.all()}

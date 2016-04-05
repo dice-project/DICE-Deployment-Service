@@ -1,5 +1,5 @@
 import factory
-from cfy_wrapper.models import Container, Blueprint
+from cfy_wrapper.models import Container, Blueprint, Input
 from django.conf import settings
 
 
@@ -50,6 +50,12 @@ class ContainerFullYamlFactory(factory.DjangoModelFactory):
         model = Container
 
 
+class InputFactory(factory.DjangoModelFactory):
+    key = 'key1'
+    value = 'value1'
+    description = 'Some input description'
 
+    class Meta:
+        model = Input
 
 
