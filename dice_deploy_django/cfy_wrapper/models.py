@@ -89,6 +89,9 @@ class Blueprint(Base):
                 self.archive = archive_filename
                 self.save()
 
+            # close the temporary file
+            f_tmp.close()
+
         return os.path.join(settings.MEDIA_ROOT, self.archive.name)
 
     def pipe_deploy_blueprint(self):
