@@ -4,6 +4,8 @@ from django.conf import settings
 import os
 import tempfile
 
+from cloudify_rest_client.client import CloudifyClient
+
 
 def generate_archive_from_yaml(f_yaml):
 
@@ -25,3 +27,8 @@ def generate_archive_from_yaml(f_yaml):
     return f_tmp
 
 
+def get_cfy_client():
+    if settings.MOCKUP_CFY:
+        raise settings.MOCKUP_CFY
+
+    return CloudifyClient(settings.CFY_MANAGER_URL)

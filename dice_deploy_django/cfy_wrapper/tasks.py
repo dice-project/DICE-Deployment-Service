@@ -3,7 +3,8 @@ from __future__ import absolute_import
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
-from cloudify_rest_client.client import CloudifyClient
+from . import utils
+
 from cloudify_rest_client.executions import Execution
 
 from django.conf import settings
@@ -28,13 +29,6 @@ def debug_task():
 logger = get_task_logger('tasks')
 
 
-def _get_cfy_client():
-    if settings.MOCKUP_CFY:
-        raise settings.MOCKUP_CFY
-
-    return CloudifyClient(settings.CFY_MANAGER_URL)
-
-
 def _wait_for_execution(client, execution):
     while execution.status not in Execution.END_STATES:
         time.sleep(settings.POOL_SLEEP_INTERVAL)
@@ -51,7 +45,7 @@ def _run_execution(workflow_id, deployment_id, blueprint_state_flow):
     blueprint = Blueprint.get(deployment_id)
 
     try:
-        client = _get_cfy_client()
+        client = utils.get_cfy_client()
 
         # Wait for environment to be prepared
         _update_state(blueprint, blueprint_state_flow[0])
@@ -87,7 +81,7 @@ def _handle_exception(task_name, blueprint, exception_obj):
 def upload_blueprint(blueprint_id):
     blueprint = Blueprint.get(blueprint_id)
     try:
-        client = _get_cfy_client()
+        client = utils.get_cfy_client()
         archive_path = blueprint.generate_archive()
 
         logger.info("Uploading blueprint archive '{}'.".format(archive_path))
@@ -107,7 +101,7 @@ def upload_blueprint(blueprint_id):
 def create_deployment(blueprint_id):
     blueprint = Blueprint.get(blueprint_id)
     try:
-        client = _get_cfy_client()
+        client = utils.get_cfy_client()
 
         logger.info("Creating deployment '{}'.".format(blueprint_id))
 
@@ -160,7 +154,7 @@ def uninstall(blueprint_id):
 def delete_deployment(blueprint_id):
     blueprint = Blueprint.get(blueprint_id)
     try:
-        client = _get_cfy_client()
+        client = utils.get_cfy_client()
 
         logger.info("Deleting deployment '{}'.".format(blueprint_id))
 
@@ -183,7 +177,7 @@ def delete_blueprint(blueprint_id, delete_local=True):
     blueprint.save()
 
     try:
-        client = _get_cfy_client()
+        client = utils.get_cfy_client()
 
         logger.info("Deleting blueprint '{}'. delete_local={}".format(blueprint_id, delete_local))
 
@@ -205,6 +199,6 @@ def delete_blueprint(blueprint_id, delete_local=True):
 
 
 def get_outputs(blueprint):
-    client = _get_cfy_client()
+    client = utils.get_cfy_client()
     outputs_raw = client.deployments.outputs.get(blueprint.cfy_id)
     return outputs_raw.get('outputs', {})
