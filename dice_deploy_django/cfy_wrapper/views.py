@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db import IntegrityError
 
-from . import tasks
+from . import tasks, utils
 from .models import Blueprint, Container, Input
 from .serializers import BlueprintSerializer, ContainerSerializer, InputSerializer
 from .forms import BlueprintUploadForm
@@ -127,6 +127,35 @@ class ContainerIdView(APIView):
             return Response({'msg': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ContainerIdNodesView(APIView):
+    def get(self, request, container_id):
+        """
+        Get ip addresses of machines, running in selected deployment
+        ---
+        parameters:
+            - name: raw
+              description: Return bare array of ip addreses
+              type: string
+              paramType: query
+        """
+        container = Container.get(container_id)
+        data = []
+        if container.blueprint is not None:
+            client = utils.get_cfy_client()
+            instances = client.node_instances.list(
+                deployment_id=container.blueprint.cfy_id,
+            )
+            instances = [i for i in instances if "ip" in i.runtime_properties]
+            data = [{
+                "node_id": i.node_id,
+                "id": i.id,
+                "ip": i.runtime_properties["ip"]
+            } for i in instances]
+            if "raw" in request.query_params:
+                data = [d["ip"] for d in data]
+        return Response(data)
 
 
 class ContainerBlueprint(APIView):
