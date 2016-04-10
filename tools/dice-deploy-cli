@@ -49,7 +49,17 @@ function usage ()
     * outputs: get deployment parameters
         parameters: container-uuid
         returns: dict of deployment parameters
-        example: $1 outputs 8f151bb0-db92-48e1-88a0-397258e01f11
+        example: $1 outputs 14132d9b-d86d-48e9-a24c-deb949d9f3d7
+
+    * node-ips: get a list of node IP host addresses in the container
+        parameters: container-uuid
+        returns: list of dicttionaries of node properties
+        example: $1 node-ips 14132d9b-d86d-48e9-a24c-deb949d9f3d7
+
+    * nodes: get a list of nodes and their properties in the container
+        parameters: container-uuid
+        returns: list of dicttionaries of node properties
+        example: $1 nodes 14132d9b-d86d-48e9-a24c-deb949d9f3d7
 
     * status: get deployment status
         parameters: deployment-uuid
@@ -239,6 +249,30 @@ function outputs ()
   echo $out
 }
 
+# Returns the details of the nodes in the container
+function node-list ()
+{
+  if [ "$1" == "" ]
+  then
+    echo "Please provide the container id."
+    usage $(basename $0)
+    exit -1
+  fi
+  service-url-check
+
+  CONTAINER_UUID="$1"
+  RAW="$2" # optional parameter
+
+  out=$(curl -s -f "${DICE_DEPLOY}/containers/$CONTAINER_UUID/nodes/?$RAW")
+  if [ "$?" != "0" ]
+  then
+    echo "{ \"msg\": \"The request failed.\" }"
+    exit 1
+  fi
+  #echo "DONE."
+  echo $out
+}
+
 # Returns a deployment's status
 function deployment-status ()
 {
@@ -324,6 +358,14 @@ case $1 in
 
   outputs)
     outputs $2
+    ;;
+
+  nodes)
+    node-list $2
+    ;;
+
+  node-ips)
+    node-list $2 raw
     ;;
 
   status)
