@@ -106,10 +106,10 @@
                                     </tr>
                                 </thead>
                                 <tbody class="dice-outputs-tbody">
-                                    <tr ng-repeat="(name, value) in cont.blueprint.outputs">
+                                    <tr ng-repeat="(name, valueObj) in cont.blueprint.outputs">
                                         <td>{{ name }}</td>
-                                        <td ng-bind-html="value | linky:'_blank'"></td>
-                                        <td>Parameter description</td>
+                                        <td ng-bind-html="valueObj.value | linky:'_blank'"></td>
+                                        <td>{{ valueObj.description }}</td>
                                     </tr>
                                 </tbody>
                             </table>

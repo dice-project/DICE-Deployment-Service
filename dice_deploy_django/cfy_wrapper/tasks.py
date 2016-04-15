@@ -184,8 +184,17 @@ def delete_blueprint(blueprint_id, delete_local=True):
 
         logger.info("Deleting blueprint '{}'. delete_local={}".format(blueprint_id, delete_local))
 
-        # Next call will block until upload is finished (can take some time)
-        client.blueprints.delete(blueprint_id)
+        # Next call fails sometimes if called to fast after deleting deployment.
+        # Retry few times to solve the problem
+        num_retries = 10
+        for i in range(num_retries):
+            try:
+                client.blueprints.delete(blueprint_id)
+                break
+            except Exception, e:
+                logger.warning("Could not delete blueprint from cfy, attempt: %d/%d. Error: %s" %
+                               (i+1, num_retries, e))
+                time.sleep(2)
 
         blueprint = Blueprint.get(blueprint_id)
         if delete_local:
@@ -203,5 +212,13 @@ def delete_blueprint(blueprint_id, delete_local=True):
 
 def get_outputs(blueprint):
     client = utils.get_cfy_client()
-    outputs_raw = client.deployments.outputs.get(blueprint.cfy_id)
-    return outputs_raw.get('outputs', {})
+    outputs_descriptions = client.deployments.get(blueprint.cfy_id).get('outputs', {})
+    outputs = client.deployments.outputs.get(blueprint.cfy_id).get('outputs', {})
+
+    for key, value in outputs.iteritems():
+        outputs[key] = {
+            'value': value,
+            'description': outputs_descriptions.get(key, {}).get('description', '')
+        }
+
+    return outputs
