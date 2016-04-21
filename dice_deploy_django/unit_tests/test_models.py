@@ -1,14 +1,8 @@
-from django.core.urlresolvers import reverse
-from rest_framework import status
 from django.conf import settings
-from rest_framework.exceptions import NotFound
 import os
-from cfy_wrapper.models import Blueprint, Container, Input
+from cfy_wrapper.models import Input, Error
 import shutil
-from django.core import management
 import factories
-from cfy_wrapper import serializers
-from rest_framework.test import APIClient
 from django.test import TestCase
 import tarfile
 import yaml as yaml_lib
@@ -137,3 +131,16 @@ class ModelsTests(TestCase):
         self.assertListEqual([-1, 0, 1, 2, 3, 4, 5, 6, 101, 102, 103], b.State.all_values())
         self.assertTrue((-1, 'error') in b.State.all_choices())
         self.assertTrue((6, 'deployed') in b.State.all_choices())
+
+    def test_add_error(self):
+        b = factories.BlueprintYamlDeployedFactory()
+
+        e1 = Exception('This is dummy exception1')
+        e2 = Exception('This is dummy exception2')
+        Error.log_for_blueprint(b, e1)
+        Error.log_for_blueprint(b, e2)
+
+        self.assertEqual(2, len(b.errors))
+
+        err = b.errors[0]
+        self.assertEqual(e2.message, err.message)

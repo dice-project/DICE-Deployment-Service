@@ -11,7 +11,7 @@ from django.conf import settings
 
 import time
 
-from .models import Blueprint, Input
+from .models import Blueprint, Input, Error
 
 """
 Module with async tasks that should not block main process
@@ -71,6 +71,7 @@ def _run_execution(workflow_id, deployment_id, blueprint_state_flow):
 def _handle_exception(task_name, blueprint, exception_obj):
     logger.error('Exeption in %s: %s' % (task_name, exception_obj))
     blueprint.refresh_from_db()
+    Error.log_for_blueprint(blueprint, exception_obj)
     blueprint.state = Blueprint.State.error.value
     blueprint.save()
     raise exception_obj

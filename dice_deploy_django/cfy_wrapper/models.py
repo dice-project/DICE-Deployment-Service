@@ -157,6 +157,10 @@ class Blueprint(Base):
         )
         pipe.apply_async()
 
+    @property
+    def errors(self):
+        return self.error_set.all().order_by('-created_date')
+
 
 class Container(Base):
     # Fields
@@ -199,3 +203,20 @@ class Input(models.Model):
         :return: dict that should be passed to create_deployment cfy call
         """
         return {el.key: el.value for el in Input.objects.all()}
+
+
+class Error(models.Model):
+    blueprint = models.ForeignKey(Blueprint)
+    state = models.IntegerField(choices=Blueprint.State.all_choices(),
+                                help_text='What state this error occured in')
+    message = models.TextField()
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    @staticmethod
+    def log_for_blueprint(blueprint, exception_obj):
+        """ Creates and saves Error instance for blueprint and given exception. """
+        err = Error()
+        err.blueprint = blueprint
+        err.state = blueprint.state
+        err.message = str(exception_obj)
+        err.save()
