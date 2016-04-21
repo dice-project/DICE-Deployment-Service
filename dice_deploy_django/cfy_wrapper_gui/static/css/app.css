@@ -351,3 +351,17 @@ div#footer #partners .subtitle{
     display: -webkit-inline-box;
     display: -moz-inline-box;
 }
+.blueprint-subcontent{
+    padding-left: 40px;
+    padding-top: 20px;
+}
+.container-error-single{
+    padding-bottom: 20px;
+}
+.container-error-single-separator{
+    border-bottom: 1px dotted lightgray;
+    width: 30%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 10px;
+}

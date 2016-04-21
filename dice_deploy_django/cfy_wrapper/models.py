@@ -220,3 +220,7 @@ class Error(models.Model):
         err.state = blueprint.state
         err.message = str(exception_obj)
         err.save()
+
+    @property
+    def state_name(self):
+        return Blueprint.State(self.state).name

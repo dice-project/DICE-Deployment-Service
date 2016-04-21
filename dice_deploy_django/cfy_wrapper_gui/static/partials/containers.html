@@ -85,6 +85,10 @@
                             <span class="glyphicon glyphicon-exclamation-sign dice-error-sign"></span>
                             <span class="dice-error">Blueprint has error state.</span>
                             <div class="dice-blueprint-time dice-time-under-msg">Since {{ getBlueprintDatetimeStr(cont.blueprint) }}</div>
+                            <div class="blueprint-subcontent">
+                                <div ng-click="showContainerErrors(cont)" class="dice-btn dice-btn-default">Details...</div>
+                            </div>
+
                         </div>
 
 

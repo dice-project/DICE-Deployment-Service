@@ -149,8 +149,11 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     };
     $scope.getBlueprintDatetimeStr = function(blueprint){
         if(blueprint) {
-            return parseDateTime(blueprint.modified_date).local().format(C_dtFormatGUI);
+            return $scope.getDatetimeStr(blueprint.modified_date);
         }
+    };
+    $scope.getDatetimeStr = function(date){
+        return parseDateTime(date).local().format(C_dtFormatGUI);
     };
     $scope.convertOutputs = function(blueprint){
         var data = blueprint.outputs;
@@ -158,7 +161,30 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
             $filter('json')(data, 4);
             return $sce.trustAsHtml(data);
         }
+    };
+    $scope.getPrettyStateName = function(stateId){
+        for(var i=0; i<BLUEPRINT_DEPLOY_STATES.statePrettyNames.length; i++){
+            var prettyObj = BLUEPRINT_DEPLOY_STATES.statePrettyNames[i];
+            if(prettyObj.stateNames.indexOf(stateId) >= 0){
+                return prettyObj.prettyName;
+            }
+        }
+        for(var i=0; i<BLUEPRINT_UNDEPLOY_STATES.statePrettyNames.length; i++){
+            var prettyObj = BLUEPRINT_UNDEPLOY_STATES.statePrettyNames[i];
+            if(prettyObj.stateNames.indexOf(stateId) >= 0){
+                return prettyObj.prettyName;
+            }
+        }
+        return '(unknown state: ' + stateId + ')';
+    };
 
+    //
+    // POPUPS
+    //
+    $scope.showContainerErrors = function(container){
+        RestServices.containerErrors.query(container, function(errors){
+            PopupServices.popupContainerErrors(container, errors, $scope);
+        });
     };
 
 

@@ -70,6 +70,28 @@ app.factory('PopupServices', function(ModalService, $q) {
             });
 
             return deferred.promise;
+        },
+        popupContainerErrors: function(container, errors, parentScope){
+            var deferred = $q.defer();
+            ModalService.showModal({
+                templateUrl: STATIC_URL + '/partials/popups/popupContainerErrors.html',
+                controller: 'ContainerErrorsController',
+                inputs: {
+                    container: container,
+                    errors: errors,
+                    parentScope: parentScope
+                }
+            }).then(function(modal) {
+                modal.element.modal();
+                modal.close.then(function(isConfirmed) {
+                    if(isConfirmed)
+                        deferred.resolve();
+                    else
+                        deferred.reject();
+                });
+            });
+
+            return deferred.promise;
         }
     }
 });
@@ -94,5 +116,14 @@ app.controller('NotifyController', function($scope, close, message, title, $sce)
 app.controller('AddContainerController', function($scope, close) {
     $scope.close = function(data) {
         close(data, 500); // close, but give 500ms for bootstrap to animate
+    };
+});
+
+app.controller('ContainerErrorsController', function($scope, close, container, errors, parentScope) {
+    $scope.parentScope = parentScope;
+    $scope.container = container;
+    $scope.errors = errors;
+    $scope.close = function(result) {
+        close(result, 500); // close, but give 500ms for bootstrap to animate
     };
 });

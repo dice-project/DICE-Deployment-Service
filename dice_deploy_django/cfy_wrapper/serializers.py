@@ -45,4 +45,4 @@ class ErrorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Error
-        fields = ("blueprint", "state", "message", "created_date")
+        fields = ("blueprint", "state_name", "message", "created_date")
