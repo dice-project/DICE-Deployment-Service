@@ -88,7 +88,7 @@ CELERY_QUEUES = (
 CELERYD_POOL_RESTARTS = True
 
 # Cloudify settings
-CFY_MANAGER_URL = "172.16.95.126"
+CFY_MANAGER_URL = "172.16.95.115"
 POOL_SLEEP_INTERVAL = 3  # In seconds
 
 # what name to pick for .yaml file (when generating archive from uploaded yaml)
