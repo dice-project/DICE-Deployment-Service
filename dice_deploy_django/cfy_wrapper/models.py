@@ -1,7 +1,7 @@
 import uuid
 from django.db import models
 from rest_framework.exceptions import NotFound
-from enum import Enum
+from enum import IntEnum, unique
 from django.db import IntegrityError
 from jsonfield import JSONField
 import utils
@@ -26,7 +26,8 @@ class Base(models.Model):
 
 class Blueprint(Base):
     # Possible states
-    class State(Enum):
+    @unique
+    class State(IntEnum):
         # deployment flow
         pending = 1
         uploaded = 2
@@ -42,11 +43,19 @@ class Blueprint(Base):
         undeployed = 0  # exists on gui, but not on cfy manageer
         error = -1
 
+        @classmethod
+        def all_values(cls):
+            return [v.value for v in list(cls)]
+
+        @classmethod
+        def all_choices(cls):
+            return [(v.value, v.name) for v in list(cls)]
+
     # Fields
     id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False
     )
-    state = models.IntegerField(default=State.pending.value)
+    state = models.IntegerField(default=State.pending.value, choices=State.all_choices())
     archive = models.FileField(upload_to="blueprints_targz", blank=True, null=True)
     yaml = models.FileField(upload_to="blueprints_yaml", blank=True, null=True)
     outputs = JSONField(blank=True, null=True)

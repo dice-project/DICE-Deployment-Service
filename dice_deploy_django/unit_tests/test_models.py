@@ -130,3 +130,10 @@ class ModelsTests(TestCase):
         inputs_dict = Input.get_inputs_values_as_dict()
 
         self.assertDictEqual(expected_dict, inputs_dict)
+
+    def test_blueprint_states_enum(self):
+        b = factories.BlueprintYamlDeployedFactory()
+
+        self.assertListEqual([-1, 0, 1, 2, 3, 4, 5, 6, 101, 102, 103], b.State.all_values())
+        self.assertTrue((-1, 'error') in b.State.all_choices())
+        self.assertTrue((6, 'deployed') in b.State.all_choices())
