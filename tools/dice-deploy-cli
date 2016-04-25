@@ -102,12 +102,8 @@ function create-container ()
   COMMENT="$1"
 
   echo -n "Creating a new container ... "
-  if [ "$COMMENT" != "" ]
-  then
-    COMMENT_CURL_PARAM="--data-urlencode \"description=$COMMENT\""
-  fi
-
-  out=$(curl -s -f -X POST $COMMENT_CURL_PARAM ${DICE_DEPLOY}/containers/)
+  
+  out=$(curl -s -f --data "description=$COMMENT" ${DICE_DEPLOY}/containers/)
   if [ "$?" != "0" ]
   then
     echo "The request failed."
@@ -329,7 +325,7 @@ case $1 in
     ;;
 
   create)
-    create-container $2
+    create-container "$2"
     ;;
 
   deploy)
