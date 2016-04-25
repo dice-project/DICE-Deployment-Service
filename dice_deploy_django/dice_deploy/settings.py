@@ -27,6 +27,7 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = (
+    "django.contrib.sessions",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.staticfiles",
@@ -35,9 +36,15 @@ INSTALLED_APPS = (
     "cfy_wrapper",
     "cfy_wrapper_gui",
     "djcelery",
+    "rest_framework.authtoken",
+    "django.contrib.admin"
 )
 
 MIDDLEWARE_CLASSES = (
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware'
 )
 
 API_DATE_FORMAT = '%Y-%m-%d'
@@ -54,7 +61,13 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.MultiPartParser",
         "rest_framework.parsers.FileUploadParser",
     ),
-    "DATETIME_FORMAT": API_DT_FORMAT
+    "DATETIME_FORMAT": API_DT_FORMAT,
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.TokenAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    )
 }
 
 ROOT_URLCONF = "dice_deploy.urls"

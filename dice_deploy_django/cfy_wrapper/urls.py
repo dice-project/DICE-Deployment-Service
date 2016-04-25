@@ -15,7 +15,6 @@ from .views import (
 )
 
 urlpatterns = [
-    url(r'^docs/?', include('rest_framework_swagger.urls')),  # swagger
     url(r"^debug/?$",
         DebugView.as_view(), name="debug"),
     # blueprint
