@@ -71,7 +71,6 @@ class ModelsTests(TestCase):
         self.assertTrue(os.path.getsize(archive_filename1) > 0, 'Archive size should not be zero')
         self.assertTrue(os.path.getsize(archive_filename2) > 0, 'Archive size should not be zero')
 
-
     def test_append_inputs_into_yaml(self):
         TMP_FOLDER = os.path.join(settings.TEST_FILES_TMP_DIR, 'check_yaml_inputs')
 
@@ -144,3 +143,21 @@ class ModelsTests(TestCase):
 
         err = b.errors[0]
         self.assertEqual(e2.message, err.message)
+
+    def test_remove_blueprint_with_errors(self):
+        b = factories.BlueprintWithErrorsFactory.create()
+
+        # errors should be here
+        errors = list(b.error_set.all())
+        self.assertEqual(3, len(errors))
+
+        b.delete()
+
+        # errors should be gone
+        self.assertEqual(0, Error.objects.filter(pk=errors[0].pk).count())
+        self.assertEqual(0, Error.objects.filter(pk=errors[1].pk).count())
+        self.assertEqual(0, Error.objects.filter(pk=errors[2].pk).count())
+
+
+
+
