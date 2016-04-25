@@ -1,6 +1,8 @@
 # DICE deployment tool
 
 Simple wrapper around Cloudify orchestration tool.
+Provides both REST API and web GUI for it.
+
 
 ## Important general information
 
@@ -10,79 +12,93 @@ in place that should take care of git side of things on checkout. If you add
 a sensitive file to repository, please update .gitattributes as well.
 
 
-## Developer setup
+## Developer Setup
 
+### What do I need to install?
+As a developer you need to prepare environment for Wrapper, which is nothing
+but a Django project with some javascript libraries for web GUI.
+Besides, you need to setup and run powerfull Django addon, Celery, that
+enables Django to run time-consuming tasks asynchronously i.e. after it
+has already responded with HTTP response.
+
+### How do I install it?
 In order to minimize the effort of getting development environment up
 and running, vagrant file, along with simple provisioning scripts is
-provided. To get started, simply execute `vagrant up --provider
-virtualbox`. This will  create new VM and install all required packages.
-Just make sure virtual box is installed and you should be good.
+provided. To get started, make sure VirtualBox is installed and then 
+simply execute:
+```
+vagrant up --provider virtualbox
+``` 
 
-In order to be able to fully utilize application, you'll also need
-Cloudify manager running. Instructions on how to do this will be
-provided soon;)
+Viola! A new VM is created with everything installed.
+Namely, 
+(1) Django and all its python dependencies are installed, 
+(2) javascript dependencies are installed and 
+(3) Celery addon is configured and running.
+Please note that Django web server is still shut down at this point.
 
-Basic setting that you need to do is to set cloudify manager url in
-dice_deploy_django/dice_deploy/settings.py, variable CFY_MANAGER_URL.
+### What do I need to configure?
+Well, everything regarding Wrapper itself is installed at this point,
+but in order to be able to fully utilize application, you'll need
+Cloudify Manager running somewhere on your network (setting this up is not a part of this README). 
+Then tell the Wrapper about Cloudify Manager endpoint in file
+dice_deploy_django/dice_deploy/settings.py by setting variable ```CFY_MANAGER_URL```.
 
-#### Running Celery
-We use Celery framework for asynchronous command execution. There are upstart 
-services used to simplify management of Celery framework. Namely:
- - `sudo service celery-service start|status|stop|restart` - manages worker that consumes messages from main queue
- - `sudo service celery-dashboard start|status|stop|restart` - runs web server on port 5555 where you can see message queue
- - `sudo service celery-test-service start|status|stop|restart` - manages worker that consumes messages from test queue
-Vagrant installs these services automatically, but you can do it manually
- by simply copying .conf files from install/upstart-services folder to your
- /etc/init folder. Also make sure that you configure parameters in each
- of the .conf files. Log files can be found in /var/log/upstart folder.
- 
- To remove all messages from Celery queues, use Django management command
-  `python manage.py celery-service purge`. To run it, you must be in
- dice_deploy_django folder with active virtualenvironment.
- 
-#### Debugging Celery Tasks
-To debug asynchronous Celery tasks it is best to use celery-dashboard service.
-There you can see all task messages and their statuses. Note that celery-dashboard
-service stores all Celery messages into internal database and displays them from there.
-It keeps them even after they are dissmissed from the Celery queue. To
-clear all messages simply restart celery-dashboard service.
-
-There is also log file (tasks.log) in dice_deploy_django folder where tasks
-write to.
+### How to actually run Wrapper?
+Navigate to dice_deploy_django folder and run 
+```
+vagrant ssh
+cd dice_deploy_django
+python manage.py runserver 0.0.0.0:8000
+```
+Now the web GUI is available at `localhost:7080` from your host machine.
+Direct access to REST API is given at `localhost:7080/docs`.
+Visualization of your asynchronous tasks is available at `localhost:8055`.
 
 
-## Local development workflow
-
-First, we need to ssh to new VM using `vagrant ssh`. This command should
-also activate virtual environment for us.
-
-In order to ease the pain of running development instance of this application,
-move into `dice_deploy` folder. There is a `run.sh` script that should
-be used to run application.
-
-First, we need to reset application state. Do this by executing
-`./run.sh reset`.
-
-After this is all done, execute `./run.sh`. This will spawn one celery
-worker and then run development server. To stop worker and server,
-simply pres `ctrl + c` to interrupt django development server and script
-will take care of celery worker.
-
-For more details about operations, consult `run.sh` source code.
+## Developing with PyCharm
+PyCharm supports Vagrant-powered development. You need to set 
+project interpreter to point to remote python interpreter at vagrant instance.
 
 
-## Deploying wrapper
+## Blueprint-driven Setup
+Besides Vagrant it is also possible to use Cloudify Manager to provision Wrapper.
+
+### How do I install/uninstall it?
+Basically you need to compress folder `install` into `install.tar.gz` and
+upload it to Cloudify Manager, but of course we have a script for this.
 
 There are currently two blueprints available that make deploying this tool
 relatively painless. Both blueprints should be uploaded to manager, running on
 platform of choice. Due to some loose ends in Flexiant plugin for Cloudify,
 credentials need to be specified in blueprint.
 
-After any modifications have been made, simply execute `./up.sh`, passing
+After any modifications have been made, execute `./up.sh`, passing
 selected platform as an argument. Or simply run the script and follow
 instructions.
 
 Removing deploy is as easy as running `./dw.sh`.
+
+### How do I run it?
+Move into `dice_deploy_django` folder. There is a `run.sh` script that should
+be used to run application.
+
+First, we need to reset application state. Do this by executing:
+```
+./run.sh reset
+```
+
+After reseting is done, execute:
+```
+./run.sh
+```
+to spawn one celery worker and then run development server. 
+To stop worker and server, press `ctrl + c` to interrupt django 
+development server and script
+will take care of celery worker.
+
+For more details about operations, consult `run.sh` source code.
+
 
 ## Command line tool
 
@@ -170,6 +186,33 @@ Finally, we can also delete the container.
 $ ./dice-deploy-cli delete 02bba363-fb85-4a54-8a2f-f1a11a25ad9d
 Deleting container ... DONE.
 ```
+
+
+## Managing asynchronous task runner
+
+We use Celery framework for asynchronous command execution. There are upstart 
+services used to simplify management of Celery framework. Namely:
+ - `sudo service celery-service start|status|stop` - manages worker that consumes messages from main queue
+ - `sudo service celery-dashboard start|status|stop` - runs web server on port 5555 where you can see message queue
+ - `sudo service celery-test-service start|status|stop` - manages worker that consumes messages from test queue
+Vagrant installs these services automatically, but you can do it manually
+ by simply copying .conf files from install/upstart-services folder to your
+ /etc/init folder. Also make sure that you configure parameters in each
+ of the .conf files. Log files can be found in /var/log/upstart folder.
+ 
+ To remove all messages from Celery queues, use Django management command
+  `python manage.py celery-service purge`. To run it, you must be in
+ dice_deploy_django folder with active virtualenvironment.
+ 
+### Debugging Celery Tasks
+To debug asynchronous Celery tasks it is best to use celery-dashboard service.
+There you can see all task messages and their statuses. Note that celery-dashboard
+service stores all Celery messages into internal database and displays them from there.
+It keeps them even after they are dissmissed from the Celery queue. To
+clear all messages simply restart celery-dashboard service.
+
+There is also log file (tasks.log) in dice_deploy_django folder where tasks
+write to.
 
 
 ## Web GUI
