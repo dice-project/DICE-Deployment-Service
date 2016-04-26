@@ -11,6 +11,9 @@ from .models import Blueprint, Container, Input
 from .serializers import BlueprintSerializer, ContainerSerializer, InputSerializer, \
     InputUpdateSerializer, ErrorSerializer
 from .forms import BlueprintUploadForm
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.serializers import AuthTokenSerializer
 
 logger = logging.getLogger("views")
 
@@ -296,5 +299,22 @@ class InputIdView(APIView):
         return Response(s.data)
 
 
+class AuthTokenView(APIView):
+    permission_classes = ()
+
+    def post(self, request):
+        """
+        Retrieve authorization token.
+        ---
+        serializer: rest_framework.authtoken.serializers.AuthTokenSerializer
+        """
+        serializer = AuthTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            'username': user.username,
+            'token': token.key
+        })
 
 

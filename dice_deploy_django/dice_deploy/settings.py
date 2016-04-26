@@ -64,6 +64,7 @@ REST_FRAMEWORK = {
     "DATETIME_FORMAT": API_DT_FORMAT,
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
@@ -172,6 +173,17 @@ GUNICORN_STATICS = True
 # indicate if you want to have static files served
 # by gunicorn (not good for production)
 GUNICORN_STATICS = True
+
+SWAGGER_SETTINGS = {
+    'api_key': '',
+    'info': {
+        'title': 'DICE Deployment Service',
+        'description': 'Please make sure you have started a session at '
+                       '<a href="/admin" target="_blank">ADMIN</a>.<br>'
+                       'Alternatively, you can provide a valid token into API_KEY field above and '
+                       'click "Explore".',
+    },
+}
 
 # Local overrides
 try:
