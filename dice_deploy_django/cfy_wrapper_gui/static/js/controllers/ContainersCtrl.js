@@ -1,5 +1,5 @@
 app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, FileUploader, $timeout,
-                                          Notification, $interval, $sce, $filter) {
+                                          Notification, $interval, $sce, $filter, $rootScope) {
     //
 	// FILE UPLOAD CONFIG
     //
@@ -200,7 +200,7 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     //
     $scope.preventSync = false;
     $interval(function(){
-        if(!$scope.preventSync){
+        if($rootScope.user && !$scope.preventSync){
             $scope.syncContainers();
         }else{
             console.log('Sync prevented');

@@ -4,6 +4,9 @@ body{
     background-size: cover;
 
 }
+input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px white inset;
+}
 .title-font{
     font-family: 'Exo', sans-serif;
 }
@@ -373,4 +376,14 @@ div#footer #partners .subtitle{
     color: white;
     font-style: italic;
     cursor: pointer;
+}
+.dice-login-div{
+    padding-top: 50px;
+}
+.dice-login-div-controls{
+    width: 300px;
+}
+.dice-btn-login{
+    width: 300px;
+    margin-top: 20px;
 }

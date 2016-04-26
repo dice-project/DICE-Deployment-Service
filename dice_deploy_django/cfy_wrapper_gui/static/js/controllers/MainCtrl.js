@@ -8,9 +8,9 @@ app.controller('MainCtrl', function($scope, RestServices, $rootScope, $window, $
         $location.path("/login");
     };
 
-    /*
-     * Global functions
-     */
+    //
+    //Global functions
+    //
     $rootScope.saveUser = function(user){
         $window.localStorage.setItem('user', JSON.stringify(user));
     };
