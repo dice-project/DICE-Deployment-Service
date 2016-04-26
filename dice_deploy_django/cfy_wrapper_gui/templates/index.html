@@ -35,6 +35,7 @@
         <script src="{% static 'js/routes.js' %}"></script>
         <script src="{% static 'js/controllers/MainCtrl.js' %}"></script>
         <script src="{% static 'js/controllers/ContainersCtrl.js' %}"></script>
+        <script src="{% static 'js/controllers/AuthCtrl.js' %}"></script>
         <script src="{% static 'js/services/restServices.js' %}"></script>
         <script src="{% static 'js/services/popupServices.js' %}"></script>
         <script src="{% static 'js/directives/directives.js' %}"></script>
@@ -86,6 +87,10 @@
             <div class="container">
                 <img src="{% static 'img/dice_logo_white.png' %}">
                 <span class="title-font">Deployment Containers</span>
+                <span class="pull-right dice-greeting" ng-show="getUser()">
+                    Hello, {% verbatim %}{{ getUser().prettyName}}{% endverbatim %}.
+                    <a ng-click="logout(event)">Logout</a>
+                </span>
             </div>
         </div>
 

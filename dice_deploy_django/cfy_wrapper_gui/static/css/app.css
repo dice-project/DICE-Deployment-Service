@@ -365,3 +365,12 @@ div#footer #partners .subtitle{
     margin-right: auto;
     padding-top: 10px;
 }
+.dice-greeting{
+    padding-top: 25px;
+    color: lightgray;
+}
+.dice-greeting a, .dice-greeting a:hover{
+    color: white;
+    font-style: italic;
+    cursor: pointer;
+}
