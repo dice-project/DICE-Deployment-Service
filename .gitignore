@@ -14,3 +14,4 @@ dice_deploy_django/test_db.sqlite3
 !dice_deploy_django/unit_tests/files/*
 
 .dice-deploy-url
+.dice-deploy-auth

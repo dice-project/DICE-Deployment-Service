@@ -2,6 +2,8 @@
 
 # Url of dice deployment service
 DICE_DEPLOY_URL_FILE=".dice-deploy-url"
+# The authentication token
+DICE_DEPLOY_AUTH_TOKEN_FILE=".dice-deploy-auth"
 
 # constants
 CST_BLUEPRINT_ID_FIELD="id"
@@ -22,6 +24,10 @@ function usage ()
     * use: use the URL as the DICE deployment service URL
         parameters: url
         example: $1 use http://109.231.122.46:8000
+
+    * authenticate: provide username and password to obtain the authentication token
+        parameters: username password
+        example: $1 authenticate testuser 123456
 
     * create: creates a new container
         parameters: description (optional)
@@ -94,22 +100,31 @@ function service-url-check ()
   fi
 }
 
+# If there is an error, we display the contents and exit. Otherwise
+# we do nothing.
+function process-error ()
+{
+  if [ "$1" != "0" ]
+  then
+    shift
+    echo "The request failed."
+    echo ""
+    echo $*
+    exit -1
+  fi
+}
+
 # Requests creation of a new container
 function create-container ()
 {
   service-url-check
+  get-authentication
 
   COMMENT="$1"
 
   echo -n "Creating a new container ... "
-  
-  out=$(curl -s -f --data "description=$COMMENT" ${DICE_DEPLOY}/containers/)
-  if [ "$?" != "0" ]
-  then
-    echo "The request failed."
-    echo ""
-    exit 2
-  fi
+  out=$(curl -s -S -f -k -H "Authorization: Token $TOKEN" --data "description=$COMMENT" ${DICE_DEPLOY}/containers/)
+  process-error $? $out
 
   uuid=$(echo $out | grep -Eo '"[0-9A-Fa-f-]+"' | grep -Eo '[0-9A-Fa-f-]+')
   echo "DONE."
@@ -121,18 +136,14 @@ function container-info ()
 {
   parameter-check 1 $#
   service-url-check
+  get-authentication
 
   CONTAINER_UUID="$1"
 
-  echo -n "Obtaining the contaner details ..."
-  out=$(curl -s -f ${DICE_DEPLOY}/containers/${CONTAINER_UUID}/)
+  echo -n "Obtaining the container details ..."
+  out=$(curl -s -S -f -k -H "Authorization: Token $TOKEN" ${DICE_DEPLOY}/containers/${CONTAINER_UUID}/)
+  process-error $? $out
 
-  if [ "$?" != "0" ]
-  then
-    echo "The request failed."
-    echo ""
-    exit 2
-  fi
   echo "DONE."
   echo $out
 }
@@ -167,22 +178,26 @@ function deploy ()
 {
   parameter-check 2 $#
   service-url-check
+  get-authentication
 
   CONTAINER_UUID="$1"
   FILE_NAME="$2"
 
   echo -n "Creating a new deployment ... "
-  out=$(curl -s -f -X POST -F "file=@${FILE_NAME}" ${DICE_DEPLOY}/containers/${CONTAINER_UUID}/blueprint)
-  if [ "$?" != "0" ]
-  then
-    echo "The request failed."
-    echo ""
-    exit 2
-  fi
+  out=$(curl -s -S -f -k -H "Authorization: Token $TOKEN" -X POST -F "file=@${FILE_NAME}" ${DICE_DEPLOY}/containers/${CONTAINER_UUID}/blueprint)
+  process-error $? $out
+  echo $out
   
-  uuid=$(echo $out | grep -Po '(?<="'$CST_BLUEPRINT_ID_FIELD'":")[^"]*')
+  uuids=$(echo $out | grep -Po '(?<="'$CST_BLUEPRINT_ID_FIELD'":")[^"]*')
   echo "DONE."
-  echo "Deployment UUID: $uuid"
+  # there are two UUIDs: one is from the container, the other one from deploy
+  for uuid in $uuids
+  do
+    if [ "$uuid" != "$CONTAINER_UUID" ]
+    then
+      echo "Deployment UUID: $uuid"
+    fi
+  done
 }
 
 # Blocks until the deployment in the given container has the status deployed.
@@ -190,17 +205,28 @@ function wait-deploy ()
 {
   parameter-check 1 $#
   service-url-check
+  get-authentication
 
   CONTAINER_UUID="$1"
   DEPLOYMENT_UUID=$(extract-deploy-id $CONTAINER_UUID)
 
   status=$(deployment-status $DEPLOYMENT_UUID | tail -n 1)
-  while [[ ( "$status" != "deployed" ) && ( "$status" != "request_failed" ) ]]
+  while [[ ( "$status" != "deployed" ) && \
+          ( "$status" != "request_failed" ) && \
+          ( "$status" != "error") ]]
   do
+    if [ "$?" != "0" ]
+    then
+      exit -3
+    fi
     echo "Current status: $status"
     sleep 5
     status=$(deployment-status $DEPLOYMENT_UUID | tail -n 1)
   done
+  if [[ ( "$status" == "error" ) ]]
+  then
+    exit -3
+  fi
 }
 
 # Tears down the deployment of a blueprint in the container. The container
@@ -209,9 +235,10 @@ function teardown ()
 {
   parameter-check 1 $#
   service-url-check
+  get-authentication
 
   echo -n "Deleting deployment ... "
-  curl -X DELETE -s ${DICE_DEPLOY}/blueprints/$1/
+  curl -X DELETE -s -S -f -k -H "Authorization: Token $TOKEN" ${DICE_DEPLOY}/blueprints/$1/
   echo "DONE."
 }
 
@@ -220,9 +247,10 @@ function delete-container ()
 {
   parameter-check 1 $#
   service-url-check
+  get-authentication
 
   echo -n "Deleting deployment ... "
-  curl -X DELETE -s ${DICE_DEPLOY}/containers/$1/
+  curl -X DELETE -s -S -f -k -H "Authorization: Token $TOKEN" ${DICE_DEPLOY}/containers/$1/
   echo "DONE."
 }
 
@@ -231,11 +259,12 @@ function outputs ()
 {
   parameter-check 1 $#
   service-url-check
+  get-authentication
 
   DEPLOYMENT_UUID=$(extract-deploy-id $1)
 
   #echo -n "Obtaining deployment parameters ... "
-  out=$(curl -s -f ${DICE_DEPLOY}/blueprints/$DEPLOYMENT_UUID/outputs)
+  out=$(curl -s -S -f -k -H "Authorization: Token $TOKEN" ${DICE_DEPLOY}/blueprints/$DEPLOYMENT_UUID/outputs)
   if [ "$?" != "0" ]
   then
     echo "{ \"msg\": \"The request failed.\" }"
@@ -255,11 +284,12 @@ function node-list ()
     exit -1
   fi
   service-url-check
+  get-authentication
 
   CONTAINER_UUID="$1"
   RAW="$2" # optional parameter
 
-  out=$(curl -s -f "${DICE_DEPLOY}/containers/$CONTAINER_UUID/nodes/?$RAW")
+  out=$(curl -s -S -f -k -H "Authorization: Token $TOKEN" "${DICE_DEPLOY}/containers/$CONTAINER_UUID/nodes/?$RAW")
   if [ "$?" != "0" ]
   then
     echo "{ \"msg\": \"The request failed.\" }"
@@ -274,15 +304,12 @@ function deployment-status ()
 {
   parameter-check 1 $#
   service-url-check
+  get-authentication
 
   echo "Obtaining deployment status ..."
-  out=$(curl -s -f "${DICE_DEPLOY}/blueprints/${1}/")
-  if [ "$?" != "0" ]
-  then
-    echo "request_failed"
-    echo ""
-    exit 2
-  fi
+  out=$(curl -s -S -f -k -H "Authorization: Token $TOKEN" "${DICE_DEPLOY}/blueprints/${1}/")
+  process-error $? $out
+
   status=$(echo "${out}" | grep -Po '(?<="state_name":")[^"]*')
   echo "$status"
 }
@@ -299,7 +326,7 @@ function use ()
   fi
 
   echo "Using $1 as the URL for the DICE deployment tool service"
-  curl -s -f "$1"/containers > /dev/null
+  curl -s -S -k -f "$1"/docs > /dev/null
   if [ "$?" != "0" ]
   then
     echo "Connection to $1 failed. We will not use this URL."
@@ -312,6 +339,39 @@ function use ()
   echo ""
 }
 
+# Acquire the authentication token and store it in a file to be used in the
+# subsequent tool calls
+function authenticate ()
+{
+  parameter-check 2 $#
+  service-url-check
+
+  USERNAME="$1"
+  PASSWORD="$2"
+
+  echo "Obtaining the authentication token"
+  out=$(curl -sS -f -k --data "username=${USERNAME}&password=${PASSWORD}" "${DICE_DEPLOY}/auth/get-token")
+  process-error $? $out
+
+  token=$(echo $out | grep -Po '(?<="'token'":")[^"]*')
+  echo $token > "$DICE_DEPLOY_AUTH_TOKEN_FILE"
+  echo "Authenticated"
+}
+
+# Read the token from the file. Use authenticate function to create one
+function get-authentication ()
+{
+  if [ -e "$DICE_DEPLOY_AUTH_TOKEN_FILE" ]
+  then
+    TOKEN=$(cat $DICE_DEPLOY_AUTH_TOKEN_FILE)
+  else
+    echo "Authentication required. Please run:"
+    echo "$(basename $0) authenticate USERNAME PASSWORD"
+    echo ""
+    exit -2
+  fi
+}
+
 # Parameter check
 if [[ "$#" == "0"  ]]
 then
@@ -322,6 +382,10 @@ fi
 case $1 in
   use)
     use $2
+    ;;
+
+  authenticate)
+    authenticate $2 $3
     ;;
 
   create)
