@@ -8,11 +8,45 @@ imports:
 
 inputs:
   webserver_port:
+    description: >
+      Wrapper's RESTful API and Web Application port
     default: 8000
   agent_user:
+    description: >
+      Linux user on the VM, which will run the Cloudify agent
     default: ubuntu
   cfy_manager:
-    default: 109.231.122.110
+    description: >
+      Addesss of the Cloudify Manager instance
+  fco_url:
+    description: >
+      URL to the FCO API
+    default: https://cp.diceproject.flexiant.net
+  fco_username:
+    description: >
+      Username used for logging into the FCO
+  fco_password:
+    description: >
+      Password used for logging into the FCO
+  fco_customer:
+    description: >
+      UUID of the FCO customer (see Information tab in user's group)
+  fco_url:
+    description: >
+      The URL of the FCO API
+    default: https://cp.diceproject.flexiant.net
+  fco_image_uuid:
+    description: >
+      UUID of the image to use as the basis for the VM
+  fco_vdc_uuid:
+    description: >
+      UUID of the VDC to use
+  fco_network_uuid:
+    description: >
+      UUID of the network to be used
+  fco_agent_key:
+    description: >
+      UUID of the SSH key to be used for connecting to the VMs
 
 node_types:
   dice.nodes.CfyWrapper:
@@ -26,17 +60,17 @@ node_templates:
     type: cloudify.flexiant.nodes.Server
     properties:
       auth:
-        username: "username"
-        password: "password"
-        customer: "customer"
-        url: "URL access point"
+        username: { get_input: fco_username }
+        password: { get_input: fco_password }
+        customer: { get_input: fco_customer }
+        url: { get_input: fco_url }
         verify_ca_cert: False
-      image: '87978c6d-5ceb-39b2-8e8b-935503ad0307'
+      image: { get_input: fco_image_uuid }
+      vdc: { get_input: fco_vdc_uuid }
+      network: { get_input: fco_network_uuid }
+      agent_key: { get_input: fco_agent_key }
       disk: "30Gb Storage"
-      vdc: '42bb54ac-4090-3caa-b730-e916b27daeff'
-      network: '5264edab-8d29-329d-b4f9-5f8ca17cff78'
       server_type: '0.5 GB / 1 CPU'
-      agent_key: '288f0541-9921-37a8-a07b-bb47eb27dc10'
       cloudify_agent:
         user: { get_input: agent_user }
 
@@ -61,3 +95,5 @@ outputs:
       concat:
         - 'http://'
         - get_attribute: [vm, ip]
+        - ':'
+        - get_attribute: [web_server, port]

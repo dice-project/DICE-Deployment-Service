@@ -8,15 +8,22 @@ imports:
 
 inputs:
   webserver_port:
+    description: >
+      Wrapper's RESTful API and Web Application port
     default: 8000
   agent_user:
+    description: >
+      Linux user on the VM, which will run the Cloudify agent
     default: ubuntu
   image:
-    default: 36dbc4e8-81dd-49f5-9e43-f44a179a64ea
+    description: >
+      OpenStack image UUID for the base of the VM
   flavor:
-    default: 070005dc-9bd5-4c0c-b2c6-88f81a7b7239
+    description: >
+      OpenStack flavor UUID for the base VM
   cfy_manager:
-    default: 172.16.95.126
+    description: >
+      Addesss of the Cloudify Manager instance
 
 node_types:
   dice.nodes.CfyWrapper:

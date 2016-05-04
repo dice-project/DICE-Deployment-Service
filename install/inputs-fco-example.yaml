@@ -1,0 +1,18 @@
+# General settings
+agent_user: ubuntu
+
+# Cloudify Manager's address
+cfy_manager: 109.231.122.106
+# Port to use for the wrapper's API and the web application
+webserver_port: 8000
+
+# Flexiant Cloud Orchestrator (FCO) parameters
+fco_url: https://cp.diceproject.flexiant.net
+fco_image_uuid:   uuid
+fco_vdc_uuid:     uuid
+fco_network_uuid: uuid
+fco_agent_key:    uuid
+# User's FCO credentials
+fco_username: username
+fco_password: password
+fco_customer: uuid

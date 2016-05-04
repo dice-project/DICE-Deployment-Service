@@ -1,0 +1,7 @@
+image: uuid
+flavor: uuid
+
+agent_user: 'ubuntu'
+
+cfy_manager: 172.16.95.115
+webserver_port: 8000
