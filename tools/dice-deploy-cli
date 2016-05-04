@@ -38,7 +38,12 @@ function usage ()
     * deploy: creates a new deployment in the container
         parameters: container-uuid package-file-name
         returns: deployment-uuid
-        example: $1 create 14132d9b-d86d-48e9-a24c-deb949d9f3d7 pi-cluster.tar.gz
+        example: $1 deploy 14132d9b-d86d-48e9-a24c-deb949d9f3d7 pi-cluster.tar.gz
+
+    * status: get deployment status
+        parameters: deployment-uuid
+        returns: the deployment's current status
+        example: $1 status 8f151bb0-db92-48e1-88a0-397258e01f11
 
     * wait-deploy: after calling deploy, this will block until deploy finishes
         parameters: container-uuid
@@ -59,19 +64,13 @@ function usage ()
 
     * node-ips: get a list of node IP host addresses in the container
         parameters: container-uuid
-        returns: list of dicttionaries of node properties
+        returns: list of dictionaries of node properties
         example: $1 node-ips 14132d9b-d86d-48e9-a24c-deb949d9f3d7
 
     * nodes: get a list of nodes and their properties in the container
         parameters: container-uuid
-        returns: list of dicttionaries of node properties
+        returns: list of dictionaries of node properties
         example: $1 nodes 14132d9b-d86d-48e9-a24c-deb949d9f3d7
-
-    * status: get deployment status
-        parameters: deployment-uuid
-        returns: the deployment's current status
-        example: $1 status 14132d9b-d86d-48e9-a24c-deb949d9f3d7
-
 EOF
 }
 
