@@ -1,194 +1,258 @@
 #!/bin/bash
 
+# ########################################################################## #
+# Global configuration                                                       #
+# ########################################################################## #
+
 # Url of dice deployment service
 DICE_DEPLOY_URL_FILE=".dice-deploy-url"
 # The authentication token
 DICE_DEPLOY_AUTH_TOKEN_FILE=".dice-deploy-auth"
-
-# constants
+# Blueprint ID field
 CST_BLUEPRINT_ID_FIELD="id"
 
-if [ -e "$DICE_DEPLOY_URL_FILE" ]
-then
-  DICE_DEPLOY=$(cat $DICE_DEPLOY_URL_FILE)
-fi
+# ########################################################################## #
+# Helper functions for various tasks                                         #
+# ########################################################################## #
 
-# Output the usage of the tool
-function usage ()
+# Log things to stderr (be pipe-friendly)
+function log ()
 {
-  cat <<EOF
-  Usage:
-    $1 ACTION PARAM [ PARAM ... ]
-
-  Available actions:
-    * use: use the URL as the DICE deployment service URL
-        parameters: url
-        example: $1 use http://109.231.122.46:8000
-
-    * authenticate: provide username and password to obtain the authentication token
-        parameters: username password
-        example: $1 authenticate testuser 123456
-
-    * create: creates a new container
-        parameters: description (optional)
-        returns: container-uuid
-        example: $1 create
-        example: $1 create "Smart Energy streaming application"
-
-    * deploy: creates a new deployment in the container
-        parameters: container-uuid package-file-name
-        returns: deployment-uuid
-        example: $1 deploy 14132d9b-d86d-48e9-a24c-deb949d9f3d7 pi-cluster.tar.gz
-
-    * status: get deployment status
-        parameters: deployment-uuid
-        returns: the deployment's current status
-        example: $1 status 8f151bb0-db92-48e1-88a0-397258e01f11
-
-    * wait-deploy: after calling deploy, this will block until deploy finishes
-        parameters: container-uuid
-        example: $1 wait-deploy 14132d9b-d86d-48e9-a24c-deb949d9f3d7
-
-    * teardown: uninstalls and deletes an existing deployment
-        parameters: deployment-uuid
-        example: $1 teardown 8f151bb0-db92-48e1-88a0-397258e01f11
-
-    * delete: deletes an existing container
-        parameters: container-uuid
-        example: $1 delete 14132d9b-d86d-48e9-a24c-deb949d9f3d7
-
-    * outputs: get deployment parameters
-        parameters: container-uuid
-        returns: dict of deployment parameters
-        example: $1 outputs 14132d9b-d86d-48e9-a24c-deb949d9f3d7
-
-    * node-ips: get a list of node IP host addresses in the container
-        parameters: container-uuid
-        returns: list of dictionaries of node properties
-        example: $1 node-ips 14132d9b-d86d-48e9-a24c-deb949d9f3d7
-
-    * nodes: get a list of nodes and their properties in the container
-        parameters: container-uuid
-        returns: list of dictionaries of node properties
-        example: $1 nodes 14132d9b-d86d-48e9-a24c-deb949d9f3d7
-EOF
+  echo "$1" >&2
 }
 
-# Check the number of parameters supplied vs. the number expected.
-# Usage: parameter-check numExpected $#
-function parameter-check ()
+# Read the token from the file. Use authenticate function to create one
+function get-authentication ()
 {
-  # Parameter check
-  if [[ $1 -ne $2 ]]
+  if [[ -f "$DICE_DEPLOY_AUTH_TOKEN_FILE" ]]
   then
-    echo "Bad number of arguments - $1 expected."
-    echo ""
-    usage $(basename $0)
-    exit -1
+    cat $DICE_DEPLOY_AUTH_TOKEN_FILE
+  else
+    log "Authentication required. Please run:"
+    log "  $0 authenticate USERNAME PASSWORD"
+    log ""
+    exit -2
   fi
 }
 
 # Check if the service URL is set
-function service-url-check ()
+function get-service-url ()
 {
-  if [ "$DICE_DEPLOY" == "" ]
+  if [[ -n $DICE_DEPLOY ]]
   then
-    echo "DICE deployment service URL not set. Use the use command to set it."
-    echo ""
-    exit 1
+    echo $DiCE_DEPLOY
+  elif [[ -f "$DICE_DEPLOY_URL_FILE" ]]
+  then
+    cat $DICE_DEPLOY_URL_FILE
+  else
+    log "DICE deployment service URL not set. Please run:"
+    log "  $0 use SERVICE_ADDRESS"
+    exit -3
   fi
 }
 
-# If there is an error, we display the contents and exit. Otherwise
-# we do nothing.
-function process-error ()
+# Wrapper around curl that adds authentication header, provides proper
+# switches and checks return value.
+function request-impl ()
 {
-  if [ "$1" != "0" ]
+  local auth=$1 && shift
+  local method=${1^^} && shift
+  local endpoint=$1 && shift
+
+  local out
+
+  case $method in
+    GET|POST|PUT|DELETE|PATCH) ;;
+    *)
+      echo "Unsupported method: '$method'."
+      exit 1;
+      ;;
+  esac
+  local url="$(get-service-url)${endpoint}"
+
+  if [[ $auth == "yes" ]]
   then
-    shift
-    echo "The request failed."
-    echo ""
-    echo $*
+    local token=$(get-authentication)
+    out=$(curl -s -S -f -k -X $method -H "Authorization: Token $token" \
+      "$@" "$url" 2>&1)
+  else
+    out=$(curl -s -S -f -k -X $method "$@" "$url" 2>&1)
+  fi
+
+  if [[ $? -ne 0 ]]
+  then
+    log "Request failed:"
+    log
+    log "$out"
     exit -1
   fi
+  echo "$out"
 }
 
-# Requests creation of a new container
+function request-noauth ()
+{
+  request-impl "no" "$@"
+}
+
+function request ()
+{
+  request-impl "yes" "$@"
+}
+
+# ########################################################################## #
+# Main script executors (help system and dispatch function)                  #
+# ########################################################################## #
+
+# Output the usage of the tool
+function usage ()
+{
+  log "Usage:"
+
+  if [[ -z "$1" ]]
+  then
+    log "$0 ACTION [PARAM ...]"
+    log
+    log "Available actions:"
+    for doc in "${DOCS[@]}"
+    do
+      echo "$doc" | sed -n 2p
+    done | sort >&2
+  else
+    log "${DOCS[$1]}"
+  fi
+}
+
+# Main action dispatch
+function dispatch ()
+{
+  # Make sure that any overrides come first in case
+  local action=$1 && shift
+  func=${ACTIONS[$action]}
+  if [[ "x$func" == "x" ]]
+  then
+    log "Unknown command: '$action'"
+    usage
+    exit 1
+  fi
+  if [[ $# -lt ${PARAMS[$action]} ]]
+  then
+    log "Bad number of arguments: $# (expected ${PARAMS[$action]})"
+    usage $action
+    exit 1
+  fi
+  $func "$@"
+}
+
+# ########################################################################## #
+# Supported actions (with provided documentation)                            #
+# ########################################################################## #
+
+# List of valid actions and associated functions with docs
+declare -A ACTIONS
+declare -A PARAMS
+declare -A DOCS
+
+# Actual functionality definition
+ACTIONS[help]=usage
+PARAMS[help]=0
+DOCS[help]="
+  help: display help
+    parameters: [command]
+    example: $0 help
+    example: $0 help deploy
+"
+
+ACTIONS[use]=use
+PARAMS[use]=1
+DOCS[use]="
+  use: use the URL as the DICE deployment service URL
+    parameters: url
+    example: $0 use http://109.231.122.46:8000
+"
+function use ()
+{
+  local url=${1%\/}
+
+  log "Using $1 as the URL for the DICE deployment tool service"
+  # We don't use request helpers here because we have no url fixed
+  curl -s -S -k -f "${url}/docs" &> /dev/null
+  if [[ $? -ne 0 ]]
+  then
+    log "Connection to $1 failed. We will not use this URL."
+    log
+    exit -1
+  fi
+  log
+
+  echo "$url" > $DICE_DEPLOY_URL_FILE
+}
+
+ACTIONS[authenticate]=authenticate
+PARAMS[authenticate]=2
+DOCS[authenticate]="
+  authenticate: provide username and password to obtain the authentication
+                token
+    parameters: username password
+    example: $0 authenticate testuser 123456
+"
+function authenticate ()
+{
+  log "Obtaining the authentication token"
+  out=$(request-noauth post /auth/get-token -d "username=${1}&password=${2}")
+  token=$(echo $out | grep -Po '(?<="'token'":")[^"]*')
+  echo $token > "$DICE_DEPLOY_AUTH_TOKEN_FILE"
+  log "Authenticated"
+}
+
+ACTIONS[create]=create-container
+PARAMS[create]=0
+DOCS[create]="
+  create: creates a new container
+    parameters: description (optional)
+    returns: container-uuid
+    example: $0 create
+    example: $0 create \"Smart Energy streaming application\"
+"
 function create-container ()
 {
-  service-url-check
-  get-authentication
-
-  COMMENT="$1"
-
-  echo -n "Creating a new container ... "
-  out=$(curl -s -S -f -k -H "Authorization: Token $TOKEN" --data "description=$COMMENT" ${DICE_DEPLOY}/containers/)
-  process-error $? $out
-
+  log -n "Creating a new container ... "
+  out=$(request post /containers -d "description=$1")
   uuid=$(echo $out | grep -Eo '"[0-9A-Fa-f-]+"' | grep -Eo '[0-9A-Fa-f-]+')
-  echo "DONE."
+  log "DONE."
   echo "Container UUID: $uuid"
 }
 
-# Requests the details of the container
-function container-info ()
+ACTIONS[delete]=delete-container
+PARAMS[delete]=1
+DOCS[delete]="
+  delete: deletes an existing container
+    parameters: container-uuid
+    example: $0 delete 14132d9b-d86d-48e9-a24c-deb949d9f3d7
+"
+function delete-container ()
 {
-  parameter-check 1 $#
-  service-url-check
-  get-authentication
-
-  CONTAINER_UUID="$1"
-
-  echo -n "Obtaining the container details ..."
-  out=$(curl -s -S -f -k -H "Authorization: Token $TOKEN" ${DICE_DEPLOY}/containers/${CONTAINER_UUID}/)
-  process-error $? $out
-
-  echo "DONE."
-  echo $out
+  log -n "Deleting deployment ... "
+  request delete /containers/$1
+  log "DONE."
 }
 
-# For a container with a deployment, this extracts the
-# deployment id
-function extract-deploy-id ()
-{
-  parameter-check 1 $#
-  service-url-check
-
-  CONTAINER_UUID="$1"
-  out=$(container-info $1 | tail -n 1)
-  ids=$(echo $out | grep -Po '(?<="'$CST_BLUEPRINT_ID_FIELD'":")[^"]*')
-
-  # grep isn't good at discerning between nested-in ids and the
-  # ids of the parent, so this is a hack to get the right one out
-  for id in $ids
-  do
-    if [ "$id" != "$CONTAINER_UUID" ]
-    then
-      echo $id
-      return
-    fi
-  done
-}
-
-# Creates and deploys a blueprint inside a container. If another
-# blueprint has been deployed in this container, the service tears
-# it down first, then deploys the supplied one.
+ACTIONS[deploy]=deploy
+PARAMS[deploy]=2
+DOCS[deploy]="
+  deploy: creates a new deployment in the container
+    parameters: container-uuid package-file-name
+    returns: deployment-uuid
+    example: $0 deploy 14132d9b-d86d-48e9-a24c-deb949d9f3d7 pi-cluster.tar.gz
+"
 function deploy ()
 {
-  parameter-check 2 $#
-  service-url-check
-  get-authentication
-
   CONTAINER_UUID="$1"
   FILE_NAME="$2"
 
-  echo -n "Creating a new deployment ... "
-  out=$(curl -s -S -f -k -H "Authorization: Token $TOKEN" -X POST -F "file=@${FILE_NAME}" ${DICE_DEPLOY}/containers/${CONTAINER_UUID}/blueprint)
-  process-error $? $out
-  echo $out
-  
+  log -n "Creating a new deployment ... "
+  out=$(request post /containers/$1/blueprint -F "file=@$2")
   uuids=$(echo $out | grep -Po '(?<="'$CST_BLUEPRINT_ID_FIELD'":")[^"]*')
-  echo "DONE."
+  log "DONE."
   # there are two UUIDs: one is from the container, the other one from deploy
   for uuid in $uuids
   do
@@ -199,15 +263,86 @@ function deploy ()
   done
 }
 
-# Blocks until the deployment in the given container has the status deployed.
+ACTIONS[container-info]=container-info
+PARAMS[container-info]=1
+DOCS[container-info]="
+  container-info: reports container state
+    parameters: container-uuid
+    returns: container information
+    example: $0 container-info b8af9e0b-ec5a-408f-8ad8-0a754b47c976
+"
+function container-info ()
+{
+  log -n "Obtaining the container details ..."
+  out=$(request get /containers/$1)
+  log "DONE."
+  echo $out
+}
+
+ACTIONS[teardown]=teardown
+PARAMS[teardown]=1
+DOCS[teardown]="
+  teardown: uninstalls and deletes an existing deployment
+    parameters: deployment-uuid
+    example: $0 teardown 8f151bb0-db92-48e1-88a0-397258e01f11
+"
+function teardown ()
+{
+  log -n "Deleting deployment ... "
+  request delete /blueprints/$1
+  log "DONE."
+}
+
+ACTIONS[extract-deploy-id]=extract-deploy-id
+PARAMS[extract-deploy-id]=1
+DOCS[extract-deploy-id]="
+  extract-deploy-id: get deployment ID from selected container
+    parameters: container-uuid
+    example: $0 extract-deploy-id b8af9e0b-ec5a-408f-8ad8-0a754b47c976
+"
+function extract-deploy-id ()
+{
+  out=$(container-info $1 | tail -n 1)
+  ids=$(echo $out | grep -Po '(?<="'$CST_BLUEPRINT_ID_FIELD'":")[^"]*')
+
+  # grep isn't good at discerning between nested-in ids and the
+  # ids of the parent, so this is a hack to get the right one out
+  for id in $ids
+  do
+    if [ "$id" != "$1" ]
+    then
+      echo $id
+      return
+    fi
+  done
+}
+
+ACTIONS[status]=deployment-status
+PARAMS[status]=1
+DOCS[status]="
+  status: get deployment status
+    parameters: deployment-uuid
+    returns: the deployment's current status
+    example: $1 status 8f151bb0-db92-48e1-88a0-397258e01f11
+"
+function deployment-status ()
+{
+  log "Obtaining deployment status ..."
+  out=$(request get /blueprints/$1)
+  status=$(echo "${out}" | grep -Po '(?<="state_name":")[^"]*')
+  echo "$status"
+}
+
+ACTIONS[wait-deploy]=wait-deploy
+PARAMS[wait-deploy]=1
+DOCS[wait-deploy]="
+  wait-deploy: after calling deploy, this will block until deploy finishes
+    parameters: container-uuid
+    example: $1 wait-deploy 14132d9b-d86d-48e9-a24c-deb949d9f3d7
+"
 function wait-deploy ()
 {
-  parameter-check 1 $#
-  service-url-check
-  get-authentication
-
-  CONTAINER_UUID="$1"
-  DEPLOYMENT_UUID=$(extract-deploy-id $CONTAINER_UUID)
+  DEPLOYMENT_UUID=$(extract-deploy-id $1)
 
   status=$(deployment-status $DEPLOYMENT_UUID | tail -n 1)
   while [[ ( "$status" != "deployed" ) && \
@@ -218,7 +353,7 @@ function wait-deploy ()
     then
       exit -3
     fi
-    echo "Current status: $status"
+    log "Current status: $status"
     sleep 5
     status=$(deployment-status $DEPLOYMENT_UUID | tail -n 1)
   done
@@ -228,213 +363,53 @@ function wait-deploy ()
   fi
 }
 
-# Tears down the deployment of a blueprint in the container. The container
-# remains the same.
-function teardown ()
-{
-  parameter-check 1 $#
-  service-url-check
-  get-authentication
-
-  echo -n "Deleting deployment ... "
-  curl -X DELETE -s -S -f -k -H "Authorization: Token $TOKEN" ${DICE_DEPLOY}/blueprints/$1/
-  echo "DONE."
-}
-
-# Deletes the container.
-function delete-container ()
-{
-  parameter-check 1 $#
-  service-url-check
-  get-authentication
-
-  echo -n "Deleting deployment ... "
-  curl -X DELETE -s -S -f -k -H "Authorization: Token $TOKEN" ${DICE_DEPLOY}/containers/$1/
-  echo "DONE."
-}
-
-# Returns the outputs of the deploy.
+ACTIONS[outputs]=outputs
+PARAMS[outputs]=1
+DOCS[outputs]="
+  outputs: get deployment parameters
+    parameters: container-uuid
+    returns: dict of deployment parameters
+    example: $0 outputs 14132d9b-d86d-48e9-a24c-deb949d9f3d7
+"
 function outputs ()
 {
-  parameter-check 1 $#
-  service-url-check
-  get-authentication
-
-  DEPLOYMENT_UUID=$(extract-deploy-id $1)
-
-  #echo -n "Obtaining deployment parameters ... "
-  out=$(curl -s -S -f -k -H "Authorization: Token $TOKEN" ${DICE_DEPLOY}/blueprints/$DEPLOYMENT_UUID/outputs)
-  if [ "$?" != "0" ]
-  then
-    echo "{ \"msg\": \"The request failed.\" }"
-    exit 1
-  fi
-  #echo "DONE."
-  echo $out
+  local blueprint=$(extract-deploy-id $1)
+  request get /blueprints/$blueprint/outputs
 }
 
-# Returns the details of the nodes in the container
+ACTIONS[nodes]=node-list
+PARAMS[nodes]=1
+DOCS[nodes]="
+  nodes: get a list of nodes and their properties in the container
+    parameters: container-uuid [raw]
+    returns: list of dictionaries of node properties
+    example: $0 nodes 14132d9b-d86d-48e9-a24c-deb949d9f3d7
+"
 function node-list ()
 {
-  if [ "$1" == "" ]
-  then
-    echo "Please provide the container id."
-    usage $(basename $0)
-    exit -1
-  fi
-  service-url-check
-  get-authentication
-
-  CONTAINER_UUID="$1"
-  RAW="$2" # optional parameter
-
-  out=$(curl -s -S -f -k -H "Authorization: Token $TOKEN" "${DICE_DEPLOY}/containers/$CONTAINER_UUID/nodes/?$RAW")
-  if [ "$?" != "0" ]
-  then
-    echo "{ \"msg\": \"The request failed.\" }"
-    exit 1
-  fi
-  #echo "DONE."
-  echo $out
+  request get /containers/$1/nodes/?$2
 }
 
-# Returns a deployment's status
-function deployment-status ()
+ACTIONS[node-ips]=node-list-ips
+PARAMS[node-ips]=1
+DOCS[node-ips]="
+  node-ips (DEPRECATED): get a list of node IP host addresses in the container
+    parameters: container-uuid
+    returns: list of dictionaries of node properties
+    example: $0 node-ips 14132d9b-d86d-48e9-a24c-deb949d9f3d7
+    replacement: use nodes with second parameter set to \"raw\"
+"
+function node-list-ips ()
 {
-  parameter-check 1 $#
-  service-url-check
-  get-authentication
-
-  echo "Obtaining deployment status ..."
-  out=$(curl -s -S -f -k -H "Authorization: Token $TOKEN" "${DICE_DEPLOY}/blueprints/${1}/")
-  process-error $? $out
-
-  status=$(echo "${out}" | grep -Po '(?<="state_name":")[^"]*')
-  echo "$status"
+  request get /containers/$1/nodes/?raw
 }
 
-# Assign the DICE deployment tool service URL to be used
-# in the subsequent tool calls.
-function use ()
-{
-  # Parameter check
-  if [[ $# -ne 1 ]]
-  then
-    usage $(basename $0)
-    exit 0
-  fi
-
-  echo "Using $1 as the URL for the DICE deployment tool service"
-  curl -s -S -k -f "$1"/docs > /dev/null
-  if [ "$?" != "0" ]
-  then
-    echo "Connection to $1 failed. We will not use this URL."
-    echo ""
-    exit -1
-  fi
-
-  echo "$1" > $DICE_DEPLOY_URL_FILE
-
-  echo ""
-}
-
-# Acquire the authentication token and store it in a file to be used in the
-# subsequent tool calls
-function authenticate ()
-{
-  parameter-check 2 $#
-  service-url-check
-
-  USERNAME="$1"
-  PASSWORD="$2"
-
-  echo "Obtaining the authentication token"
-  out=$(curl -sS -f -k --data "username=${USERNAME}&password=${PASSWORD}" "${DICE_DEPLOY}/auth/get-token")
-  process-error $? $out
-
-  token=$(echo $out | grep -Po '(?<="'token'":")[^"]*')
-  echo $token > "$DICE_DEPLOY_AUTH_TOKEN_FILE"
-  echo "Authenticated"
-}
-
-# Read the token from the file. Use authenticate function to create one
-function get-authentication ()
-{
-  if [ -e "$DICE_DEPLOY_AUTH_TOKEN_FILE" ]
-  then
-    TOKEN=$(cat $DICE_DEPLOY_AUTH_TOKEN_FILE)
-  else
-    echo "Authentication required. Please run:"
-    echo "$(basename $0) authenticate USERNAME PASSWORD"
-    echo ""
-    exit -2
-  fi
-}
 
 # Parameter check
-if [[ "$#" == "0"  ]]
+if [[ $# -eq 0 ]]
 then
-  usage $(basename $0)
+  usage
   exit 0
 fi
 
-case $1 in
-  use)
-    use $2
-    ;;
-
-  authenticate)
-    authenticate $2 $3
-    ;;
-
-  create)
-    create-container "$2"
-    ;;
-
-  deploy)
-    deploy $2 "$3"
-    ;;
-
-  wait-deploy)
-    wait-deploy $2
-    ;;
-
-  teardown)
-    teardown $2
-    ;;
-
-  delete)
-    delete-container $2
-    ;;
-
-  container-info)
-    container-info $2
-    ;;
-
-  extract-deploy-id)
-    extract-deploy-id $2
-    ;;
-
-  outputs)
-    outputs $2
-    ;;
-
-  nodes)
-    node-list $2
-    ;;
-
-  node-ips)
-    node-list $2 raw
-    ;;
-
-  status)
-    deployment-status $2
-    ;;
-
-  *)
-    echo "Unknown command: '$1'"
-    echo ""
-    usage $(basename $0)
-    exit 1
-    ;;
-esac
+dispatch "$@"

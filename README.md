@@ -315,6 +315,10 @@ Deleting container ... DONE.
 
 ## Command line tool action reference
 
+Complete reference documentation is displayed when the tool is invoked with no
+arguments. To get more in-depth documentation with examples for specific
+command, use `dice-deploy-cli help COMMAND`.
+
 ### General actions
 
 * `use`: use the URL as the DICE deployment service URL
