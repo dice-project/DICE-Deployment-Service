@@ -382,6 +382,22 @@ These actions require deployment's UUID as a parameter.
   * example: `./dice-deploy-cli teardown $DEPLOYMENT_UUID`
 
 
+### Input actions
+
+Next two actions make it possible to add and delete inputs on deployment
+service.
+
+* `input-add`: add an input that is added to all yamls (not archives!)
+  * parameters: key value description
+  * returns: dict, representing new input
+  * example: `./dice-deploy-cli input-add large_flavor_id 654fee342 "flavor"`
+
+* `input-delete`: delete an input
+  * parameters: key
+  * returns: None
+  * example: `./dice-deploy-cli input-delete large_flavor_id`
+
+
 # Development notes
 
 ## Developing with PyCharm

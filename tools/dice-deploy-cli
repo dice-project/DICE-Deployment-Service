@@ -404,6 +404,34 @@ function node-list-ips ()
   request get /containers/$1/nodes/?raw
 }
 
+ACTIONS[input-add]=input-add
+PARAMS[input-add]=3
+DOCS[input-add]="
+  input-add: add an input that is added to all yamls (not archives!)
+    parameters: key value description
+    returns: dict, representing new input
+    example: $0 input-add large_flavor_id 654fee342 \"OpenStack flavor\"
+"
+function input-add ()
+{
+  local key=$1 && shift
+  local val=$1 && shift
+  request post /inputs -d "key=$key&value=$val&description=$*"
+}
+
+ACTIONS[input-delete]=input-delete
+PARAMS[input-delete]=1
+DOCS[input-delete]="
+  input-delete: delete an input
+    parameters: key
+    returns: None
+    example: $0 input-delete large_flavor_id
+"
+function input-delete ()
+{
+  request delete /inputs/$1 &> /dev/null
+}
+
 
 # Parameter check
 if [[ $# -eq 0 ]]
