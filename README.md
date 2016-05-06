@@ -317,9 +317,14 @@ Deleting container ... DONE.
 
 Complete reference documentation is displayed when the tool is invoked with no
 arguments. To get more in-depth documentation with examples for specific
-command, use `dice-deploy-cli help COMMAND`.
+command, use `./dice-deploy-cli help COMMAND`.
 
 ### General actions
+
+* `help`: display help
+  * parameters: [command]
+  * example: `./dice-deploy-cli help`
+  * example: `./dice-deploy-cli help deploy`
 
 * `use`: use the URL as the DICE deployment service URL
   * parameters: url
@@ -348,6 +353,11 @@ These actions (except for `create`) require the container's UUID as a parameter.
   * parameters: container-uuid
   * example: `./dice-deploy-cli wait-deploy $CONTAINER_UUID`
 
+* `container-info`: reports container state
+  * parameters: container-uuid
+  * returns: container information
+  * example:  `./dice-deploy-cli container-info $CONTAINER_UUID`
+
 * `delete`: deletes an existing container
   * parameters: container-uuid
   * example: `./dice-deploy-cli delete $CONTAINER_UUID`
@@ -363,7 +373,7 @@ These actions (except for `create`) require the container's UUID as a parameter.
   * example: `./dice-deploy-cli node-ips $CONTAINER_UUID`
 
 * `nodes`: get a list of nodes and their properties in the container
-  * parameters: container-uuid
+  * parameters: container-uuid [raw]
   * returns: list of dictionaries of node properties
   * example: `./dice-deploy-cli nodes $CONTAINER_UUID`
 
