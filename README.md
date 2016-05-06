@@ -469,3 +469,15 @@ clear all messages simply restart celery-dashboard service.
 
 There is also log file (tasks.log) in dice_deploy_django folder where tasks
 write to.
+
+### Running tests
+
+In order for tests to run properly, some special settings need to be enabled.
+Proper command for executing tests is thus:
+
+    python manage.py test --settings=dice_deploy.settings_tests
+
+For test of specific module, run (example is set to run `test_models` module)
+
+    python manage.py test unit_tests.test_models \
+      --settings=dice_deploy.settings_tests
