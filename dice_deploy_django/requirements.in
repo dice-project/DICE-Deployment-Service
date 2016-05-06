@@ -10,3 +10,4 @@ django-celery
 django-rest-swagger
 jsonfield
 PyYAML
+gunicorn

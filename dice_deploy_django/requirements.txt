@@ -32,3 +32,4 @@ PyYAML==3.11              # via django-rest-swagger
 requests==2.7.0           # via cloudify-rest-client
 six==1.10.0               # via fake-factory, python-dateutil
 tornado==4.2.0            # via flower
+gunicorn==19.4.5

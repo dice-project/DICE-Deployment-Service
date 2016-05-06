@@ -13,3 +13,4 @@ cd dice_deploy_django
 pip-sync
 bower install
 python manage.py migrate
+python manage.py create-dice-superuser

@@ -23,6 +23,7 @@ function reset()
   rm -rf db.sqlite3 uploads cfy_wrapper/migrations
   python manage.py makemigrations cfy_wrapper
   python manage.py migrate
+  python manage.py create-dice-superuser
 }
 
 case $1 in

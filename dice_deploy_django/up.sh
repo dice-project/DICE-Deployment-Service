@@ -15,5 +15,8 @@ gunicorn --bind 0.0.0.0:${port} \
          --pid gunicorn.pid \
          --daemon \
          --log-file gunicorn.log \
+        # Turn SSL On
+        # --keyfile dice_deploy/certs/gunicorn.key \
+        # --certfile dice_deploy/certs/gunicorn.crt \
          dice_deploy.wsgi:application
 

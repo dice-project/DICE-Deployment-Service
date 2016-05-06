@@ -49,10 +49,11 @@ Navigate to dice_deploy_django folder and run
 ```
 vagrant ssh
 cd dice_deploy_django
-python manage.py runserver 0.0.0.0:8000
+python manage.py runserver 0.0.0.0:8080
 ```
 Now the web GUI is available at `localhost:7080` from your host machine.
-Direct access to REST API is given at `localhost:7080/docs`.
+Default username is `root` with password `root`. Navigate to `/admin` 
+page to add new users. Direct access to REST API is given at `/docs`.
 Visualization of your asynchronous tasks is available at `localhost:8055`.
 
 
