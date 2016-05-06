@@ -37,12 +37,6 @@ def generate_archive_from_yaml(f_yaml):
             # add the yaml
             tar.add(f_tmp_yaml.name, filter=set_permissions,
                     arcname=os.path.join(settings.ARCHIVE_FOLDER_NAME, settings.YAML_NAME))
-            # add common archive files
-            for filename in os.listdir(settings.BLUEPRINT_PACKAGE_DIR):
-                tar.add(
-                    os.path.join(settings.BLUEPRINT_PACKAGE_DIR, filename), filter=set_permissions,
-                    arcname=os.path.join(settings.ARCHIVE_FOLDER_NAME, os.path.basename(filename))
-                )
         f_tmp.flush()
 
     # return opened temporary file with archive in it
