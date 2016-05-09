@@ -1,6 +1,15 @@
 #!/bin/bash
 
-port=8000
+echo "I am $(whoami)"
+
+port=${1-8000}
+delay=${2-0}
+
+if [ "$delay" != "0" ]
+then
+    echo "Sleeping for $delay s"
+    sleep $delay
+fi
 
 celery multi start main-worker@localhost \
     --app=dice_deploy \
@@ -15,8 +24,13 @@ gunicorn --bind 0.0.0.0:${port} \
          --pid gunicorn.pid \
          --daemon \
          --log-file gunicorn.log \
-        # Turn SSL On
-        # --keyfile dice_deploy/certs/gunicorn.key \
-        # --certfile dice_deploy/certs/gunicorn.crt \
          dice_deploy.wsgi:application
 
+        # Turn SSL On
+#gunicorn --bind 0.0.0.0:${port} \
+#         --pid gunicorn.pid \
+#         --daemon \
+#         --log-file gunicorn.log \
+        # --keyfile dice_deploy/certs/gunicorn.key \
+        # --certfile dice_deploy/certs/gunicorn.crt \
+#         dice_deploy.wsgi:application

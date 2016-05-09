@@ -6,25 +6,18 @@ cd /home/ubuntu
 . venv/bin/activate
 cd dice_deploy_django
 
-ctx logger info "Starting celery worker"
-celery multi start main-worker@localhost \
-    --app=dice_deploy \
-    --queues=dice_deploy \
-    --broker='amqp://guest:guest@localhost:5672//' \
-    --without-gossip --without-mingle --events \
-    --config=dice_deploy.settings \
-    -c 1 \
-    -l INFO
-
-# make sure that celery has enough time to create queue and everything
-sleep 10
-
-ctx logger info "Starting server"
 port=$(ctx node properties port)
-gunicorn --bind 0.0.0.0:${port} \
-         --pid gunicorn.pid \
-         --daemon \
-         --log-file gunicorn.log \
-         dice_deploy.wsgi:application
+ctx logger info "Sending application start to a delayed start"
+
+#nohup bash up.sh $port 60 > /home/ubuntu/startup-nohup.out &
+
+ctx logger info "Up with the service"
+bash up.sh $port 60
+sleep 5
+ctx logger info "Down with the service"
+bash down.sh
+ctx logger info "Up with the service again"
+bash up.sh $port 20
+
 
 ctx logger info "Done starting"
