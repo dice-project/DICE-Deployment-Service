@@ -1,0 +1,94 @@
+tosca_definitions_version: cloudify_dsl_1_1
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.2.1/types.yaml
+  - http://www.getcloudify.org/spec/chef-plugin/1.2/plugin.yaml
+  - types/dice.yaml
+
+node_templates:
+
+  zookeeper_vm:
+    type: dice.medium_host
+    instances:
+      deploy: 1
+
+  storm_nimbus_vm:
+    type: dice.medium_host
+    instances:
+      deploy: 1
+
+  storm_vm:
+    type: dice.medium_host
+    instances:
+      deploy: 1
+
+  zookeeper:
+    type: dice.zookeeper
+    properties:
+      tickTime: 1500
+      initLimit: 10
+      syncLimit: 5
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: zookeeper_vm
+        source_interfaces:
+          cloudify.interfaces.relationship_lifecycle:
+            preconfigure: scripts/connect_zookeeper_servers.sh
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create: scripts/configure_hosts.sh
+
+  storm_nimbus:
+    type: dice.storm_nimbus
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: storm_nimbus_vm
+        source_interfaces:
+          cloudify.interfaces.relationship_lifecycle:
+            preconfigure: scripts/connect_storm_to_nimbus.sh
+      - type: cloudify.relationships.connected_to
+        target: zookeeper
+        source_interfaces:
+          cloudify.interfaces.relationship_lifecycle:
+            preconfigure: scripts/connect_storm_to_zookeeper.sh
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create: scripts/configure_hosts.sh
+
+  storm:
+    type: dice.storm
+    properties:
+      component.count_bolt_num: 1
+      component.split_bolt_num: 1
+      component.spout_num: 3
+      topology.max.spout.pending: 100
+      storm.messaging.netty.min_wait_ms: 100
+      topology.sleep.spout.wait.strategy.time.ms: 1
+
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: storm_vm
+      - type: cloudify.relationships.connected_to
+        target: zookeeper
+        source_interfaces:
+          cloudify.interfaces.relationship_lifecycle:
+            preconfigure: scripts/connect_storm_to_zookeeper.sh
+      - type: cloudify.relationships.connected_to
+        target: storm_nimbus
+        source_interfaces:
+          cloudify.interfaces.relationship_lifecycle:
+            preconfigure: scripts/connect_storm_to_nimbus.sh
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create: scripts/configure_hosts.sh
+
+outputs:
+  storm_nimbus_address:
+    description: The address to be used by the storm client
+    value: { get_attribute: [storm_nimbus_vm, ip] }
+  storm_nimbus_gui:
+    description: URL of the Storm nimbus gui
+    value: { concat: [ 'http://', { get_attribute: [storm_nimbus_vm, ip] }, ':8080' ] }
+  zookeeper_endpoint:
+    description: Debugging endpoint to see if zookeeper lives
+    value: { concat: [ { get_attribute: [zookeeper_vm, ip] }, ':2181' ] }
