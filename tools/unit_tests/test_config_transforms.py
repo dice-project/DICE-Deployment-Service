@@ -8,8 +8,10 @@ class TestConfigurationTransformation(unittest.TestCase):
     FILE_PATH = 'unit_tests/files'
 
     FILE_SINGLE_NODE_BLUEPRINT = '%s/single-node-blueprint.yaml' % FILE_PATH
+    FILE_FULL_BLUEPRINT = '%s/full-blueprint.yaml' % FILE_PATH
 
     FILE_CO_OPTIONS = '%s/expconfig.yaml' % FILE_PATH
+    FILE_CO_OPTIONS_MULTINODE = '%s/expconfig-multinode.yaml' % FILE_PATH
 
     FILE_CONFIGURATION_MATLAB = '%s/config-matlab.txt' % FILE_PATH
     FILE_CONFIGURATION_JSON = '%s/config-matlab.json' % FILE_PATH
@@ -52,12 +54,62 @@ class TestConfigurationTransformation(unittest.TestCase):
         options = load_options(self.FILE_CO_OPTIONS)
 
         expected_options = [
-            { 'paramname': 'component.spout_num' },
-            { 'paramname': 'topology.max.spout.pending' },
-            { 'paramname': 'topology.sleep.spout.wait.strategy.time.ms' },
-            { 'paramname': 'component.split_bolt_num' },
-            { 'paramname': 'component.count_bolt_num' },
-            { 'paramname': 'storm.messaging.netty.min_wait_ms' },
+            { 'node': 'storm', 'paramname': 'component.spout_num' },
+            { 'node': 'storm', 'paramname': 'topology.max.spout.pending' },
+            { 'node': 'storm', 
+                'paramname': 'topology.sleep.spout.wait.strategy.time.ms' },
+            { 'node': 'storm', 'paramname': 'component.split_bolt_num' },
+            { 'node': 'storm', 'paramname': 'component.count_bolt_num' },
+            { 'node': 'storm', 
+                'paramname': 'storm.messaging.netty.min_wait_ms' },
+        ]
+
+        self.assertEqual(expected_options, options)
+
+    def test_load_options_multiple_nodes(self):
+        """
+        Load the Configuration Optimization options containing several nodes
+        and check their contents.
+        """
+        options = load_options(self.FILE_CO_OPTIONS_MULTINODE)
+
+        expected_options = [
+            {
+                'node': ['storm', 'storm_nimbus'],
+                'paramname': 'component.spout_num'
+            },
+            {
+                'node': ['storm', 'storm_nimbus'],
+                'paramname': 'topology.max.spout.pending'
+            },
+            {
+                'node': ['storm', 'storm_nimbus'],
+                'paramname': 'topology.sleep.spout.wait.strategy.time.ms'
+            },
+            {
+                'node': ['storm', 'storm_nimbus'],
+                'paramname': 'component.split_bolt_num'
+            },
+            {
+                'node': ['storm', 'storm_nimbus'],
+                'paramname': 'component.count_bolt_num'
+            },
+            {
+                'node': ['storm', 'storm_nimbus'],
+                'paramname': 'storm.messaging.netty.min_wait_ms'
+            },
+            {
+                'node': 'zookeeper',
+                'paramname': 'tickTime'
+            },
+            {
+                'node': 'zookeeper',
+                'paramname': 'initLimit'
+            },
+            {
+                'node': 'zookeeper',
+                'paramname': 'syncLimit'
+            },
         ]
 
         self.assertEqual(expected_options, options)
@@ -167,7 +219,6 @@ class TestConfigurationTransformation(unittest.TestCase):
         #        "Difference in %s (%s != %s)" % (k, v,
         #            updated_storm_properties[k]))
 
-
     def test_single_node_longer_config(self):
         """
         Test updating a blueprint where the configuration to be updated has a
@@ -213,6 +264,63 @@ class TestConfigurationTransformation(unittest.TestCase):
         # verify the outcome
         self.maxDiff = None
         self.assertEqual(expected_blueprint, updated_blueprint)
+
+    def test_multiple_node_update(self):
+        """
+        Load a blueprint with a single node (one VM, one Storm service
+        on top of it). Update the blueprint with new configurations.
+        """
+        # Load and set the input parameters
+        blueprint = load_blueprint(self.FILE_FULL_BLUEPRINT)
+        options = load_options(self.FILE_CO_OPTIONS_MULTINODE)
+        config = [ 2, 4, 10, 15, 20, 2, 3000, 21, 7 ]
+
+        # routine check of the blueprint representation
+        self.assertIsNotNone(blueprint)
+        self.assertTrue('node_templates' in blueprint)
+
+        node_templates = blueprint['node_templates']
+        self.assertTrue('storm' in node_templates)
+        self.assertTrue('storm_nimbus' in node_templates)
+        self.assertTrue('zookeeper' in node_templates)
+
+        # prepare the expected values
+        expected_blueprint = copy.deepcopy(blueprint)
+        expected_storm_nimbus_properties = {
+                "component.spout_num": 2,
+                "topology.max.spout.pending": 4,
+                "topology.sleep.spout.wait.strategy.time.ms": 10,
+                "component.split_bolt_num": 15,
+                "component.count_bolt_num": 20,
+                "storm.messaging.netty.min_wait_ms": 2
+            }
+        expected_storm_properties = {
+                "component.spout_num": 2,
+                "topology.max.spout.pending": 4,
+                "topology.sleep.spout.wait.strategy.time.ms": 10,
+                "component.split_bolt_num": 15,
+                "component.count_bolt_num": 20,
+                "storm.messaging.netty.min_wait_ms": 2
+            }
+        expected_zookeeper_properties = {
+                "tickTime": 3000,
+                "initLimit": 21,
+                "syncLimit": 7
+            }
+        expected_blueprint['node_templates']['storm']['properties'] = \
+            expected_storm_properties
+        expected_blueprint['node_templates']['storm_nimbus']['properties'] = \
+            expected_storm_nimbus_properties
+        expected_blueprint['node_templates']['zookeeper']['properties'] = \
+            expected_zookeeper_properties
+
+        # run the update
+        updated_blueprint = update_blueprint(blueprint, options, config)
+
+        # verify the outcome
+        self.maxDiff = None
+        self.assertEqual(expected_blueprint, updated_blueprint)
+
 
 if __name__ == '__main__':
     unittest.main()

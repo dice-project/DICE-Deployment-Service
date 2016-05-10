@@ -26,7 +26,8 @@ def load_options(options_file_path):
     for i in range(nvars):
         key = 'var%d' % (i + 1)
         item = {
-            'paramname': options_raw[key]['paramname']
+            'paramname': options_raw[key]['paramname'],
+            'node': options_raw[key]['node']
         }
         options += [ item ]
 
@@ -69,12 +70,23 @@ def update_blueprint(input_blueprint, options, config):
     `options`: a dictionary with the Configuration Optimization options
     `config`: the configuration values to be updated.
     """
+    import types
+
     updated_blueprint = copy.deepcopy(input_blueprint)
 
     assert(len(options) == len(config))
 
-    node_properties = updated_blueprint['node_templates']['storm']['properties']
     for i in range(len(options)):
-        node_properties[options[i]['paramname']] = config[i]
+        paramname = options[i]['paramname']
+        nodes = options[i]['node']
+        if isinstance(nodes, types.StringTypes):
+            nodes = [ nodes ]
+
+        for node in nodes:
+            node_template = updated_blueprint['node_templates'][node]
+            node_properties = node_template.get('properties', { })
+            node_properties[paramname] = config[i]
+            if not 'properties' in node_template:
+                node_template['properties'] = node_properties
 
     return updated_blueprint
