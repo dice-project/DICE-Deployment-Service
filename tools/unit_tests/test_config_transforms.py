@@ -1,26 +1,38 @@
 import unittest
 import copy
+import os
 
 from config_tool.utils import *
 
 class TestConfigurationTransformation(unittest.TestCase):
 
-    FILE_PATH = 'unit_tests/files'
+    @classmethod
+    def setUpClass(cls):
+        base_path = os.path.dirname(os.path.realpath(__file__))
+        file_path = os.path.join(base_path, 'files')
 
-    FILE_SINGLE_NODE_BLUEPRINT = '%s/single-node-blueprint.yaml' % FILE_PATH
-    FILE_FULL_BLUEPRINT = '%s/full-blueprint.yaml' % FILE_PATH
+        def fpath(*names):
+            return os.path.join(file_path, *names)
 
-    FILE_CO_OPTIONS = '%s/expconfig.yaml' % FILE_PATH
-    FILE_CO_OPTIONS_MULTINODE = '%s/expconfig-multinode.yaml' % FILE_PATH
+        cls.blueprints = {
+            'single-node': fpath('single-node-blueprint.yaml'),
+            'full': fpath('full-blueprint.yaml'),
+        }
+        cls.options = {
+            'normal': fpath('expconfig.yaml'),
+            'multinode': fpath('expconfig-multinode.yaml'),
+        }
+        cls.config = {
+            'matlab': fpath('config-matlab.txt'),
+            'json': fpath('config-matlab.json'),
+        }
 
-    FILE_CONFIGURATION_MATLAB = '%s/config-matlab.txt' % FILE_PATH
-    FILE_CONFIGURATION_JSON = '%s/config-matlab.json' % FILE_PATH
 
     def test_load_blueprint(self):
         """
         Load the blueprint from a yaml file and check its contents
         """
-        blueprint = load_blueprint(self.FILE_SINGLE_NODE_BLUEPRINT)
+        blueprint = load_blueprint(self.blueprints['single-node'])
         self.assertIsNotNone(blueprint)
 
         self.assertTrue('tosca_definitions_version' in blueprint)
@@ -51,7 +63,7 @@ class TestConfigurationTransformation(unittest.TestCase):
         Load the Configuration Optimization options and check their
         contents.
         """
-        options = load_options(self.FILE_CO_OPTIONS)
+        options = load_options(self.options['normal'])
 
         expected_options = [
             { 'node': 'storm', 'paramname': 'component.spout_num' },
@@ -71,7 +83,7 @@ class TestConfigurationTransformation(unittest.TestCase):
         Load the Configuration Optimization options containing several nodes
         and check their contents.
         """
-        options = load_options(self.FILE_CO_OPTIONS_MULTINODE)
+        options = load_options(self.options['multinode'])
 
         expected_options = [
             {
@@ -120,7 +132,7 @@ class TestConfigurationTransformation(unittest.TestCase):
         from Matlab.
         """
         expected_config = [2, 4, 10, 15000, 20, 2.400003]
-        config = load_configuration_matlab(self.FILE_CONFIGURATION_MATLAB)
+        config = load_configuration_matlab(self.config['matlab'])
 
         self.assertEqual(expected_config, config)
 
@@ -130,7 +142,7 @@ class TestConfigurationTransformation(unittest.TestCase):
         containing an array.
         """
         expected_config = [2, 4, 10, 15000, 20, 2.400003]
-        config = load_configuration_json(self.FILE_CONFIGURATION_JSON)
+        config = load_configuration_json(self.config['json'])
 
         self.assertEqual(expected_config, config)
 
@@ -140,8 +152,8 @@ class TestConfigurationTransformation(unittest.TestCase):
         on top of it). Update the blueprint with new configurations.
         """
         # Load and set the input parameters
-        blueprint = load_blueprint(self.FILE_SINGLE_NODE_BLUEPRINT)
-        options = load_options(self.FILE_CO_OPTIONS)
+        blueprint = load_blueprint(self.blueprints['single-node'])
+        options = load_options(self.options['normal'])
         config = [ 2, 4, 10, 15, 20, 2 ]
 
         # routine check of the blueprint representation
@@ -177,8 +189,8 @@ class TestConfigurationTransformation(unittest.TestCase):
         properties than the configuration to be updated.
         """
         # Load and set the input parameters: truncated options and config values
-        blueprint = load_blueprint(self.FILE_SINGLE_NODE_BLUEPRINT)
-        options = load_options(self.FILE_CO_OPTIONS)
+        blueprint = load_blueprint(self.blueprints['single-node'])
+        options = load_options(self.options['normal'])
         options = options[0:4]
         config = [ 2, 4, 10, 15 ]
         self.assertEqual(len(config), len(options))
@@ -225,8 +237,8 @@ class TestConfigurationTransformation(unittest.TestCase):
         longer list of properties than the configuration to be updated.
         """
         # Load and set the input parameters
-        blueprint = load_blueprint(self.FILE_SINGLE_NODE_BLUEPRINT)
-        options = load_options(self.FILE_CO_OPTIONS)
+        blueprint = load_blueprint(self.blueprints['single-node'])
+        options = load_options(self.options['normal'])
         config = [ 2, 4, 10, 15, 20, 2 ]
 
         # routine check of the blueprint representation
@@ -271,8 +283,8 @@ class TestConfigurationTransformation(unittest.TestCase):
         on top of it). Update the blueprint with new configurations.
         """
         # Load and set the input parameters
-        blueprint = load_blueprint(self.FILE_FULL_BLUEPRINT)
-        options = load_options(self.FILE_CO_OPTIONS_MULTINODE)
+        blueprint = load_blueprint(self.blueprints['full'])
+        options = load_options(self.options['multinode'])
         config = [ 2, 4, 10, 15, 20, 2, 3000, 21, 7 ]
 
         # routine check of the blueprint representation
