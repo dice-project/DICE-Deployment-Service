@@ -1,0 +1,8 @@
+var6:
+    paramname: "comp.test.delay"
+    node: [a, b]
+    options: [3.4 5e1 34]
+    lowerbound: 0
+    upperbound: 0
+    integer: 0
+    categorical: 0

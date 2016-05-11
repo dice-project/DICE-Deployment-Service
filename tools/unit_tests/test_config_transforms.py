@@ -21,6 +21,9 @@ class TestConfigurationTransformation(unittest.TestCase):
         cls.options = {
             'normal': fpath('expconfig.yaml'),
             'multinode': fpath('expconfig-multinode.yaml'),
+            'misc-fields': fpath('expconfig-misc-fields.yaml'),
+            'bad-var-name': fpath('expconfig-bad-var-name.yaml'),
+            'bad-var-info': fpath('expconfig-bad-var-info.yaml'),
         }
         cls.config = {
             'matlab': fpath('config-matlab.txt'),
@@ -125,6 +128,48 @@ class TestConfigurationTransformation(unittest.TestCase):
         ]
 
         self.assertEqual(expected_options, options)
+
+    def test_load_options_misc_fields(self):
+        """
+        Load the Configuration Optimization options containing additional,
+        non-var fields and messed up ordering.
+        """
+        options = load_options(self.options['misc-fields'])
+
+        expected_options = [
+            {
+                'node': ['storm', 'storm_nimbus'],
+                'paramname': 'component.spout_num'
+            },
+            {
+                'node': ['storm', 'storm_nimbus'],
+                'paramname': 'topology.max.spout.pending'
+            },
+            {
+                'node': ['storm', 'storm_nimbus'],
+                'paramname': 'topology.sleep.spout.wait.strategy.time.ms'
+            },
+            {
+                'node': ['a', 'b'],
+                'paramname': 'comp.test.delay',
+            },
+        ]
+        self.assertEqual(expected_options, options)
+
+    def test_load_options_bad_var_name(self):
+        """
+        Loading of non-sequential variables is not supported and should throw
+        an exception
+        """
+        with self.assertRaises(KeyError):
+            load_options(self.options['bad-var-name'])
+
+    def test_load_options_bad_var_info(self):
+        """
+        Loading of variables where not all fields are present is not supported
+        """
+        with self.assertRaises(KeyError):
+            load_options(self.options['bad-var-info'])
 
     def test_load_config_matlab(self):
         """

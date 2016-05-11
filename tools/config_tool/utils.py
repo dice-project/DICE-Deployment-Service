@@ -18,19 +18,14 @@ def load_blueprint(blueprint_file_path):
 
 def load_options(options_file_path):
     """Loads a Configuration optimization YAML file"""
-    options_raw = load_yaml(options_file_path)
-    options = [ ]
-
-    nvars = len(options_raw) - 1
-
-    for i in range(nvars):
-        key = 'var%d' % (i + 1)
-        item = {
-            'paramname': options_raw[key]['paramname'],
-            'node': options_raw[key]['node']
-        }
-        options += [ item ]
-
+    in_opts = load_yaml(options_file_path)
+    vars = {int(k[3:]): v for k, v in in_opts.items() if k.startswith('var')}
+    options = []
+    for i in range(1, len(vars) + 1):
+        options.append({
+            'paramname': vars[i]['paramname'],
+            'node': vars[i]['node'],
+        })
     return options
 
 
