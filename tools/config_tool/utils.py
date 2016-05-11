@@ -56,6 +56,14 @@ def load_configuration_json(configuration_file_path):
     return data['config']
 
 
+def set_configuration_value(node, paramname, value):
+    props = node.get('properties', {})
+    conf = props.get('configuration', {})
+    conf[paramname] = value
+    props['configuration'] = conf
+    node['properties'] = props
+
+
 def update_blueprint(input_blueprint, options, config):
     """
     Updates the input TOSCA blueprint with the new configuration values and
@@ -71,17 +79,12 @@ def update_blueprint(input_blueprint, options, config):
 
     assert(len(options) == len(config))
 
-    for i in range(len(options)):
-        paramname = options[i]['paramname']
-        nodes = options[i]['node']
-        if isinstance(nodes, types.StringTypes):
-            nodes = [ nodes ]
-
+    for option, value in zip(options, config):
+        paramname = option['paramname']
+        nodes = option['node']
+        nodes = [nodes] if isinstance(nodes, basestring) else nodes
         for node in nodes:
             node_template = updated_blueprint['node_templates'][node]
-            node_properties = node_template.get('properties', { })
-            node_properties[paramname] = config[i]
-            if not 'properties' in node_template:
-                node_template['properties'] = node_properties
+            set_configuration_value(node_template, paramname, value)
 
     return updated_blueprint

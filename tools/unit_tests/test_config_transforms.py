@@ -50,8 +50,8 @@ class TestConfigurationTransformation(unittest.TestCase):
         storm = node_templates['storm']
         self.assertTrue('properties' in storm)
 
-        storm_properties = storm['properties']
-        expected_storm_properties = {
+        storm_config = storm['properties']['configuration']
+        expected_storm_config = {
                 "component.count_bolt_num": 1,
                 "component.split_bolt_num": 1,
                 "component.spout_num": 3,
@@ -59,7 +59,7 @@ class TestConfigurationTransformation(unittest.TestCase):
                 "topology.max.spout.pending": 100,
                 "topology.sleep.spout.wait.strategy.time.ms": 1
             }
-        self.assertEqual(expected_storm_properties, storm_properties)
+        self.assertEqual(expected_storm_config, storm_config)
 
     def test_load_options(self):
         """
@@ -208,9 +208,11 @@ class TestConfigurationTransformation(unittest.TestCase):
         node_templates = blueprint['node_templates']
         self.assertTrue('storm' in node_templates)
 
+        # run the update
+        updated_blueprint = update_blueprint(blueprint, options, config)
+
         # prepare the expected values
-        expected_blueprint = copy.deepcopy(blueprint)
-        expected_storm_properties = {
+        configuration = {
                 "component.spout_num": 2,
                 "topology.max.spout.pending": 4,
                 "topology.sleep.spout.wait.strategy.time.ms": 10,
@@ -218,15 +220,12 @@ class TestConfigurationTransformation(unittest.TestCase):
                 "component.count_bolt_num": 20,
                 "storm.messaging.netty.min_wait_ms": 2
             }
-        expected_blueprint['node_templates']['storm']['properties'] = \
-            expected_storm_properties
-
-        # run the update
-        updated_blueprint = update_blueprint(blueprint, options, config)
+        blueprint['node_templates']['storm']['properties']['configuration'] = \
+            configuration
 
         # verify the outcome
         self.maxDiff = None
-        self.assertEqual(expected_blueprint, updated_blueprint)
+        self.assertEqual(blueprint, updated_blueprint)
 
     def test_single_node_shorter_config(self):
         """
@@ -247,9 +246,11 @@ class TestConfigurationTransformation(unittest.TestCase):
         node_templates = blueprint['node_templates']
         self.assertTrue('storm' in node_templates)
 
+        # run the update
+        updated_blueprint = update_blueprint(blueprint, options, config)
+
         # prepare the expected values
-        expected_blueprint = copy.deepcopy(blueprint)
-        expected_storm_properties = {
+        configuration = {
                 "component.spout_num": 2,
                 "topology.max.spout.pending": 4,
                 "topology.sleep.spout.wait.strategy.time.ms": 10,
@@ -257,24 +258,11 @@ class TestConfigurationTransformation(unittest.TestCase):
                 "component.count_bolt_num": 1,
                 "storm.messaging.netty.min_wait_ms": 100
             }
-        expected_blueprint['node_templates']['storm']['properties'] = \
-            expected_storm_properties
-
-        # run the update
-        updated_blueprint = update_blueprint(blueprint, options, config)
+        blueprint['node_templates']['storm']['properties']['configuration'] = \
+            configuration
 
         # verify the outcome
-        self.assertEqual(expected_blueprint, updated_blueprint)
-
-        # longer version of the verification - probably not needed
-        #updated_storm_properties = \
-        #    updated_blueprint['node_templates']['storm']['properties']
-        #self.assertEqual(len(expected_storm_properties), \
-        #    len(updated_storm_properties))
-        #for k, v in expected_storm_properties.iteritems():
-        #    self.assertEqual(v, updated_storm_properties[k],
-        #        "Difference in %s (%s != %s)" % (k, v,
-        #            updated_storm_properties[k]))
+        self.assertEqual(blueprint, updated_blueprint)
 
     def test_single_node_longer_config(self):
         """
@@ -294,17 +282,18 @@ class TestConfigurationTransformation(unittest.TestCase):
         self.assertTrue('storm' in node_templates)
 
         # truncate the blueprint's parameter list
-        blueprint_storm_properties = \
-            blueprint['node_templates']['storm']['properties']
-        del blueprint_storm_properties['component.split_bolt_num']
-        del blueprint_storm_properties['component.spout_num']
-        del blueprint_storm_properties['storm.messaging.netty.min_wait_ms']
-        self.assertEqual(3,
-            len(blueprint['node_templates']['storm']['properties']))
+        blueprint_storm_config = \
+            blueprint['node_templates']['storm']['properties']['configuration']
+        del blueprint_storm_config['component.split_bolt_num']
+        del blueprint_storm_config['component.spout_num']
+        del blueprint_storm_config['storm.messaging.netty.min_wait_ms']
+        self.assertEqual(3, len(blueprint_storm_config))
+
+        # run the update
+        updated_blueprint = update_blueprint(blueprint, options, config)
 
         # prepare the expected values
-        expected_blueprint = copy.deepcopy(blueprint)
-        expected_storm_properties = {
+        configuration = {
                 "component.spout_num": 2,
                 "topology.max.spout.pending": 4,
                 "topology.sleep.spout.wait.strategy.time.ms": 10,
@@ -312,20 +301,17 @@ class TestConfigurationTransformation(unittest.TestCase):
                 "component.count_bolt_num": 20,
                 "storm.messaging.netty.min_wait_ms": 2
             }
-        expected_blueprint['node_templates']['storm']['properties'] = \
-            expected_storm_properties
-
-        # run the update
-        updated_blueprint = update_blueprint(blueprint, options, config)
+        blueprint['node_templates']['storm']['properties']['configuration'] = \
+            configuration
 
         # verify the outcome
         self.maxDiff = None
-        self.assertEqual(expected_blueprint, updated_blueprint)
+        self.assertEqual(blueprint, updated_blueprint)
 
     def test_multiple_node_update(self):
         """
-        Load a blueprint with a single node (one VM, one Storm service
-        on top of it). Update the blueprint with new configurations.
+        Load a blueprint with multiple nodes. Update the blueprint with new
+        configurations.
         """
         # Load and set the input parameters
         blueprint = load_blueprint(self.blueprints['full'])
@@ -341,9 +327,11 @@ class TestConfigurationTransformation(unittest.TestCase):
         self.assertTrue('storm_nimbus' in node_templates)
         self.assertTrue('zookeeper' in node_templates)
 
+        # run the update
+        updated_blueprint = update_blueprint(blueprint, options, config)
+
         # prepare the expected values
-        expected_blueprint = copy.deepcopy(blueprint)
-        expected_storm_nimbus_properties = {
+        expected_storm_nimbus_config = {
                 "component.spout_num": 2,
                 "topology.max.spout.pending": 4,
                 "topology.sleep.spout.wait.strategy.time.ms": 10,
@@ -351,7 +339,7 @@ class TestConfigurationTransformation(unittest.TestCase):
                 "component.count_bolt_num": 20,
                 "storm.messaging.netty.min_wait_ms": 2
             }
-        expected_storm_properties = {
+        expected_storm_config = {
                 "component.spout_num": 2,
                 "topology.max.spout.pending": 4,
                 "topology.sleep.spout.wait.strategy.time.ms": 10,
@@ -359,24 +347,21 @@ class TestConfigurationTransformation(unittest.TestCase):
                 "component.count_bolt_num": 20,
                 "storm.messaging.netty.min_wait_ms": 2
             }
-        expected_zookeeper_properties = {
+        expected_zookeeper_config = {
                 "tickTime": 3000,
                 "initLimit": 21,
                 "syncLimit": 7
             }
-        expected_blueprint['node_templates']['storm']['properties'] = \
-            expected_storm_properties
-        expected_blueprint['node_templates']['storm_nimbus']['properties'] = \
-            expected_storm_nimbus_properties
-        expected_blueprint['node_templates']['zookeeper']['properties'] = \
-            expected_zookeeper_properties
-
-        # run the update
-        updated_blueprint = update_blueprint(blueprint, options, config)
+        blueprint['node_templates']['storm']['properties']\
+            ['configuration'] = expected_storm_config
+        blueprint['node_templates']['storm_nimbus']['properties'] = \
+            {'configuration': expected_storm_nimbus_config}
+        blueprint['node_templates']['zookeeper']['properties']\
+            ['configuration'] = expected_zookeeper_config
 
         # verify the outcome
         self.maxDiff = None
-        self.assertEqual(expected_blueprint, updated_blueprint)
+        self.assertEqual(blueprint, updated_blueprint)
 
 
 if __name__ == '__main__':

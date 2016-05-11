@@ -58,12 +58,13 @@ node_templates:
   storm:
     type: dice.storm
     properties:
-      component.count_bolt_num: 1
-      component.split_bolt_num: 1
-      component.spout_num: 3
-      topology.max.spout.pending: 100
-      storm.messaging.netty.min_wait_ms: 100
-      topology.sleep.spout.wait.strategy.time.ms: 1
+      configuration:
+        component.count_bolt_num: 1
+        component.split_bolt_num: 1
+        component.spout_num: 3
+        topology.max.spout.pending: 100
+        storm.messaging.netty.min_wait_ms: 100
+        topology.sleep.spout.wait.strategy.time.ms: 1
 
     relationships:
       - type: cloudify.relationships.contained_in
