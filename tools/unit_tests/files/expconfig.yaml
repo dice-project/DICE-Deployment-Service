@@ -8,50 +8,52 @@ runexp:
     conf: wordcount.yaml
     sleep_time: 60
     metricPoll: 1000
-    expTime: 300   
-# information about the parameters 
-var1:
-    paramname: "component.spout_num" 
+    expTime: 300
+# information about the parameters
+
+vars:
+
+  - paramname: "component.spout_num"
     node: storm
     options: [1 3]
     lowerbound: 0
     upperbound: 0
     integer: 0
     categorical: 1
-var2:
-    paramname: "topology.max.spout.pending" 
+
+  - paramname: "topology.max.spout.pending"
     node: storm
     options: [1 2 10 100 1000 10000]
     lowerbound: 0
     upperbound: 0
     integer: 0
     categorical: 1
-var3:
-    paramname: "topology.sleep.spout.wait.strategy.time.ms" 
+
+  - paramname: "topology.sleep.spout.wait.strategy.time.ms"
     node: storm
     options: [1 2 3 10 100]
     lowerbound: 0
     upperbound: 0
     integer: 0
     categorical: 1
-var4:
-    paramname: "component.split_bolt_num"   
+
+  - paramname: "component.split_bolt_num"
     node: storm
     options: [1 2 3 6]
     lowerbound: 0
     upperbound: 0
     integer: 0
     categorical: 1
-var5:
-    paramname: "component.count_bolt_num"   
+
+  - paramname: "component.count_bolt_num"
     node: storm
     options: [1 3 6 12]
     lowerbound: 0
     upperbound: 0
     integer: 0
     categorical: 1
-var6:
-    paramname: "storm.messaging.netty.min_wait_ms"   
+
+  - paramname: "storm.messaging.netty.min_wait_ms"
     node: storm
     options: [10 100 1000]
     lowerbound: 0

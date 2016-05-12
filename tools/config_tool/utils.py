@@ -18,15 +18,8 @@ def load_blueprint(blueprint_file_path):
 
 def load_options(options_file_path):
     """Loads a Configuration optimization YAML file"""
-    in_opts = load_yaml(options_file_path)
-    vars = {int(k[3:]): v for k, v in in_opts.items() if k.startswith('var')}
-    options = []
-    for i in range(1, len(vars) + 1):
-        options.append({
-            'paramname': vars[i]['paramname'],
-            'node': vars[i]['node'],
-        })
-    return options
+    vars = load_yaml(options_file_path)['vars']
+    return [{'paramname': v['paramname'], 'node': v['node']} for v in vars]
 
 
 def load_configuration_matlab(configuration_file_path):
@@ -34,20 +27,20 @@ def load_configuration_matlab(configuration_file_path):
     Loads a matlab text dump of the configuration numerical values
     and stores them in a Python array.
     """
-    config = [ ]
+    config = []
     with open(configuration_file_path, 'r') as f:
         for line in f.readlines():
             v = float(line)
             if v.is_integer():
                 v = int(v)
-            config += [ v ]
+            config.append(v)
 
     return config
 
 
 def load_configuration_json(configuration_file_path):
     """
-    Loads a json representation of the configuration and stores it in 
+    Loads a json representation of the configuration and stores it in
     a Python array.
     """
     with open(configuration_file_path, 'r') as f:
@@ -73,8 +66,6 @@ def update_blueprint(input_blueprint, options, config):
     `options`: a dictionary with the Configuration Optimization options
     `config`: the configuration values to be updated.
     """
-    import types
-
     updated_blueprint = copy.deepcopy(input_blueprint)
 
     assert(len(options) == len(config))
