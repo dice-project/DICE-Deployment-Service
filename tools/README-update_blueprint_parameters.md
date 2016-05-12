@@ -53,41 +53,39 @@ by the Cloudify orchestrator. Specifically, it should contain a
 Optimization. Here is an example of the contents of such a file:
 
 ```yaml
+# information about the experiment
 runexp:
     noise: 1e-5
     numIter: 100
-    saveFolder: ./reports/
-    confFolder: ./config/
-    topologyName: "WordCount"
-    conf: wordcount.yaml
-    sleep_time: 60
-    metricPoll: 1000
-    expTime: 300
+    # ...
+# the url of the services confioguration optimization is depend on or use
+services:
+  deploymentServiceURL: "https://deployment.example.com/"
+  monitoringURL: "localhost:4986"
 # information about the parameters 
-var1:
-    paramname: "component.spout_num"
-    node: storm
-    options: [1 3]
-    lowerbound: 0
-    upperbound: 0
-    integer: 0
-    categorical: 1
-var2:
-    paramname: "topology.max.spout.pending"
-    node: ["storm", "storm_nimbus"]
-    options: [1 2 10 100 1000 10000]
-    lowerbound: 0
-    upperbound: 0
-    integer: 0
-    categorical: 1
+vars:
+    - paramname: "component.spout_num"
+      node: storm
+      options: [1 3]
+      lowerbound: 0
+      upperbound: 0
+      integer: 0
+      categorical: 1
+    - paramname: "topology.max.spout.pending"
+      node: ["storm", "storm_nimbus"]
+      options: [1 2 10 100 1000 10000]
+      lowerbound: 0
+      upperbound: 0
+      integer: 0
+      categorical: 1
+    - paramname: "topology.sleep.spout.wait.strategy.time.ms"
+      node: ["storm", "storm_nimbus"]
+      # ...
 ```
 
-The blueprint update tool relies on there being one more than the
-number of `varX` keys, `X` being the sequence number of the variable
-starting with `1`. In each `varX` value there should be a `paramname`
-key, the value of which defines the name of the parameter used in the
-blueprint. Additionally, the definition must include a `node` key.
-This contains one of the following values:
+Each of the variables definition must include a `paramname` key,
+providing the name of the parameter. It also needs to provide a
+`node` key, containing one of the following values:
 
 * A string representing the name of the node in the blueprint's node
   templates section. The tool will assign the variable as a parameter
