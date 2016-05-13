@@ -27,4 +27,15 @@ app.controller('MainCtrl', function($scope, RestServices, $rootScope, $window, $
         $rootScope.user = undefined;
         $window.localStorage.removeItem('user');
     };
+
+    //
+    // Embedded mode (e.g. in Eclipse) - only single container is visible
+    //
+    var singleContainerId = $location.search()['container-id'];
+    if(singleContainerId){
+        $rootScope.embeddedMode = {containerId: singleContainerId};
+    }else{
+        $rootScope.embeddedMode = undefined;
+    }
+    $scope.embeddedMode = $rootScope.embeddedMode;
 });

@@ -79,11 +79,11 @@
             };
             var BLUEPRINT_ERROR_STATE = 'error';
         </script>
-
+        <base href="/" />
     </head>
     <body ng-app="cfyWrapper" ng-controller="MainCtrl">
 
-        <div id="header">
+        <div id="header" ng-hide="embeddedMode">
             <div class="container">
                 <img src="{% static 'img/dice_logo_white.png' %}">
                 <span class="title-font">Deployment Containers</span>
@@ -94,9 +94,9 @@
             </div>
         </div>
 
-        <div ng-view="" class="dice-content"></div><!-- routes.js takes care for proper routing -->
+        <div ng-view="" class="dice-content"></div><!-- routes.js takes care of proper routing -->
 
-        <div id="footer">
+        <div id="footer" ng-hide="embeddedMode">
             <div id="credits">
                 <div class="container">
                     <div class="partners row">

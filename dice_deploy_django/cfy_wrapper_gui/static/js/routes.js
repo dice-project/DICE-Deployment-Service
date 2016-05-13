@@ -1,4 +1,4 @@
-app.config(function ($routeProvider){
+app.config(function ($routeProvider, $locationProvider){
     $routeProvider
         .when('/', {
             templateUrl: STATIC_URL + '/partials/containers.html',
@@ -27,6 +27,9 @@ app.config(function ($routeProvider){
                 requireLogin: false
             }
         });
+
+    // html 5 mode
+    $locationProvider.html5Mode(true);
 });
 
 

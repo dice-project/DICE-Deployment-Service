@@ -51,6 +51,7 @@ a{
 .dice-general-toolbar{
     padding-top: 20px;
     padding-bottom: 50px;
+    margin-bottom: 45px;
 }
 .file-upload{
     display: inline-block;
@@ -68,7 +69,7 @@ a{
     font-weight: 700;
 }
 .dice-container {
-    margin-top: 45px;
+    margin-bottom: 45px;
 }
 .dice-container .panel-heading{
     background-color: #84DEC5;
