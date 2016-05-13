@@ -1,7 +1,7 @@
-<div class="container">
-    <div class="row">
+<div ng-class="{container: !embeddedMode}">
+    <div ng-class="{row: !embeddedMode}">
 
-        <div class="dice-general-toolbar">
+        <div class="dice-general-toolbar" ng-hide="embeddedMode">
             <button class="pull-right dice-btn dice-btn-add" ng-click="addContainer()" title="Create empty container">
                 <span class="glyphicon glyphicon-plus"></span>
                 New Container
@@ -17,7 +17,7 @@
                     <span class="title-font dice-container-description">{{ cont.description }}</span>
                     <div class="pull-right text-right dice-container-id-div">
                         <span class="dice-container-id">{{ cont.id }}</span>
-                        <span class="dice-container-remove" ng-click="removeContainer(cont)" title="Remove container"></span>
+                        <span ng-hide="embeddedMode" class="dice-container-remove" ng-click="removeContainer(cont)" title="Remove container"></span>
                     </div>
                 </div>
 
@@ -134,7 +134,8 @@
             </div>
         </div>
         <p ng-if="containers.length == 0">
-            There are no containers yet! Please add one using the button above.
+            <span ng-hide="embeddedMode">There are no containers yet! Please add one using the button above.</span>
+            <span ng-show="embeddedMode">Could not obtain any data for container with id "{{ embeddedMode.containerId }}".</span>
         </p>
 
     </div>

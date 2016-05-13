@@ -12,7 +12,7 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     $scope.uploader.onCompleteItem = function(fileItem, response, status, headers) {
         $timeout(function(){
             $scope.uploader.clearQueue();
-            $scope.syncContainers();
+            $scope.syncContainers($scope.embeddedMode ? $scope.embeddedMode.containerId : undefined);
             // start syncing again
             $scope.preventSync = false;
         }, 500);  // some delay to show progressbar
@@ -73,7 +73,7 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     $scope.undeployBlueprint = function(cont){
         PopupServices.popupConfirm('Are you sure that you want to UNDEPLOY BLUEPRINT with id <br><code>' + cont.blueprint.id + '</code>?').then(function(){
 			RestServices.blueprint.delete(cont.blueprint, function(){
-                $scope.syncContainers();
+                $scope.syncContainers($scope.embeddedMode ? $scope.embeddedMode.containerId : undefined);
 			}, $scope.showServerError);
 		});
     };
@@ -81,7 +81,7 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     $scope.redeployBlueprint = function(cont){
         PopupServices.popupConfirm('Are you sure that you want to REDEPLOY BLUEPRINT with id <br><code>' + cont.blueprint.id + '</code>?').then(function(){
 			RestServices.containerBlueprint.put(cont, function(){
-                $scope.syncContainers();
+                $scope.syncContainers($scope.embeddedMode ? $scope.embeddedMode.containerId : undefined);
 			}, $scope.showServerError);
 		});
     };
@@ -92,13 +92,13 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     $scope.showServerError = function(err){
         Notification.error(err.status + ': ' + err.data.msg);
     };
-    $scope.getContainers = function(){
-        $scope.containers = RestServices.containers.query({}, function(){
+    $scope.getContainers = function(containerId){
+        $scope.containers = RestServices.containers.query({id: containerId}, function(){
             //LOG('containers: ', $scope.containers);
         });
     };
-    $scope.syncContainers = function(){
-        var actualContainers = RestServices.containers.query({}, function(){
+    $scope.syncContainers = function(containerId){
+        var actualContainers = RestServices.containers.query({id: containerId}, function(){
 
             console.log('Sync containers');
 
@@ -194,7 +194,9 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     //
     // ON LOAD
     //
-	$scope.getContainers();
+    $scope.embeddedMode = $rootScope.embeddedMode;
+    $scope.getContainers($scope.embeddedMode ? $scope.embeddedMode.containerId: undefined);
+
     $scope.blueprintDeployStates = jQuery.extend({}, BLUEPRINT_DEPLOY_STATES);
     $scope.blueprintUndeployStates = jQuery.extend({}, BLUEPRINT_UNDEPLOY_STATES);
 
@@ -204,7 +206,7 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     $scope.preventSync = false;
     $interval(function(){
         if($rootScope.user && !$scope.preventSync){
-            $scope.syncContainers();
+            $scope.syncContainers($scope.embeddedMode ? $scope.embeddedMode.containerId : undefined);
         }else{
             console.log('Sync prevented');
         }

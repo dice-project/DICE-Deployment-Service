@@ -79,8 +79,11 @@ class ContainersView(APIView):
         ---
         serializer: cfy_wrapper.serializers.ContainerSerializer
         """
-        contaiers = Container.objects.all()
-        s = ContainerSerializer(contaiers, many=True)
+        containers = Container.objects.all()
+        container_id = self.request.query_params.get('id', None)
+        if container_id is not None:
+            containers = containers.filter(id=container_id)
+        s = ContainerSerializer(containers, many=True)
         return Response(data=s.data)
 
     def post(self, request):
