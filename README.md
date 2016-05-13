@@ -451,6 +451,16 @@ Please use bower to install Javascript libraries. Simply run
 `bower install` while being in project directory. Gui can be accessed at
 http://localhost:7080 if using Vagrant default setup.
 
+### Embedding Web GUI
+
+A simplified version of Web GUI is rendered if you pass container id as a
+query parameter. This is particularly useful when rendering container from
+Eclipse WebKit plugin. Example url:
+```
+http://localhost:7080?container-id=f4266342-b46b-46b2-8467-cf317eab5a7a
+```
+
+
 ## Managing asynchronous task runner
 
 We use Celery framework for asynchronous command execution. There are upstart 
