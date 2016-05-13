@@ -21,6 +21,9 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
         $scope.uploader.clearQueue();
         $scope.uploader.upload_errors = undefined;
         $scope.uploader.url = BLUEPRINT_UPLOAD_URL_TEMPLATE.replace('{id}', cont.id);
+        $scope.uploader.headers = {
+            Authorization: 'Token ' + $rootScope.user.token
+        };
         $scope.uploader.containerId = cont.id;
         // prevent syncing while file picker is opened to prevent loss of selection
         $scope.preventSync = true;
