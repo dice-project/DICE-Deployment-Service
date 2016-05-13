@@ -5,12 +5,11 @@ cd $HOME
 virtualenv venv
 . venv/bin/activate
 pip install -U pip
-pip install pip-tools
 
 echo '. venv/bin/activate' >> .profile
 
 cd dice_deploy_django
-pip-sync
+pip install -r requirements.txt
 bower install
 python manage.py migrate
 python manage.py create-dice-superuser
