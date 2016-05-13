@@ -9,6 +9,7 @@ from django.core import management
 import factories
 from cfy_wrapper import serializers
 from rest_framework.test import APIClient
+from rest_framework.authtoken.models import Token
 from django.test import TransactionTestCase
 import tarfile
 import yaml as yaml_lib
@@ -53,9 +54,16 @@ class ApiTests(TransactionTestCase):
             shutil.rmtree(settings.TEST_FILES_TMP_DIR)
         os.mkdir(settings.TEST_FILES_TMP_DIR)
 
+        # create root user
+        management.call_command('create-dice-superuser')
+        self.token = Token.objects.first()
+
     def tearDown(self):
         shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
         shutil.rmtree(settings.TEST_FILES_TMP_DIR, ignore_errors=True)
+
+    def _auth_header(self):
+        return 'Token %s' % self.token
 
     def test_blueprint_list(self):
         url = reverse('blueprints')
@@ -66,7 +74,7 @@ class ApiTests(TransactionTestCase):
         blue_deployed = factories.BlueprintArchiveDeployedFactory()
         blue_deployed_ser = serializers.BlueprintSerializer(blue_deployed).data
 
-        response = self.client.get(url)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self._auth_header())
 
         # check HTTP response
         self.assertEqual(
@@ -82,7 +90,7 @@ class ApiTests(TransactionTestCase):
 
         url = reverse('blueprint_id', kwargs={'blueprint_id': blue_deployed.id})
 
-        response = self.client.get(url)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self._auth_header())
 
         # check HTTP response
         self.assertEqual(
@@ -98,7 +106,7 @@ class ApiTests(TransactionTestCase):
 
         url = reverse('blueprint_id', kwargs={'blueprint_id': blue_deployed.id})
 
-        response = self.client.delete(url)
+        response = self.client.delete(url, HTTP_AUTHORIZATION=self._auth_header())
 
         # check HTTP response
         self.assertEqual(
@@ -109,7 +117,7 @@ class ApiTests(TransactionTestCase):
     def test_container_create(self):
         url = reverse('containers')
 
-        response = self.client.post(url)
+        response = self.client.post(url, HTTP_AUTHORIZATION=self._auth_header())
 
         # check HTTP response
         self.assertEqual(
@@ -131,7 +139,7 @@ class ApiTests(TransactionTestCase):
         cont_empty = factories.ContainerEmptyFactory()
 
         url = reverse('container_id', kwargs={'container_id': cont_empty.id})
-        response = self.client.delete(url)
+        response = self.client.delete(url, HTTP_AUTHORIZATION=self._auth_header())
 
         # check HTTP response
         self.assertEqual(
@@ -143,7 +151,7 @@ class ApiTests(TransactionTestCase):
         cont_full = factories.ContainerFullGzipFactory()
 
         url = reverse('container_id', kwargs={'container_id': cont_full.id})
-        response = self.client.delete(url)
+        response = self.client.delete(url, HTTP_AUTHORIZATION=self._auth_header())
 
         # check HTTP response
         self.assertEqual(
@@ -160,7 +168,7 @@ class ApiTests(TransactionTestCase):
         cont_full = factories.ContainerFullGzipFactory()
         cont_full_ser = serializers.ContainerSerializer(cont_full).data
 
-        response = self.client.get(url)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self._auth_header())
 
         # check HTTP response
         self.assertEqual(
@@ -175,7 +183,7 @@ class ApiTests(TransactionTestCase):
         cont_full_ser = serializers.ContainerSerializer(cont_full).data
 
         url = reverse('container_id', kwargs={'container_id': cont_full.id})
-        response = self.client.get(url)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self._auth_header())
 
         # check HTTP response
         self.assertEqual(
@@ -189,7 +197,7 @@ class ApiTests(TransactionTestCase):
         cont_full = factories.ContainerFullGzipFactory.build()  # unsaved
 
         url = reverse('container_id', kwargs={'container_id': cont_full.id})
-        response = self.client.get(url)
+        response = self.client.get(url, HTTP_AUTHORIZATION=self._auth_header())
 
         # check HTTP response
         self.assertEqual(
@@ -203,7 +211,7 @@ class ApiTests(TransactionTestCase):
 
         with open(os.path.join(settings.TEST_FILE_BLUEPRINT_EXAMPLE_GZIP), 'rb') as f:
             data = {'file': f}
-            response = self.client.post(url, data)
+            response = self.client.post(url, data, HTTP_AUTHORIZATION=self._auth_header())
 
         # check HTTP response
         self.assertEqual(
@@ -234,7 +242,7 @@ class ApiTests(TransactionTestCase):
 
         with open(os.path.join(settings.TEST_FILE_BLUEPRINT_EXAMPLE_YAML), 'rb') as f:
             data = {'file': f}
-            response = self.client.post(url, data)
+            response = self.client.post(url, data, HTTP_AUTHORIZATION=self._auth_header())
 
         # check HTTP response
         self.assertEqual(
@@ -265,7 +273,7 @@ class ApiTests(TransactionTestCase):
 
         with open(os.path.join(settings.TEST_FILE_BLUEPRINT_EXAMPLE_GZIP), 'rb') as f:
             data = {'file': f}
-            response = self.client.post(url, data)
+            response = self.client.post(url, data, HTTP_AUTHORIZATION=self._auth_header())
 
         # check HTTP response
         self.assertEqual(
@@ -296,7 +304,7 @@ class ApiTests(TransactionTestCase):
 
         with open(os.path.join(settings.TEST_FILE_BLUEPRINT_EXAMPLE_YAML), 'rb') as f:
             data = {'file': f}
-            response = self.client.post(url, data)
+            response = self.client.post(url, data, HTTP_AUTHORIZATION=self._auth_header())
 
         # check HTTP response
         self.assertEqual(
@@ -325,7 +333,7 @@ class ApiTests(TransactionTestCase):
         cont_empty = factories.ContainerEmptyFactory()
         url = reverse('container_blueprint', kwargs={'container_id': cont_empty.id})
 
-        response = self.client.put(url)
+        response = self.client.put(url, HTTP_AUTHORIZATION=self._auth_header())
 
         # check HTTP response
         self.assertEqual(
@@ -337,7 +345,7 @@ class ApiTests(TransactionTestCase):
         cont_full = factories.ContainerFullGzipFactory()
         url = reverse('container_blueprint', kwargs={'container_id': cont_full.id})
 
-        response = self.client.put(url)
+        response = self.client.put(url, HTTP_AUTHORIZATION=self._auth_header())
 
         # check HTTP response
         self.assertEqual(
