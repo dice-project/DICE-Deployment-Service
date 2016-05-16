@@ -37,7 +37,6 @@ ctx logger info "Installing virtualenv"
 virtualenv venv
 . venv/bin/activate
 pip install -U pip
-pip install pip-tools
 
 ctx logger info "Copying application sources"
 ctx download-resource dice_deploy.tar.gz /home/ubuntu/dice_deploy.tar.gz
@@ -49,7 +48,7 @@ tar -xvf dice_deploy.tar.gz
 
 ctx logger info "Installing application dependencies"
 cd dice_deploy_django
-pip-sync
+pip install -r requirements.txt
 
 ctx logger info "Installing bower"
 bower install

@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo "I am $(whoami)"
-
 port=${1-8000}
 delay=${2-0}
 

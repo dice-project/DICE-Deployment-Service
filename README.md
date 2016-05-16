@@ -112,13 +112,8 @@ fully start. As a workaround, the manual steps for starting it are required:
 ```bash
 # Connect to the command line console of the deployment service host
 $ ssh ubuntu@10.10.20.35 # ubuntu is the default linux user
-# Activate a virtual environment
-$ . venv/bin/activate
-# Stop the currently running services
-$ cd dice_deploy_django
-$ bash down.sh
-# Start the services
-$ bash up.sh
+# Perform the services start-up
+$ ./start.sh
 ```
 
 Now the service should function properly.
