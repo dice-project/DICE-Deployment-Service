@@ -277,6 +277,14 @@ Current status: working
 # ...
 ```
 
+The following are important final states:
+
+* `deployed` - the final state after the deployment action, indicating success.
+* `undeployed` - the final state after the undeployment action, indicating
+  success.
+* `error` - indicates an error condition, which occurred during the deploying or
+  undeploying process.
+
 Once the blueprint deploys, the returned status will be `deployed`. At this 
 point we can obtain the deployment's outputs. The outputs
 are the values, which depend on the configuration of the blueprint and the
