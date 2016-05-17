@@ -79,3 +79,33 @@ def update_blueprint(input_blueprint, options, config):
             set_configuration_value(node_template, paramname, value)
 
     return updated_blueprint
+
+def extract_blueprint_config(blueprint, options):
+    """
+    Extracts the properties from the TOSCA blueprint to create a configuration
+    values array.
+    """
+    config = [ ]
+    node_templates = blueprint.get('node_templates', {})
+
+    for option in options:
+        node_names = option['node']
+        node_names = [node_names] if isinstance(node_names, basestring) \
+            else node_names
+        cfg_vals = set([])
+        for node_name in node_names:
+            node = node_templates.get(node_name, {})
+            properties = node.get('properties', {})
+            configuration = properties.get('configuration', {})
+            parameter = configuration.get(option['paramname'], None)
+            cfg_vals.add(parameter)
+
+        if len(cfg_vals) > 1:
+            raise Exception("Conflict in nodes {0}, parameter {1}.".format(
+                node_names, option['paramname']))
+        elif len(cfg_vals) == 1:
+            config.append(cfg_vals.pop())
+        else:
+            config.append(None)
+
+    return config

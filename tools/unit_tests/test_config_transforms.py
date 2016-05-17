@@ -17,6 +17,8 @@ class TestConfigurationTransformation(unittest.TestCase):
         cls.blueprints = {
             'single-node': fpath('single-node-blueprint.yaml'),
             'full': fpath('full-blueprint.yaml'),
+            'mixed': fpath('full-blueprint-mixed.yaml'),
+            'conflicting': fpath('full-blueprint-conflicting.yaml'),
         }
         cls.options = {
             'normal': fpath('expconfig.yaml'),
@@ -325,6 +327,81 @@ class TestConfigurationTransformation(unittest.TestCase):
         # verify the outcome
         self.maxDiff = None
         self.assertEqual(blueprint, updated_blueprint)
+
+    def test_single_node_config_extract_full(self):
+        """
+        Load a blueprint with a single node (one VM, one Storm service
+        on top of it). This blueprint has the complete set of propertes
+        needed for the configuration.
+        """
+        # Load and set the input parameters
+        blueprint = load_blueprint(self.blueprints['single-node'])
+        options = load_options(self.options['normal'])
+
+        # run the extraction
+        extracted_config = extract_blueprint_config(blueprint, options)
+
+        # prepare the expected values
+        config = [ 3, 100, 1, 1, 1, 100 ]
+
+        # verify the outcome
+        self.assertEqual(config, extracted_config)
+
+    def test_multiple_node_config_extract_full(self):
+        """
+        Load a blueprint with multiple nodes, which already has the set of
+        properties matching the ones in the configuration.
+        """
+        # Load and set the input parameters
+        blueprint = load_blueprint(self.blueprints['full'])
+        options = load_options(self.options['multinode'])
+
+        # run the extraction
+        extracted_config = extract_blueprint_config(blueprint, options)
+
+        # prepare the expected values
+        config = [ 3, 100, 1, 1, 1, 100, 1500, 10, 5 ]
+
+        # verify the outcome
+        self.assertEqual(config, extracted_config)
+
+    def test_multiple_node_config_extract_mixed(self):
+        """
+        Load a blueprint with multiple nodes, which has a mixed set of
+        properties in comparison with the options: some of the properties are
+        present, some are missing, and there are a few in the blueprint that are
+        not declared in the options. The extraction needs to pick up the ones
+        that are present, use a dedicated value for the missing ones and ignore
+        the extra ones in the blueprint.
+        """
+        # Load and set the input parameters
+        blueprint = load_blueprint(self.blueprints['mixed'])
+        options = load_options(self.options['multinode'])
+
+        # run the extraction
+        extracted_config = extract_blueprint_config(blueprint, options)
+
+        # prepare the expected values
+        config = [ 3, 100, 1, None, None, 100, None, 10, 5 ]
+
+        # verify the outcome
+        self.assertEqual(config, extracted_config)
+
+    def test_multiple_node_config_extract_conflicting(self):
+        """
+        Load a blueprint with multiple nodes, which already has the set of
+        properties matching the ones in the configuration. The properties
+        appearing in multiple nodes have conflicting values, which the
+        tool has to reject with an error.
+        """
+
+        # Load and set the input parameters
+        blueprint = load_blueprint(self.blueprints['conflicting'])
+        options = load_options(self.options['multinode'])
+
+        # run the extraction
+        with self.assertRaises(Exception):
+            extracted_config = extract_blueprint_config(blueprint, options)
 
 
 if __name__ == '__main__':

@@ -26,9 +26,10 @@ node_templates:
     type: dice.zookeeper
     properties:
       configuration:
-        tickTime: 1500
+#        tickTime: 1500
         initLimit: 10
         syncLimit: 5
+        preAllocSize: 64
     relationships:
       - type: cloudify.relationships.contained_in
         target: zookeeper_vm
@@ -43,12 +44,13 @@ node_templates:
     type: dice.storm_nimbus
     properties:
       configuration:
-        component.count_bolt_num: 1
-        component.split_bolt_num: 1
+#        component.count_bolt_num: 1
+#        component.split_bolt_num: 1
         component.spout_num: 3
         topology.max.spout.pending: 100
         storm.messaging.netty.min_wait_ms: 100
         topology.sleep.spout.wait.strategy.time.ms: 1
+        nimbus.thrift.max_buffer_size: 1048576
     relationships:
       - type: cloudify.relationships.contained_in
         target: storm_nimbus_vm
@@ -68,13 +70,13 @@ node_templates:
     type: dice.storm
     properties:
       configuration:
-        component.count_bolt_num: 1
-        component.split_bolt_num: 1
+#        component.count_bolt_num: 1
+#        component.split_bolt_num: 1
         component.spout_num: 3
         topology.max.spout.pending: 100
         storm.messaging.netty.min_wait_ms: 100
         topology.sleep.spout.wait.strategy.time.ms: 1
-
+        nimbus.thrift.max_buffer_size: 1048576
     relationships:
       - type: cloudify.relationships.contained_in
         target: storm_vm

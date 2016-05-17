@@ -29,6 +29,7 @@ node_templates:
         tickTime: 1500
         initLimit: 10
         syncLimit: 5
+        preAllocSize: 64
     relationships:
       - type: cloudify.relationships.contained_in
         target: zookeeper_vm
@@ -69,12 +70,11 @@ node_templates:
     properties:
       configuration:
         component.count_bolt_num: 1
-        component.split_bolt_num: 1
+        component.split_bolt_num: 15
         component.spout_num: 3
         topology.max.spout.pending: 100
         storm.messaging.netty.min_wait_ms: 100
         topology.sleep.spout.wait.strategy.time.ms: 1
-
     relationships:
       - type: cloudify.relationships.contained_in
         target: storm_vm
