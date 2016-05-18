@@ -1,6 +1,7 @@
 import unittest
 import copy
 import os
+import tempfile
 
 from config_tool.utils import *
 
@@ -155,6 +156,35 @@ class TestConfigurationTransformation(unittest.TestCase):
         config = load_configuration_json(self.config['json'])
 
         self.assertEqual(expected_config, config)
+
+    def test_export_config(self):
+        """
+        Confirm that the configuration values exported to string (for text file
+        outputs) can be read back again properly.
+        """
+        # example configurations
+        configurations = [
+            [ 3, 100, 1, 2, 3, 110 ],
+            [ 3, 100, None, 2, 3, 110, None ],
+            [ ],
+        ]
+
+        for configuration in configurations:
+            with tempfile.NamedTemporaryFile('w+') as f:
+                fname = f.name
+                # dump json
+                save_configuration_json(configuration,
+                    fname)
+                # read json back
+                configuration_imported_json = load_configuration_json(fname)
+                # check the contents
+                self.assertEqual(configuration, configuration_imported_json)
+                # dump matlab
+                save_configuration_matlab(configuration, fname)
+                # read matlab back
+                configuration_imported_matlab = load_configuration_matlab(fname)
+                # check the contents
+                self.assertEqual(configuration, configuration_imported_matlab)
 
     def test_single_node_update(self):
         """
@@ -327,6 +357,69 @@ class TestConfigurationTransformation(unittest.TestCase):
         # verify the outcome
         self.maxDiff = None
         self.assertEqual(blueprint, updated_blueprint)
+
+    def test_multiple_node_partial_config_update(self):
+        """
+        In the input configuration, some of the values may be missing. In the
+        Python array representation, the missing values are marked with None.
+        The corresponding parameters then have to be absent from the blueprint
+        (effectively setting them to the default value).
+        """
+        # Load and set the input parameters
+        blueprint = load_blueprint(self.blueprints['mixed'])
+        options = load_options(self.options['multinode'])
+        config = [ None, 4, 10, 15, None, 2, 3000, 21, 7 ]
+
+        # routine check of the blueprint representation
+        self.assertIsNotNone(blueprint)
+        self.assertTrue('node_templates' in blueprint)
+
+        node_templates = blueprint['node_templates']
+        self.assertTrue('storm' in node_templates)
+        self.assertTrue('storm_nimbus' in node_templates)
+        self.assertTrue('zookeeper' in node_templates)
+
+        # run the update
+        updated_blueprint = update_blueprint(blueprint, options, config)
+
+        # prepare the expected values
+        expected_storm_nimbus_config = {
+               #"component.spout_num": 2, # omitted - missing in config
+                "topology.max.spout.pending": 4,
+                "topology.sleep.spout.wait.strategy.time.ms": 10,
+                "component.split_bolt_num": 15,
+                "component.spout_num": 3,
+               #"component.count_bolt_num": 20,# missing in config and blueprint
+                "storm.messaging.netty.min_wait_ms": 2,
+                "nimbus.thrift.max_buffer_size": 1048576, # present in blueprint
+            }
+        expected_storm_config = {
+               #"component.spout_num": 2, # omitted - missing in config
+                "topology.max.spout.pending": 4,
+                "topology.sleep.spout.wait.strategy.time.ms": 10,
+                "component.split_bolt_num": 15,
+                "component.spout_num": 3,
+               #"component.count_bolt_num": 20,# missing in config and blueprint
+                "storm.messaging.netty.min_wait_ms": 2,
+                "nimbus.thrift.max_buffer_size": 1048576, # present in blueprint
+            }
+        expected_zookeeper_config = {
+                "tickTime": 3000,
+                "initLimit": 21,
+                "syncLimit": 7,
+                "preAllocSize": 64, # present in blueprint
+            }
+        blueprint['node_templates']['storm']['properties']\
+            ['configuration'] = expected_storm_config
+        blueprint['node_templates']['storm_nimbus']['properties'] = \
+            {'configuration': expected_storm_nimbus_config}
+        blueprint['node_templates']['zookeeper']['properties']\
+            ['configuration'] = expected_zookeeper_config
+
+        # verify the outcome
+        self.maxDiff = None
+        self.assertEqual(blueprint, updated_blueprint)
+
 
     def test_single_node_config_extract_full(self):
         """

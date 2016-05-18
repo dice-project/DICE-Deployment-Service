@@ -30,12 +30,26 @@ def load_configuration_matlab(configuration_file_path):
     config = []
     with open(configuration_file_path, 'r') as f:
         for line in f.readlines():
-            v = float(line)
-            if v.is_integer():
-                v = int(v)
+            if line.strip().lower() == 'nan':
+                v = None
+            else:
+                v = float(line)
+                if v.is_integer():
+                    v = int(v)
             config.append(v)
 
     return config
+
+
+def save_configuration_matlab(configuration, file_path):
+    """
+    Saves a configuration represented by a Python array into a file containing a
+    matlab-like output.
+    """
+    with open(file_path, 'w') as f:
+        for v in configuration:
+            v = 'NaN' if v == None else v
+            f.write("    {0}\n".format(v))
 
 
 def load_configuration_json(configuration_file_path):
@@ -47,6 +61,15 @@ def load_configuration_json(configuration_file_path):
         data = json.load(f)
 
     return data['config']
+
+
+def save_configuration_json(configuration, file_path):
+    """
+    Saves a configuration represented by a Python array into a json file.
+    """
+    config_dict = {'config': configuration}
+    with open(file_path, 'w') as f:
+        json.dump(config_dict, f)
 
 
 def set_configuration_value(node, paramname, value):
@@ -76,7 +99,11 @@ def update_blueprint(input_blueprint, options, config):
         nodes = [nodes] if isinstance(nodes, basestring) else nodes
         for node in nodes:
             node_template = updated_blueprint['node_templates'][node]
-            set_configuration_value(node_template, paramname, value)
+            if value != None:
+                set_configuration_value(node_template, paramname, value)
+            else:
+                if paramname in node_template:
+                    del node_template[paramname]
 
     return updated_blueprint
 
