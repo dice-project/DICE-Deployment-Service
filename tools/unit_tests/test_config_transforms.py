@@ -173,8 +173,7 @@ class TestConfigurationTransformation(unittest.TestCase):
             with tempfile.NamedTemporaryFile('w+') as f:
                 fname = f.name
                 # dump json
-                save_configuration_json(configuration,
-                    fname)
+                save_configuration_json(configuration, fname)
                 # read json back
                 configuration_imported_json = load_configuration_json(fname)
                 # check the contents

@@ -119,7 +119,7 @@ def extract_blueprint_config(blueprint, options):
         node_names = option['node']
         node_names = [node_names] if isinstance(node_names, basestring) \
             else node_names
-        cfg_vals = set([])
+        cfg_vals = set()
         for node_name in node_names:
             node = node_templates.get(node_name, {})
             properties = node.get('properties', {})
@@ -127,6 +127,7 @@ def extract_blueprint_config(blueprint, options):
             parameter = configuration.get(option['paramname'], None)
             cfg_vals.add(parameter)
 
+        cfg_vals = cfg_vals - set([None])
         if len(cfg_vals) > 1:
             raise Exception("Conflict in nodes {0}, parameter {1}.".format(
                 node_names, option['paramname']))
