@@ -26,14 +26,14 @@ To use the tool, we need the following:
   if it is a Matlab output, or `config.json` if it is a JSON-formatted
   file.
 
-To update a TOSCA blueprint with new configuration, simply invoke:
+To update a TOSCA blueprint with new configuration, invoke:
 
 ```bash
 $ ./update_blueprint_parameters.py \
     --options expconfig.yaml \
     --blueprint blueprint.yaml \
     --configuration config.json \
-    --json
+    --json \
     --output new-blueprint.yaml
 ```
 
@@ -95,3 +95,42 @@ providing the name of the parameter. It also needs to provide a
   their names listed in the array will get an updated configuration
   with the name defined in `paramname`.
 
+**Configuration file** contains an array of numeric values, where the index 
+(i.e., the position in the array) of a value corresponds to the index of the
+parameter's declaration in the `vars` array of the options file. Currently
+supported formats are JSON and matlab-like. A valid example of a JSON file
+is as follows:
+
+```json
+{"config": [3, 100, 1, 15.4, 30, 100]}
+```
+
+The same configuration file in matlab-like format would appear as follows:
+
+```
+    3
+    100
+    1
+    15.4
+    30
+    100
+```
+
+A scientific notation (e.g., `1.554E4`) is also possible.
+
+It is also possible to have configuration files where not all of the parameter
+values are present. This can be expressed with a value `null` in the JSON
+notation, or as `NaN` in the matlab notation. The tool will treat the missing
+values by omitting the corresponding parameters from the node template's
+configuration list. More specifically, 
+
+* if a parameter is present in the blueprint, but its corresponding
+  configuration value is missing, then the parameter will not appear in
+  any of the prescribed node template's configuraton of the updated blueprint
+  (removal of the parameter),
+* if a paremeter is not present in the blueprint, then it won't appear in the
+  updated blueprint either.
+
+The expected effect of the missing parameters on the deployer is then that a
+default value will be used if one is present (but this is not expressed in
+the blueprint), or it won't be used at all.
