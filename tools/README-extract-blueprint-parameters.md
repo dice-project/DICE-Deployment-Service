@@ -4,7 +4,7 @@ Blueprint configuration extractor tool
 Introduction
 ------------
 
-This tool complements the [blueprint updater tool](README-update-blueprint-parameters.md).
+This tool complements the [blueprint updater tool].
 It creates a configuration file containing the values of the parameters
 in the blueprint as expressed in the options file.
 
@@ -35,7 +35,7 @@ Use `--matlab` instead of `--json` and `config.mat` as the value of the
 Input file specification
 ------------------------
 
-The input files follow the same rules as for the [blueprint updater tool](README-update-blueprint-parameters.md).
+The input files follow the same rules as for the [blueprint updater tool].
 
 **Configuration file** will contain the values that the tool finds in the
 blueprint's node template preferences in the order defined in the options file.
@@ -52,3 +52,5 @@ rules apply:
 * If none of the node templates listed in the array are missing the parameter,
   then the corresponding configuration value will be `null` in the JSON output
   and `NaN` in the Matlab output.
+
+[blueprint updater tool]: tools/README-update-blueprint-parameters.md
