@@ -10,8 +10,8 @@ used in the deployment process. This includes the following tools:
   for further instructions.
 * `update-blueprint-parameters.py`: a Python script for applying configuration
   values to the blueprint. Please refer to
-  [this document](tools/README-update-blueprint-parameters.md)
+  [this document](./README-update-blueprint-parameters.md)
   for more information.
 * `extract-blueprint-parameters.py`: a Python script for extracting parameters
   from a blueprint into a configuration file. Please refer to
-  [this document](tools/README-extract-blueprint-parameters.md) for more information.
+  [this document](./README-extract-blueprint-parameters.md) for more information.
