@@ -18,6 +18,12 @@ inputs:
   cfy_manager:
     description: >
       Addesss of the Cloudify Manager instance
+  cfy_manager_username:
+    description: >
+      Username that should be used when connecting to manager
+  cfy_manager_password:
+    description: >
+      Password that should be used when connecting to manager
   fco_url:
     description: >
       URL to the FCO API
@@ -54,6 +60,10 @@ node_types:
     properties:
       manager:
         description: Cloudify manager instance we wrap
+      manager_user:
+        description: Cloudify manager instance username
+      manager_pass:
+        description: Cloudify manager instance password
 
 node_templates:
   vm:
@@ -79,6 +89,8 @@ node_templates:
     properties:
       port: { get_input: webserver_port }
       manager: { get_input: cfy_manager}
+      manager_user: { get_input: cfy_manager_username }
+      manager_pass: { get_input: cfy_manager_password }
     relationships:
       - type: cloudify.relationships.contained_in
         target: vm

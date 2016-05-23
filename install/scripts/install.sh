@@ -55,7 +55,11 @@ bower install
 
 ctx logger info "Adjusting settings"
 manager=$(ctx node properties manager)
-echo "CFY_MANAGER_URL = \"${manager}\"" > dice_deploy/local_settings.py
+username=$(ctx node properties manager_user)
+password=$(ctx node properties manager_pass)
+echo "CFY_MANAGER_URL = \"${manager}\""       >  dice_deploy/local_settings.py
+echo "CFY_MANAGER_USERNAME = \"${username}\"" >> dice_deploy/local_settings.py
+echo "CFY_MANAGER_PASSWORD = \"${password}\"" >> dice_deploy/local_settings.py
 
 ctx logger info "Resetting database"
 bash run.sh reset

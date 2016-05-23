@@ -3,6 +3,7 @@ import tarfile
 from django.conf import settings
 import os
 import tempfile
+import base64
 
 from cloudify_rest_client.client import CloudifyClient
 
@@ -47,4 +48,8 @@ def get_cfy_client():
     if settings.MOCKUP_CFY:
         raise settings.MOCKUP_CFY
 
-    return CloudifyClient(settings.CFY_MANAGER_URL)
+    creds = "{}:{}".format(settings.CFY_MANAGER_USERNAME,
+                           settings.CFY_MANAGER_PASSWORD)
+    creds_enc = base64.urlsafe_b64encode(creds.encode("utf-8"))
+    headers = {"Authorization": "Basic {}".format(creds_enc)}
+    return CloudifyClient(settings.CFY_MANAGER_URL, headers=headers)

@@ -100,6 +100,8 @@ CELERYD_POOL_RESTARTS = True
 
 # Cloudify settings
 CFY_MANAGER_URL = "172.16.95.115"
+CFY_MANAGER_USERNAME = "username"
+CFY_MANAGER_PASSWORD = "password"
 POOL_SLEEP_INTERVAL = 3  # In seconds
 
 # what name to pick for .yaml file (when generating archive from uploaded yaml)
