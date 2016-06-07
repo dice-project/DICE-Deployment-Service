@@ -62,7 +62,11 @@ echo "CFY_MANAGER_USERNAME = \"${username}\"" >> dice_deploy/local_settings.py
 echo "CFY_MANAGER_PASSWORD = \"${password}\"" >> dice_deploy/local_settings.py
 
 ctx logger info "Resetting database"
-bash run.sh reset
+superuser_username="$(ctx node properties superuser_username)"
+superuser_password="$(ctx node properties superuser_password)"
+superuser_email="$(ctx node properties superuser_email)"
+bash run.sh reset "$superuser_username" "$superuser_password" \
+	"$superuser_email"
 
 ctx logger info "Install gunicorn"
 pip install gunicorn

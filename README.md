@@ -114,6 +114,7 @@ fully start. As a workaround, the manual steps for starting it are required:
 $ ssh ubuntu@10.10.20.35 # ubuntu is the default linux user
 # Perform the services start-up
 $ ./start.sh
+$ exit
 ```
 
 Now the service should function properly.

@@ -20,10 +20,10 @@ inputs:
       Addesss of the Cloudify Manager instance
   cfy_manager_username:
     description: >
-      Username that should be used when connecting to manager
+      Username that should be used when connecting to Cloudify Manager
   cfy_manager_password:
     description: >
-      Password that should be used when connecting to manager
+      Password that should be used when connecting to Cloudify Manager
   fco_url:
     description: >
       URL to the FCO API
@@ -53,17 +53,35 @@ inputs:
   fco_agent_key:
     description: >
       UUID of the SSH key to be used for connecting to the VMs
+  superuser_username:
+    description: >
+      This username will be set for the deployment service superuser
+    default: admin
+  superuser_password:
+    description: >
+      This password will be set for the deployment service superuser
+    default: changeme
+  superuser_email:
+    description: >
+      This e-mail address will be assigned to the deployment service superuser
+    default: admin@example.com
 
 node_types:
   dice.nodes.CfyWrapper:
     derived_from: cloudify.nodes.WebServer
     properties:
       manager:
-        description: Cloudify manager instance we wrap
+        description: Cloudify Manager instance we wrap
       manager_user:
-        description: Cloudify manager instance username
+        description: Cloudify Manager instance username
       manager_pass:
-        description: Cloudify manager instance password
+        description: Cloudify Manager instance password
+      superuser_username:
+        description: Username part of the superuser credentials to create
+      superuser_password:
+        description: Password part of the superuser credentials to create
+      superuser_email:
+        description: E-mail address to assign to the superuser
 
 node_templates:
   vm:
@@ -91,6 +109,9 @@ node_templates:
       manager: { get_input: cfy_manager}
       manager_user: { get_input: cfy_manager_username }
       manager_pass: { get_input: cfy_manager_password }
+      superuser_username: { get_input: superuser_username }
+      superuser_password: { get_input: superuser_password }
+      superuser_email: { get_input: superuser_email }
     relationships:
       - type: cloudify.relationships.contained_in
         target: vm

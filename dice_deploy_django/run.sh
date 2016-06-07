@@ -20,15 +20,21 @@ function run()
 
 function reset()
 {
+  SUPERUSER_UNAME="${1-admin}"
+  SUPERUSER_PASSWORD="${2-changeme}"
+  SUPERUSER_EMAIL="${3-admin@example.com}"
   rm -rf db.sqlite3 uploads cfy_wrapper/migrations
   python manage.py makemigrations cfy_wrapper
   python manage.py migrate
-  python manage.py create-dice-superuser
+  python manage.py create-dice-superuser \
+    --username "${SUPERUSER_UNAME}" \
+    --password "${SUPERUSER_PASSWORD}" \
+    --email "${SUPERUSER_EMAIL}"
 }
 
 case $1 in
   reset)
-    reset
+    reset "$2" "$3" "$4"
     ;;
 
   *)

@@ -1,18 +1,51 @@
-# General settings
+# VM settings
+#
+# The Linux user name available in the provisioned VM
 agent_user: ubuntu
 
-# Cloudify Manager's address
-cfy_manager: 109.231.122.106
-# Port to use for the wrapper's API and the web application
-webserver_port: 8000
+# Cloudify Manager settings
+#
+# Address of the Cloudify Manager that the DICE Deployment Service should use
+# as its back-end
+cfy_manager: 109.231.122.56
+# Cloudify Manager security username. If your Cloudify Manager does not have
+# any security set, use an arbitrary value.
+cfy_manager_username: username
+# Cloudify Manager security password. If your Cloudify Manager does not have
+# any security set, use an arbitrary value.
+cfy_manager_password: password
 
-# Flexiant Cloud Orchestrator (FCO) parameters
+# DICE Deployment Service parameters
+#
+# The port to assing the web application (and the RESTful service) to. At this
+# time, the reserved ports (e.g., 80) are not available.
+webserver_port: 8000
+# The blueprint creates a superuser. This is the username it will use.
+superuser_username: admin
+# This is the password for the superuser.
+superuser_password: changeme
+# This is the e-mail address to be used by the created superuser.
+superuser_email: admin@example.com
+
+# Flexiant Cloud Orchestrator (FCO) related parameters
+#
+# The URL of the FCO API
 fco_url: https://cp.diceproject.flexiant.net
+# Set the ID of the image to be used as the basis for the DICE Deployment
+# Service VM.
 fco_image_uuid:   uuid
+# Set the ID of the VCD where the DICE Deployment Service VM will be deployed.
 fco_vdc_uuid:     uuid
+# Set the ID of the FCO network that the VM will connect to.
 fco_network_uuid: uuid
+# Set the ID of the SSH key to be used by the agent to make the VM accessible.
 fco_agent_key:    uuid
-# User's FCO credentials
+# User's FCO credentials: the username
 fco_username: username
+# User's FCO credentials: the password
 fco_password: password
+# FCO customer ID.
+# Obtain this ID by visiting th FCO console (the web GUI). In the Users tab,
+# click on one of the groups. Then open the Information panel and find
+# the Customer information in Related resources & UUIDs.
 fco_customer: uuid
