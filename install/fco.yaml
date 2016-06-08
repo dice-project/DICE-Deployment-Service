@@ -121,6 +121,16 @@ node_templates:
         start: scripts/start.sh
         stop: scripts/stop.sh
 
+  wake_up:
+    type: cloudify.nodes.Root
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: web_server
+        target_interfaces:
+          cloudify.interfaces.relationship_lifecycle:
+            postconfigure:
+              implementation: scripts/remote-wake-up.sh
+
 outputs:
   http_endpoint:
     description: Web server external endpoint

@@ -73,6 +73,11 @@ $ cp install/inputs-openstack-example.yaml inputs-openstack.yaml
 $ nano inputs-openstack.yaml
 ```
 
+Your editor will open with the configuration file, which has all its properties
+set to generic values. Follow the comments, which explain the meaning of each
+property, replace the generic values with the actual ones, and save the inputs
+file.
+
 Then, make sure the Cloudify's virtual environment is activated, point the `cfy`
 to your Cloudify Manager - the same one that will serve as the DICE Deployment
 Service's backend - and use `up.sh` to deploy the blueprint:
@@ -92,37 +97,42 @@ longer than the preconfigured time, use `cfy` to learn the outputs:
 
 ```bash
 $ cfy deployments outputs -d dice_deploy
-Getting outputs for deployment: dice_deploy2 [manager=10.10.20.115]
+Getting outputs for deployment: dice_deploy [manager=10.10.20.115]
  - "http_endpoint":
   *  Description: Web server external endpoint
   *  Value: http://10.10.20.35:8000
 ```
 
-By default, calling `./up.sh PLATFORM` will create a blueprint and deployment
-named `dice_deploy`. It is possible to use a different name by supplying it
-as the second (optinal) parameter, e.g.:
+Now the RESTful interface is running and the Web interface is available. You can
+visit the assigned address (in the above case visit `http://10.10.20.35:8000`)
+with your browser. To log in, use the credentials set earlier in the inputs
+file, i.e., the values of the `superuser_username` and `superuser_password`).
+
+If additional instances of the service are needed, then we need to name each
+deployment differently. By default, calling `./up.sh PLATFORM` will create a 
+blueprint and deployment named `dice_deploy`. If we need an instance that is
+named differently, we can provide the name as the second parameter of the
+`up.sh` tool, e.g.:
 
 ```bash
 $ ./up.sh openstack staging_deployment
 ```
 
-There is currently a bug in the deployment process preventing the service to
-fully start. As a workaround, the manual steps for starting it are required:
+# Removing the service
+
+Tearing down the deployment service is then as easy as running the `dw.sh` script:
 
 ```bash
-# Connect to the command line console of the deployment service host
-$ ssh ubuntu@10.10.20.35 # ubuntu is the default linux user
-# Perform the services start-up
-$ ./start.sh
-$ exit
+$ ./dw.sh
 ```
 
-Now the service should function properly.
+By default, this script will remove the deployment and blueprint named
+`dice_deploy`. It is possible to supply a different name as a parameter, e.g.:
 
-Tearing down the deployment service is then as easy as running `./dw.sh`. By 
-default, this script will remove the deployment and blueprint named
-`dice_deploy`. It is possible to supply a different name as a parameter, e.g.,
-`./dw.sh staging_deployment`.
+
+```bash
+$ ./dw.sh staging_deployment
+```
 
 
 ## Vagrant installation
