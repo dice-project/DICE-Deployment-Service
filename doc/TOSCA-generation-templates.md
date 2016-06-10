@@ -114,8 +114,12 @@ Variables:
   `${STORM}` instance.
 * `STORM_INSTANCE_COUNT`: number of Storm worker instances, specific to the
   `${STORM}` instance (default: 1)
-* `STORM_TOPOLOGY_JAR_UML`: the URL where the user's Storm topology can be
-  downloaded from.
+* `STORM_TOPOLOGY_JAR_URL`: the URL or the filename where the user's Storm
+   topology can be obtained. If the URL starts with a protocol designation such
+   as 'https', then the jar needs to be available for download from the provided
+   URL. If no protocol designation is provided, the deployer assumes a file
+   packaged with the blueprint (*Note*: we have not implemented this scenario
+   yet).
 * `STORM_TOPOLOGY_JAR_FILENAME`: the filename of the jar containuing the user's
   Storm topology.
 * `STORM_TOPOLOGY_NAME`: the name of the user's Storm topology as it will be
@@ -170,7 +174,7 @@ submit with the blueprint:
   ${STORM_TOPOLOGY}:
     type: dice.components.storm.Topology
     properties:
-      ${STORM_APPLICATION_DEFINITION}
+      application: ${STORM_TOPOLOGY_JAR_URL}
       topology_name: ${STORM_TOPOLOGY_NAME}
       topology_class: ${STORM_TOPOLOGY_CLASS}
    relationships:
@@ -179,23 +183,6 @@ submit with the blueprint:
      - type: cloudify.relationships.depends_on
        target: ${STORM}
 ```
-
-The `STORM_APPLICATION_DEFINITION` may take one of two forms.
-
-* The user specifies an URL of the repository where the Storm topology's jar can
-  be downloaded from:
-
-```yaml
-application_url: ${STORM_TOPOLOGY_JAR_UML}
-```
-
-* The user specifies that the jar is to be packaged with the blueprint (we have
-  not implemented this scenario yet):
-
-```yaml
-application_file: ${STORM_TOPOLOGY_JAR_FILENAME}
-```
-
 
 ### Outputs
 
