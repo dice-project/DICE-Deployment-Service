@@ -194,7 +194,7 @@ class Container(Base):
 
 class Input(models.Model):
     key = models.CharField(max_length=256, primary_key=True)
-    value = models.CharField(max_length=256)
+    value = models.TextField()
     description = models.CharField(max_length=512, blank=True, null=True)
 
     @staticmethod

@@ -1,5 +1,6 @@
 from django.conf import settings
 import os
+import random
 from cfy_wrapper.models import Input, Error
 import shutil
 import factories
@@ -118,6 +119,23 @@ class ModelsTests(TestCase):
             'key1': 'val1',
             'key2': 'val2',
             'key3': 'val3',
+        }
+
+        inputs_dict = Input.get_inputs_values_as_dict()
+
+        self.assertDictEqual(expected_dict, inputs_dict)
+
+    def test_inputs_long_key(self):
+        long_value_length = 5000
+        random_text = "".join( \
+            random.choice('abcdefghijklmnopqrstuvxyzABCDEFGHIJKLMNOPQRSTUVXYZ ') \
+            for _ in range(long_value_length))
+        self.assertEqual(long_value_length, len(random_text))
+        input1 = factories.InputFactory.create(key='LongInput', value=random_text, \
+            description='A very long randomly generated value')
+
+        expected_dict = {
+            'LongInput': random_text,
         }
 
         inputs_dict = Input.get_inputs_values_as_dict()
