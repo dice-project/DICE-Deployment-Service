@@ -35,17 +35,38 @@ fco_url: https://cp.diceproject.flexiant.net
 # Service VM.
 fco_image_uuid:   uuid
 # Set the ID of the VCD where the DICE Deployment Service VM will be deployed.
+# This is the UUID that can be found in the VCDs section of the FCO web GUI
+# console, where you can click on the VCD designated to receive the blueprints,
+# then switch to the Information tab. The UUIDs are listed in the Related
+# resources & UUIDs panel.
 fco_vdc_uuid:     uuid
 # Set the ID of the FCO network that the VM will connect to.
+# This is the UUID that can be found in the Networks section of the FCO web GUI
+# console, where you can click on the network designated to connect the VMs,
+# then switch to the Information tab. The UUIDs are listed in the Related
+# resources & UUIDs panel for the item Network.
 fco_network_uuid: uuid
 # Set the ID of the SSH key to be used by the agent to make the VM accessible.
+# This is the UUID that can be found in the SSH keys section of the FCO web GUI
+# console, where you can click on the SSH key designated for Cloudify to be able
+# to connect to the VMs, then switch to the Information tab. The UUIDs are
+# listed in the Related resources & UUIDs panel for the item Network.
 fco_agent_key:    uuid
-# User's FCO credentials: the username
+# User's FCO credentials: the username (e-mail address) or the API key user ID.
+# The best practice is to create an API key user in the FCO, which is then
+# delegated to the automation. The API key user must be a member of the Admin
+# Group to be able to deploy and delete VMs. Obain the API username ID by
+# visiting the FCO web GUI console, switching to Users section in the navigation
+# at the left side of the interface, clicking on your API Key User entry and
+# referring to the API username field. The user id is the first part of the
+# entry before the "/" delimiter.
 fco_username: username
 # User's FCO credentials: the password
 fco_password: password
 # FCO customer ID.
-# Obtain this ID by visiting th FCO console (the web GUI). In the Users tab,
-# click on one of the groups. Then open the Information panel and find
-# the Customer information in Related resources & UUIDs.
+# For an API key user, this ID is in the part after the "/" delimiter of the
+# API username field.
+# For a regular user, obtain this ID by visiting th FCO console (the web GUI).
+# In the Users tab, click on one of the groups. Then open the Information panel
+# and find the Customer information in Related resources & UUIDs.
 fco_customer: uuid
