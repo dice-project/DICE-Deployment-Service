@@ -106,16 +106,79 @@ Next, we need to set up `dice-deploy-cli` tool by executing:
     $ dice-deploy-cli use <URL of deployment service>
     $ dice-deploy-cli authenticate <username> <password>
 
-Note that these two commands only need to be executed once. Creating initial
-deploy is then a matter of executing:
+Note that these two commands only need to be executed once. In terms of the
+RESTful API usage, the above effectively performes the following:
+
+    POST /auth/get-token
+    DATA:
+        mimeType: application/x-www-form-urlencoded
+        username=<username>&password=<password>
+    RESPONSE:
+    {
+        "token": "<auth token>",
+        "username": "<username>"
+    }
+
+Please note that we have show tuhe example outputs in a formatted form for
+legibility. In reality, the service returns the JSON string all in one line and
+with no extra white spaces.
+
+From the returned response, we need to store the `<auth token>` and use it 
+in the subsequent RESTful calls in the header to be authenticated by the
+service.
+
+Creating initial deploy is then a matter of executing:
 
     $ dice-deploy-cli deploy <container id> fco_{i}.yaml
+
+This makes the following RESTful call, which is a standard file submit via a
+file form field named `file`:
+
+    POST /containers/<container id>/blueprint
+    HEADER:
+        Authorization: Token <auth token>
+        Content-Length: ...
+        Content-Type: multipart/form-data; boundary=------------------------...
+    DATA:
+        file=<fco_{i}.yaml contents>
+    RESPONSE:
+    {
+        "blueprint": {
+            "id": "<blueprint id>",
+            "modified_date": "2016-06-13T07:45:09",
+            "outputs": null,
+            "state_name": "pending"
+        },
+        "description": "WordCount",
+        "id": "<container id>",
+        "modified_date": "2016-06-13T07:45:09"
+    }
+
+We need to save the `<blueprint id>` returned in the response's JSON document,
+because we will be using it in further calls to refer to the specific deploy. 
 
 It is then worth waiting until the execution finishes:
 
     $ dice-deploy-cli wait-deploy <container id>
 
-### Extracting the Strorm topology ID
+This command internally calls the following RESTful call:
+
+    GET /blueprints/<blueprint id>
+    HEADER:
+        Authorization: Token <auth token>
+    RESPONSE:
+    {
+        "id": "<blueprint id>",
+        "modified_date": "2016-06-13T07:45:14",
+        "outputs": null,
+        "state_name": "pending"
+    }
+
+it repeats the call until the `state_name` is either `deployed` or `error`. If
+something went wrong with the poll request, it will be `request_failed`.
+
+
+### Extracting the Storm topology ID
 
 In case of our sample Apache Storm blueprints, the deployer will have submitted
 the Storm topology and provide the unique ID of the job in the deployment's
@@ -140,11 +203,34 @@ outputs. To obtain this metadata, run:
         }
     }
 
-Please note that we have formatted the example output for legibility. The result
-is a JSON file with a single top level key `outputs`. It contains the keys
-defined in the `outputs` section of the `fco_{i}.yaml`. For the purposes of the
-Configuration Optimization of Storm, we need the `wordcount_id` and the value
-of the underlying `value`.
+Or, use the direct RESTful call:
+
+    GET /blueprints/<blueprint id>/outputs
+    HEADER:
+        Authorization: Token <auth token>
+    RESPONSE:
+    {
+        "outputs": {
+            "storm_nimbus_address": {
+                "description": "The address to be used by the storm client",
+                "value": "109.231.122.80"
+            },
+            "storm_nimbus_gui": {
+                "description": "URL of the Storm nimbus gui",
+                "value": "http://109.231.122.80:8080"
+            },
+            "wordcount_id": {
+                "description": "Unique Storm topology ID",
+                "value": "dice-wordcount-1-1465569456"
+            }
+        }
+    }
+
+
+The result is a JSON file with a single top level key `outputs`. It contains the
+keys defined in the `outputs` section of the `fco_{i}.yaml`. For the purposes of
+the Configuration Optimization of Storm, we need the `wordcount_id` and the
+value of the underlying `value`.
 
 ### Extracting performance indicators
 
@@ -152,7 +238,6 @@ Getting performance indicators from existing deploy is out of scope for
 deployment tools, so no data acquisition functionality is provided by our
 tools. What we do provide is metadata about deployment, such as various
 endpoints of deployed services.
-
 
 
 ### Updating blueprint with new configuration
@@ -171,11 +256,19 @@ parameter values.
 
 ### Redeploying cluster
 
-Last step is as easy as running
+When redeploying the cluster or deploying a new one in the same container, the
+service undeploys the previous deploy, so we can again directly call:
 
     $ dice-deploy-cli deploy <container id> fco_{i+1}.yaml
 
-This will destroy last deployment and create new one with updated parameters.
+### Destroying the cluster
 
+If needed, the following command will undeploy a running cluster:
 
+    $ dice-deploy-cli teardown <blueprint id>
 
+This performs the following RESTful call:
+
+    DELETE /blueprints/<blueprint id>
+    HEADER:
+        Authorization: Token <auth token>
