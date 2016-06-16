@@ -67,7 +67,7 @@ $ cd tools
 $ export PATH=$PATH:$(pwd)
 ```
 
-### Installation from TOSCA blueprint 
+### Installation from TOSCA blueprint
 
 Currently, we support the following platforms with TOSCA blueprints:
 
@@ -339,7 +339,7 @@ dice-deploy-cli input-add vdc 9799fe42-02ef-3929-88d4-c993a02cbe1d "FCO VDC"
 dice-deploy-cli input-add network 5264edab-8d29-329d-b4f9-5f8ca17cff78 "FCO network"
 ```
 
-# Container management
+## Container management
 
 With the Cloudify Manager installed and the DICE deployment service installed
 and configured, the users can now start using the service. But to be able to
@@ -370,7 +370,34 @@ Container UUID: 75570440-545c-42ed-a677-c54732783e67
 
 In this case we receive the UUID of the newly created container in the console.
 
-# What is next
+
+## Testing installation
+
+In order to make sure everything works as expected, there are a few test
+blueprints provided in [examples](../example/) folder that should be uploaded
+to some container on freshly installed service.
+
+First blueprint that should be uploaded is
+[test-setup.yaml](../example/test-setup.yaml). This blueprint does not use any
+external dependencies and creates no physical nodes (virtual machines, etc.).
+This makes it perfect for testing if all of the pieces are properly wired
+together. If the test succeeds, container in UI should look something like the
+screenshot below.
+
+![Deployed test blueprint](images/dice-deployment-service-tester.png)
+
+Second blueprint that should be uploaded is one of the
+`test-server-<platform>.yaml`, depending on the platform where service is
+installed. This blueprint will create a single virtual machine and install
+demo web server that serves static file onto it.
+
+![deployed server test](images/dice-deployment-service-server-tester.png)
+
+If all of the tests finished, deployment service is set up correctly and ready
+for real work.
+
+
+## What is next
 
 This concludes the installation and administration of the DICE deployment
 service. The users can now start using it through the web GUI, the command

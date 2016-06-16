@@ -1,0 +1,61 @@
+tosca_definitions_version: cloudify_dsl_1_2
+
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.3.1/types.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.3.1/plugin.yaml
+  - http://dice-project.github.io/DICE-Deployment-Cloudify/spec/openstack/0.1.1/plugin.yaml
+  - https://raw.githubusercontent.com/dice-project/cloudify-chef-plugin/redirect/plugin.yaml
+
+
+inputs:
+  agent_user:
+    default: ubuntu
+  small_image_id:
+    default: 36dbc4e8-81dd-49f5-9e43-f44a179a64ea
+  small_flavor_id:
+    default: 070005dc-9bd5-4c0c-b2c6-88f81a7b7239
+  medium_image_id:
+    default: 36dbc4e8-81dd-49f5-9e43-f44a179a64ea
+  medium_flavor_id:
+    default: 070005dc-9bd5-4c0c-b2c6-88f81a7b7239
+  large_image_id:
+    default: 36dbc4e8-81dd-49f5-9e43-f44a179a64ea
+  large_flavor_id:
+    default: 070005dc-9bd5-4c0c-b2c6-88f81a7b7239
+
+
+node_templates:
+  virtual_ip:
+    type: cloudify.openstack.nodes.FloatingIP
+
+  firewall:
+    type: dice.firewall_rules.mock.WebServer
+
+  vm:
+    type: dice.hosts.Small
+    relationships:
+      - type: dice.relationships.ProtectedBy
+        target: firewall
+      - type: cloudify.openstack.server_connected_to_floating_ip
+        target: virtual_ip
+
+  server:
+    type: dice.components.mock.WebServer
+    properties:
+      title: Non default title
+      description: Non default description
+    relationships:
+      - type: dice.relationships.ContainedIn
+        target: vm
+
+
+outputs:
+  http_endpoint:
+    description: Web server external endpoint
+    value:
+      concat:
+        - 'http://'
+        - get_attribute: [virtual_ip, floating_ip_address]
+        - ':'
+        - get_property: [server, port]
