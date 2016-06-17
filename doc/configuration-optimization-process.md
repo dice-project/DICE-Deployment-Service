@@ -247,7 +247,7 @@ We will assume here that configuration optimization tool takes
 `values_${i+1}.json` that contains new configuration parameter values.
 Incorporating new values into blueprint is done by running
 
-    $ update_blueprint_parameters.py -o desc.yaml -c values_{i+1}.yaml \
+    $ update-blueprint-parameters.py -o desc.yaml -c values_{i+1}.yaml \
         -b fco_{i}.yaml -O fco_{i+1}.yaml --json
 
 This will produce new blueprint `fco_{i}.yaml` that contains new configuration
