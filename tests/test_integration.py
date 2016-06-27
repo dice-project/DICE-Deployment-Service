@@ -1,8 +1,10 @@
 from unittest import TestCase
 import os
+import re
 import subprocess
 import time
 import json
+import requests
 
 import utils
 import settings
@@ -21,6 +23,8 @@ class BootstrapTests(TestCase):
     """
 
     terminal_status = ['terminated', 'failed', 'cancelled']
+    _cfy_client = None
+
     def non_terminal_executions(self, executions):
         return [e for e in executions if e.status not in self.terminal_status]
 
@@ -70,6 +74,16 @@ class BootstrapTests(TestCase):
             self.log("Deleting the blueprint")
             self.cfy_client.blueprints.delete(self.deployment_id)
 
+    @property
+    def cfy_client(self):
+        if self._cfy_client is None:
+            self._cfy_client = utils.get_cfy_client(settings)
+        return self._cfy_client
+
+    def get_outputs(self, deployment_id):
+        outputs = self.cfy_client.deployments.outputs.get(
+            deployment_id=deployment_id)
+        return outputs["outputs"]
 
     def test_bootstrap(self):
         """
@@ -94,8 +108,7 @@ class BootstrapTests(TestCase):
         call_env['CLOUDIFY_PASSWORD'] = settings.CLOUDIFY_PASSWORD
 
         # initialize the cloudify client
-        cfy_client = utils.get_cfy_client(settings)
-        self.cfy_client = cfy_client
+        cfy_client = self.cfy_client
 
         # but we use the CLI tool to start the bootstrapping, because this
         # is what the users will use
@@ -131,11 +144,35 @@ class BootstrapTests(TestCase):
             non_term_executions = self.non_terminal_executions(executions)
             if len(non_term_executions) > 0:
                 self.log("Install not finished yet. Polling until it's done.")
-            while len(non_term_executions) > 0:
-                time.sleep(2)
-                executions = cfy_client.executions.list(
-                    deployment_id=self.deployment_id)
-                non_term_executions = self.non_terminal_executions(executions)
+                # we have already waited for 15 minutes. 10 minutes more should
+                # be more than enough
+                sleep_time = 5
+                attempts = 120
+                while len(non_term_executions) > 0 and attempts > 0:
+                    time.sleep(sleep_time)
+                    executions = cfy_client.executions.list(
+                        deployment_id=self.deployment_id)
+                    non_term_executions = self.non_terminal_executions(executions)
+                    attempts -= 1
+
+                if len(non_term_executions) > 0:
+                    self.log("Installation takes too long. Cancelling.")
+                    cfy_client.executions.cancel(
+                        execution_id=non_term_executions[0].id)
+                    # now wait a bit until it is really cancelled
+                    attempts = 24
+                    execution = cfy_client.executions.get(
+                        execution_id=non_term_executions[0].id)
+                    while execution.status != 'cancelled' and attempts > 0:
+                        time.sleep(sleep_time)
+                        attempts -= 1
+                        execution = cfy_client.executions.get(
+                            execution_id=execution.id)
+                    if execution.status != 'cancelled':
+                        raise Exception("The execution wouldn't cancel in due time.")
+                    time.sleep(10) # TODO - find a way to wait for the end of the
+                                  # hidden workflow _stop_deployment_environment
+                    self.fail("Installation took too long.")
 
             # * has failed (no executions, or one of the executions has status
             #   failed)
@@ -152,6 +189,26 @@ class BootstrapTests(TestCase):
             install_execs = [e for e in executions if e.workflow_id == 'install']
             self.assertEquals(1, len(install_execs))
             self.assertEquals('terminated', install_execs[0].status)
+
+            # check the outputs
+            outputs = self.get_outputs(deployment_id=self.deployment_id)
+            self.assertNotEquals(0, len(outputs), "Outputs not available.")
+            self.assertTrue("http_endpoint" in outputs)
+
+            # is the output a valid URL?
+            http_endpoint = outputs["http_endpoint"]
+            m = re.match("https?://[^:]+:[0-9]+", http_endpoint)
+            self.assertIsNotNone(m, "Bad URL in outputs: %s." % http_endpoint)
+
+            # check if we can get to the API
+            r = requests.get("%s/docs/" % http_endpoint)
+            self.assertEquals(200, r.status_code,
+                "API not available? Got HTTP %s on /docs/" % r.status_code)
+
+            # check if we can get to the GUI
+            r = requests.get("%s" % http_endpoint)
+            self.assertEquals(200, r.status_code,
+                "GUI not available? Got HTTP %s on /" % r.status_code)
 
         except Exception as e:
             self.log("Deployment failed: %s" % e)
@@ -171,6 +228,8 @@ class BootstrapTests(TestCase):
             except Exception as e:
                 self.log("Getting the logs failed: %s" % str(e))
                 pass
+
+            self.fail(str(e))
         finally:
             self.log("Cleaning up")
             time.sleep(10)

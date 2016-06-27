@@ -15,3 +15,4 @@ dice_deploy_django/test_db.sqlite3
 .dice-deploy-url
 .dice-deploy-auth
 inputs-*.yaml
+env.sh
