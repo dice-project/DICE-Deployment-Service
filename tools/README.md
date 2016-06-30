@@ -15,3 +15,6 @@ used in the deployment process. This includes the following tools:
 * `extract-blueprint-parameters.py`: a Python script for extracting parameters
   from a blueprint into a configuration file. Please refer to
   [this document](./README-extract-blueprint-parameters.md) for more information.
+* `test-openstack-connection.py`: a Python script for testing if we can connect
+  to OpenStack using provided credentials. For usage instructions are
+  [here](./README-test-openstack-connection.md).
