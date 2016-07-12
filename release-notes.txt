@@ -1,0 +1,7 @@
+New in v.0.2.4:
+
+* Enabled support and documentaion for Cloudify 3.4.0.
+* Added an integration test for bootstrapping the DICE deployment service
+  wrapper.
+* Added an OpenStack tester tool to assess viability of successful bootstrapping
+  in the target OpenStack testbed.
