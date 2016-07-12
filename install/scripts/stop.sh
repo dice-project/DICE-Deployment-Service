@@ -2,6 +2,11 @@
 
 set -e
 
+# Break free of cloudify agent virtual env cage
+ctx logger info "Break from agent virtual env"
+unset VIRTUALENV
+export PATH=/usr/bin:$PATH
+
 cd /home/ubuntu
 . venv/bin/activate
 cd dice_deploy_django

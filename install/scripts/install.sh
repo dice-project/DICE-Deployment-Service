@@ -11,6 +11,10 @@ echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+DWIPXKhHM+DUdxvglfDMDW3ZOAR56h1CBO
 # Miha
 echo "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEA3Yd5NraU2eXCK+yQdaUIjh6nvVxEZNIuhUfIDxG6mfIanz/8BmJKFv0CtCxLypKKA757HK8A4VMT22OvI016D5v+OfWRg4VfE2mxDXBLVZ5zQyzrVtI3oMYZdg+sgtvY5AeUfqSE5lZhgwb8eIgeQyOdYIfvMSuKLvBEnq6rNDE= miha-WINDOWS" >> ~/.ssh/authorized_keys
 
+# Break free of cloudify agent virtual env cage
+ctx logger info "Break from agent virtual env"
+unset VIRTUALENV
+export PATH=/usr/bin:$PATH
 
 # Admin part
 ctx logger info "Installing system dependencies"

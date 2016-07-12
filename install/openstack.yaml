@@ -1,10 +1,10 @@
 # Installation blueprintf for dice deployment tools
 
-tosca_definitions_version: cloudify_dsl_1_1
+tosca_definitions_version: cloudify_dsl_1_3
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/3.2.1/types.yaml
-  - http://www.getcloudify.org/spec/openstack-plugin/1.2.1/plugin.yaml
+  - http://www.getcloudify.org/spec/cloudify/3.4/types.yaml
+  - http://dice-project.github.io/cloudify-openstack-plugin/1.4/plugin.yaml
 
 inputs:
   webserver_port:
@@ -80,9 +80,8 @@ node_templates:
     properties:
       cloudify_agent:
         user: { get_input: agent_user }
-      server:
-        image: { get_input: image }
-        flavor: { get_input: flavor }
+      image:  { get_input: image  }
+      flavor: { get_input: flavor }
     relationships:
       - type: cloudify.openstack.server_connected_to_floating_ip
         target: virtual_ip
