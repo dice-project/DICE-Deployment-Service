@@ -10,7 +10,7 @@ to:
 
 ## Requirements
 
-* Orchestrator: Cloudify 3.3.1
+* Orchestrator: Cloudify 3.4.0
 * Supported platforms:
   * OpenStack Kilo (see [compatibility](http://docs.getcloudify.org/3.3.1/plugins/openstack/#compatibility)
     for Cloudify 3.3.1)
@@ -24,7 +24,7 @@ The DICE deployment service relies on an instance of a Cloudify
 Manager running in the network. Here are our notes and instructions on
 bootstrapping the Cloudify Manager:
 
-* [OpenStack](Cloudify-3.3.1-OpenStack.md)
+* [OpenStack](Cloudify-3.4.0-OpenStack.md)
 
 ## DICE Deployment service installation
 
