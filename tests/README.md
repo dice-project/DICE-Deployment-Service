@@ -27,7 +27,10 @@ Execute shell:
 ```bash
 PATH="$WORKSPACE/../venv/bin":/usr/local/bin:$PATH
 
-[[ ! -d "../venv" ]] && virtualenv ../venv
+if [ ! -d "../venv" ]
+then
+  virtualenv ../venv
+fi
 
 . "$WORKSPACE/../venv/bin/activate"
 
