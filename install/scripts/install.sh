@@ -46,10 +46,6 @@ ctx logger info "Copying application sources"
 ctx download-resource dice_deploy.tar.gz /home/ubuntu/dice_deploy.tar.gz
 tar -xvf dice_deploy.tar.gz
 
-#ctx download-resource upstart-services.tar.gz /home/ubuntu/upstart-services.tar.gz
-#tar -xvf upstart-services.tar.gz
-#sudo cp /home/ubuntu/install/upstart-services/* /etc/init/
-
 ctx logger info "Installing application dependencies"
 cd dice_deploy_django
 pip install -r requirements.txt

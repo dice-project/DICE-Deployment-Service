@@ -56,7 +56,9 @@ function check_args ()
 function main ()
 {
   local blueprint="${1}.yaml"
-  DEPLOY_NAME=${2-dice_deploy}
+
+  # :- is not optional here, because function parameters are tricky
+  DEPLOY_NAME=${2:-dice_deploy}
 
   # Package application
   tar -cvzf install/dice_deploy.tar.gz \
@@ -67,10 +69,6 @@ function main ()
     --exclude='dice_deploy/db.sqlite3' \
     --exclude='dice_deploy/uploads' \
     dice_deploy_django
-
-  ## Package the upstart configuration
-  #tar -cvzf install/upstart-services.tar.gz \
-  #  install/upstart-services
 
   # Create blueprint archive
   tar -cvzf dd.tar.gz --exclude='*.swp' install
