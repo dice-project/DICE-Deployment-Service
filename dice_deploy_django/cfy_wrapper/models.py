@@ -33,36 +33,42 @@ class Blueprint(Base):
     # Possible states
     @unique
     class State(IntEnum):
-        # deployment flow
-        pending = 1
-        uploaded = 2
-        ready_to_deploy = 3
-        preparing_deploy = 4
-        working = 5
-        deployed = 6
-        # undeploymen flow
-        uninstalling = 101
-        deleting_deployment = 102
-        deleting_blueprint = 103
-        # special states
-        undeployed = 0  # exists on gui, but not on cfy manageer
-        error = -1
+        """
+        Blueprint states
 
-        @classmethod
-        def all_values(cls):
-            return [v.value for v in list(cls)]
+        States roughly correspond to the states of the Cloudify, but we made
+        them a bit more fine grained to support wider variety of recovery
+        actions without user intervention (for example, if user wishes to
+        remove existing blueprint that failed to validate, no uninstall should
+        be done).
 
-        @classmethod
-        def all_choices(cls):
-            return [(v.value, v.name) for v in list(cls)]
+        Error states are negated states from this enum (for example, -2 means
+        that blueprint could not be uploaded to cloudify). Not all negations
+        make sense, but we allow them in order to make code a bit more
+        generic.
+        """
+        present = 1  # This is initial state + after uninstall finishes
+        # Installation
+        uploading_to_cloudify = 2
+        uploaded_to_cloudify = 3
+        preparing_deployment = 4
+        prepared_deployment = 5
+        installing = 6
+        installed = 7  # This is what we reach after install workflow finishes
+        fetching_outputs = 8
+        fetched_outputs = 9  # This is idle state
+        # Uninstall workflow
+        uninstalling = 10
+        uninstalled = 11
+        deleting_deployment = 12
+        deleted_deployment = 13
+        deleting_from_cloudify = 14
 
     # Fields
     id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False
     )
-    state = models.IntegerField(default=State.pending.value, choices=State.all_choices())
-    archive = models.FileField(upload_to="blueprints_targz", blank=True, null=True)
-    yaml = models.FileField(upload_to="blueprints_yaml", blank=True, null=True)
+    state = models.IntegerField(default=State.present.value)
     outputs = JSONField(blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
@@ -73,94 +79,67 @@ class Blueprint(Base):
 
     @property
     def state_name(self):
-        return Blueprint.State(self.state).name
+        return Blueprint.State(abs(self.state)).name
 
-    def generate_archive(self):
+    @property
+    def in_error(self):
+        return self.state < 0
+
+    @property
+    def content_folder(self):
+        return os.path.join(settings.MEDIA_ROOT, self.cfy_id)
+
+    @property
+    def content_blueprint(self):
+        return os.path.join(self.content_folder, "blueprint.yaml")
+
+    @property
+    def content_tar(self):
+        return self.content_folder + ".tar.gz"
+
+    def store_content(self, content):
         """
-        Generate archive for this blueprint. Does nothing if archive was originally uploaded
-        instead of yaml.
-        NOTE: This overrides previously generated archive
-        :return: filepath to the generated file
+        First, try to untar the content. If this fails, simply copy the file
+        to content folder. This function does no validation of blueprints!
         """
-        if bool(self.yaml):
-            # generate archive
-            f_tmp = utils.generate_archive_from_yaml(self.yaml.file)
+        if not utils.extract_archive(content, self.content_folder)[0]:
+            path = os.path.join(self.content_folder, "blueprint.yaml")
+            with open(path, "w") as file:
+                file.write(content.read())
 
-            # store it under same archive name as the old one if exists ...
-            if bool(self.archive):
-                archive_filename = self.archive.name
-                os.remove(archive_filename)
-                shutil.copy(f_tmp.name, archive_filename)
-            # ... or create new one
-            else:
-                archive_filename = os.path.join('generated_archives', str(uuid.uuid4()) + '.tar.gz')
-                archive_filename_full = os.path.join(settings.MEDIA_ROOT, archive_filename)
-                try:
-                    os.makedirs(os.path.dirname(archive_filename_full))
-                except OSError:
-                    pass
-                shutil.copy(f_tmp.name, archive_filename_full)
-                self.archive = archive_filename
-                self.save()
+    def is_valid(self):
+        """
+        Each blueprint needs blueprint.yaml in folder. If this file does not
+        exist, we are grumpy.
+        """
+        try:
+            with open(self.content_blueprint) as f:
+                yaml.safe_load(f)
+            return True
+        except:
+            return False
 
-            # close the temporary file
-            f_tmp.close()
+    def pack(self):
+        """
+        Create tarball that contains complete blueprint contents, augmented
+        with admin supplied inputs.
+        """
+        utils.create_archive(self.content_tar, self.content_folder)
+        return self.content_tar
 
-        return os.path.join(settings.MEDIA_ROOT, self.archive.name)
-
-    def pipe_deploy_blueprint(self):
-        """ Defines and starts async pipeline for deploying blueprint to cloudify """
-        from cfy_wrapper import tasks
-
-        # update my state immediately
-        self.state = Blueprint.State.pending.value
-        self.save()
-
-        pipe = (
-            tasks.upload_blueprint.si(self.cfy_id) |
-            tasks.create_deployment.si(self.cfy_id) |
-            tasks.install.si(self.cfy_id)
-        )
-        pipe.apply_async()
-
-    def pipe_undeploy_blueprint(self):
-        """ Defines and starts async pipeline for undeploying blueprint from cloudify """
-        from cfy_wrapper import tasks
-
-        # update my state immediately
-        self.state = Blueprint.State.uninstalling.value
-        self.save()
-
-        pipe = (
-            tasks.uninstall.si(self.cfy_id) |
-            tasks.delete_deployment.si(self.cfy_id) |
-            tasks.delete_blueprint.si(self.cfy_id, delete_local=False)
-        )
-        pipe.apply_async()
-
-    def pipe_redeploy_blueprint(self):
-        """ Defines and starts async pipeline for redeploying blueprint on cloudify """
-        from cfy_wrapper import tasks
-
-        # prevent undeploying when I'm not even deployed
-        if self.state != self.State.deployed.value:
-            return self.pipe_deploy_blueprint()
-
-        # update my state immediately
-        self.state = Blueprint.State.uninstalling.value
-        self.save()
-
-        pipe = (
-            # undeploy
-            tasks.uninstall.si(self.cfy_id) |
-            tasks.delete_deployment.si(self.cfy_id) |
-            tasks.delete_blueprint.si(self.cfy_id, delete_local=False) |
-            # deploy
-            tasks.upload_blueprint.si(self.cfy_id) |
-            tasks.create_deployment.si(self.cfy_id) |
-            tasks.install.si(self.cfy_id)
-        )
-        pipe.apply_async()
+    def update_inputs(self, inputs):
+        """
+        This function loads blueprint yaml, replaces inputs section and saves
+        blueprint back.
+        """
+        with open(self.content_blueprint) as file:
+            data = yaml.load(file)
+        if len(inputs) == 0 and "inputs" in data:
+            del data["inputs"]
+        else:
+            data.update({"inputs": inputs})
+        with open(self.content_blueprint, "w") as file:
+            yaml.dump(data, file)
 
     @property
     def errors(self):

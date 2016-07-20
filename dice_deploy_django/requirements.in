@@ -5,9 +5,10 @@ cloudify_rest_client==3.2.1
 celery
 enum34
 flower
-django-factory-boy
 django-celery
 django-rest-swagger
 jsonfield
 PyYAML
 gunicorn
+testfixtures
+mock

@@ -1,17 +1,20 @@
-import re
-from rest_framework import serializers, fields
+from rest_framework import serializers
 
 from .models import Blueprint, Container, Input
 
 
 class BlueprintSerializer(serializers.ModelSerializer):
-    modified_date = serializers.DateTimeField(read_only=True)
-    outputs = fields.JSONField()
-
     class Meta:
         model = Blueprint
-        fields = ("state_name", "id", "modified_date", "outputs")
+        fields = ("id", "state_name", "modified_date", "outputs", "in_error")
 
+    outputs = serializers.JSONField()
+
+    def save(*args, **kwargs):
+        raise RuntimeError("Blueprint saving is not supported")
+
+    def update(*args, **kwargs):
+        raise RuntimeError("Blueprint updating is not supported")
 
 class ContainerSerializer(serializers.ModelSerializer):
     blueprint = BlueprintSerializer()

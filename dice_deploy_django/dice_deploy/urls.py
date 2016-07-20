@@ -9,7 +9,6 @@ from django.conf.urls import url, include
 admin.autodiscover()
 
 urlpatterns = [
-    url(r'^docs/?', include('rest_framework_swagger.urls')),  # swagger
     url(r'^admin/?', include(admin.site.urls)),
     url(r'^auth/get-token/?', AuthTokenView.as_view(), name='get_token')
 ]
