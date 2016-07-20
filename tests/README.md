@@ -70,19 +70,23 @@ $ pip install cloudify==3.4.0
 
 Then provide the context information as a set of environment properties. Use
 either the Jenkins' Environment variables in the Global properties section of
-`/jenkins/configure`. 
+`/jenkins/configure`.
 
-  Name                | Example value
-  ----                | -------------
-  `TARGET_PLATFORM`   | `openstack`  
-  `CLOUDIFY_ADDRESS`  | `10.10.43.48`
-  `CLOUDIFY_USERNAME` | `admin`      
-  `CLOUDIFY_PASSWORD` | `2Big1Secret`
+  Name                          | Example value
+  ----                          | -------------
+  `TARGET_PLATFORM`             | `openstack`
+  `CLOUDIFY_ADDRESS`            | `10.10.43.48`
+  `CLOUDIFY_USERNAME`           | `admin`
+  `CLOUDIFY_PASSWORD`           | `2Big1Secret`
+  `DEPLOYMENT_SERVICE_USERNAME` | `ds-user`
+  `DEPLOYMENT_SERVICE_PASSWORD` | `ds-pass`
 
 
 Prepare the inputs that will be valid for your environment. Make sure to
 name the inputs file as `inputs-$TARGET_PLATFORM.yaml`. Put it into
-`$HOME/jobs/Deployment-Service-01-unit-tests/`.
+`$HOME/jobs/Deployment-Service-01-unit-tests/`. Also make sure that last two
+variables in the preceding table are consistent with the values in the inputs
+yaml file.
 
 Then create a Cloudify job, e.g., `Deployment-Service-02-integration-tests`. 
 Click on **Advanced ...** and check **Use custom workspace**. In the Directory,
@@ -109,10 +113,44 @@ fi
 cfy use -t $CLOUDIFY_ADDRESS
 
 cd tests
-python -m unittest test_integration.BootstrapTests.test_bootstrap
+./run-integration-tests.sh
 ```
 
 The job is now ready to run. As the last step, go back to the
 `Deployment-Service-01-unit-tests`, go to the **Post-build Actions** section
 and add **Build other projects**, specifying 
 `Deployment-Service-02-integration-tests` project to build.
+
+
+# Running integration tests against vagrant instance
+
+Developers might find it beneficial to run integration tests against local
+deployment service. To do this, a few steps need to be taken care of.
+
+First, make sure deployment service settings have properly configured cloudify
+manager endpoint (settings that need to be checked are `CFY_MANAGER_URL`,
+`CFY_MANAGER_USERNAME` and `CFY_MANAGER_PASSWORD`). Second, export following
+variables (change contents to fit your development environment, defaults
+listed below should work for default vagrant setup):
+
+    export DEPLOYMENT_SERVICE_ADDRESS="http://localhost:8080"
+    export DEPLOYMENT_SERVICE_USERNAME=admin
+    export DEPLOYMENT_SERVICE_PASSWORD=changeme
+
+Now simply run `python -m unittest discover` and be amazed.
+
+
+# Running bootstrap and teardown tests from local machine
+
+This is also quite simple to do. First, create `inputs-<platform>.yaml` file
+in the root of the project and fill in proper values. Now execute
+
+    export CLOUDIFY_ADDRESS=10.10.43.35
+    export CLOUDIFY_USERNAME=cloudify_username
+    export CLOUDIFY_PASSWORD=cloudify_password
+    export DEPLOYMENT_SERVICE_USERNAME=admin
+    export DEPLOYMENT_SERVICE_PASSWORD=changeme
+
+where values should be consistent with the ones in the inputs file. Now simply
+run `./run-integration-tests.sh` script. The script should start bootstraping
+the deployment service and execute tests after bootstrap is done.

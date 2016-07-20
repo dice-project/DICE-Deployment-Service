@@ -20,12 +20,16 @@ CLOUDIFY_PASSWORD = os.environ.get('CLOUDIFY_PASSWORD', '')
 TARGET_PLATFORM = os.environ.get('TARGET_PLATFORM', 'fco')
 
 # Blueprint inputs file
-INPUTS_FILE_PATH = os.path.join(
-	os.path.dirname(BASE_DIR),
-	'inputs-%s.yaml' % TARGET_PLATFORM)
+INPUTS_FILE_PATH = os.path.join(os.path.dirname(BASE_DIR),
+                                "inputs-{}.yaml".format(TARGET_PLATFORM))
+
+# Settings for integration tests against deployment service
+DEPLOYMENT_SERVICE_ADDRESS = os.environ.get('DEPLOYMENT_SERVICE_ADDRESS', '')
+DEPLOYMENT_SERVICE_USERNAME = os.environ.get('DEPLOYMENT_SERVICE_USERNAME', '')
+DEPLOYMENT_SERVICE_PASSWORD = os.environ.get('DEPLOYMENT_SERVICE_PASSWORD', '')
 
 # Local overrides
 try:
-    from local_settings import *
+    from local_settings import *  # noqa
 except ImportError:
     pass

@@ -1,0 +1,4 @@
+this: is
+valid: yaml
+but:
+  invalid: blueprint
