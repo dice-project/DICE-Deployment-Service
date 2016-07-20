@@ -11,5 +11,5 @@ echo '. venv/bin/activate' >> .profile
 cd dice_deploy_django
 pip install -r requirements.txt
 bower install
-python manage.py migrate
-python manage.py create-dice-superuser
+
+./run.sh reset

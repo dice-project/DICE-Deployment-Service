@@ -4,15 +4,21 @@ function run()
 {
   # Start celery worker
   echo "Starting celery worker ..."
-  celery -A dice_deploy worker --loglevel=info > celery.out 2> celery.err &
+  celery worker -A dice_deploy -Q dice_deploy -l debug --without-gossip \
+   --without-mingle --purge &
   local celery_pid=$!
+
+  # Start celery flower
+  celery flower --port=5555 &
+  local flower_pid=$!
 
   # Start server
   echo "Starting django server ..."
   python manage.py runserver 0.0.0.0:8080
 
-  # Shutdown worker
+  # Shutdown flower and worker
   echo Cleaning up ...
+  kill $flower_pid
   kill $celery_pid
 
   echo All done.
@@ -20,9 +26,9 @@ function run()
 
 function reset()
 {
-  SUPERUSER_UNAME="${1-admin}"
-  SUPERUSER_PASSWORD="${2-changeme}"
-  SUPERUSER_EMAIL="${3-admin@example.com}"
+  SUPERUSER_UNAME="${1:-admin}"
+  SUPERUSER_PASSWORD="${2:-changeme}"
+  SUPERUSER_EMAIL="${3:-admin@example.com}"
   rm -rf db.sqlite3 uploads cfy_wrapper/migrations
   python manage.py makemigrations cfy_wrapper
   python manage.py migrate
