@@ -28,7 +28,7 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework_swagger",
-    "cfy_wrapper",
+    "cfy_wrapper.apps.CfyWrapper",
     "cfy_wrapper_gui",
     "djcelery",
     "rest_framework.authtoken",

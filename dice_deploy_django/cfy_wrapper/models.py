@@ -1,23 +1,18 @@
-import uuid
-from django.db import models
-from rest_framework.exceptions import NotFound
 from enum import IntEnum, unique
-from django.db import IntegrityError
-from jsonfield import JSONField
-import utils
-import shutil
-import os
+
+from rest_framework.exceptions import NotFound
+
 from django.conf import settings
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from rest_framework.authtoken.models import Token
+from django.db import IntegrityError
+from django.db import models
 
+from jsonfield import JSONField
 
-# make sure every user gets authentication token on create
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
+from . import utils
+
+import uuid
+import yaml
+import os
 
 
 class Base(models.Model):
