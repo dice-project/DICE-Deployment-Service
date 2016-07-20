@@ -54,7 +54,6 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.JSONParser",
         "rest_framework.parsers.FormParser",
         "rest_framework.parsers.MultiPartParser",
-        "rest_framework.parsers.FileUploadParser",
     ),
     "DATETIME_FORMAT": API_DT_FORMAT,
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -95,11 +94,6 @@ CFY_MANAGER_URL = "172.16.95.115"
 CFY_MANAGER_USERNAME = "username"
 CFY_MANAGER_PASSWORD = "password"
 POOL_SLEEP_INTERVAL = 3  # In seconds
-
-# what name to pick for .yaml file (when generating archive from uploaded yaml)
-YAML_NAME = 'blueprint.yaml'
-# what name to pick for archive top folder (when generating archive from uploaded yaml)
-ARCHIVE_FOLDER_NAME = 'dice-generated-archive'
 
 # File upload storage
 MEDIA_ROOT = os.path.join(BASE_DIR, "uploads")
