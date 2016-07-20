@@ -11,8 +11,6 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 import os
-from kombu import Queue, Exchange
-from cfy_wrapper.exceptions import CfyMockupSuccess, CfyMockupFail
 
 IS_TEST_SETTINGS = False
 
@@ -90,13 +88,6 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_ENABLE_UTC = True
 CELERY_DEFAULT_QUEUE = 'dice_deploy'
-CELERY_QUEUES = (
-    # consumed by main worker
-    Queue('dice_deploy', Exchange('dice_deploy'), routing_key='dice_deploy'),
-    # consumed by test worker (unit tests)
-    Queue('dice_deploy_tests', Exchange('dice_deploy_tests'), routing_key='dice_deploy_tests'),
-)
-CELERYD_POOL_RESTARTS = True
 
 # Cloudify settings
 CFY_MANAGER_URL = "172.16.95.115"
@@ -108,12 +99,6 @@ POOL_SLEEP_INTERVAL = 3  # In seconds
 YAML_NAME = 'blueprint.yaml'
 # what name to pick for archive top folder (when generating archive from uploaded yaml)
 ARCHIVE_FOLDER_NAME = 'dice-generated-archive'
-
-# Cloudify mockup settings
-MOCKUP_CFY_OPTION_NO = None  # don't mockup
-MOCKUP_CFY_OPTION_YES_SUCCESS = CfyMockupSuccess()
-MOCKUP_CFY_OPTION_YES_FAIL = CfyMockupFail()
-MOCKUP_CFY = MOCKUP_CFY_OPTION_NO  # selected option
 
 # File upload storage
 MEDIA_ROOT = os.path.join(BASE_DIR, "uploads")

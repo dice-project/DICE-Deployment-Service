@@ -45,9 +45,6 @@ def generate_archive_from_yaml(f_yaml):
 
 
 def get_cfy_client():
-    if settings.MOCKUP_CFY:
-        raise settings.MOCKUP_CFY
-
     creds = "{}:{}".format(settings.CFY_MANAGER_USERNAME,
                            settings.CFY_MANAGER_PASSWORD)
     creds_enc = base64.urlsafe_b64encode(creds.encode("utf-8"))
