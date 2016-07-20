@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 from . import tasks, utils
 from .models import Blueprint, Container, Input
 from .serializers import BlueprintSerializer, ContainerSerializer, InputSerializer, \
-    InputUpdateSerializer, ErrorSerializer
+    InputUpdateSerializer
 from .forms import BlueprintUploadForm
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
@@ -135,18 +135,6 @@ class ContainerIdView(APIView):
             return Response({'msg': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class ContainerIdErrorsView(APIView):
-    def get(self, request, container_id):
-        """
-        Get errors that reference blueprint in this container.
-        ---
-        output_serializer: cfy_wrapper.serializers.ErrorSerializer
-        """
-        container = Container.get(container_id)
-        s = ErrorSerializer(container.blueprint.errors, read_only=True, many=True)
-        return Response(s.data)
 
 
 class ContainerIdNodesView(APIView):

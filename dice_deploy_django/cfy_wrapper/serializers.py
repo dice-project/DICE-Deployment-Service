@@ -1,7 +1,7 @@
 import re
 from rest_framework import serializers, fields
 
-from .models import Blueprint, Container, Input, Error
+from .models import Blueprint, Container, Input
 
 
 class BlueprintSerializer(serializers.ModelSerializer):
@@ -39,10 +39,3 @@ class InputUpdateSerializer(serializers.ModelSerializer):
         model = Input
         fields = ("key", "value", "description")
         read_only_fields = ("key",)
-
-
-class ErrorSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Error
-        fields = ("blueprint", "state_name", "message", "created_date")
