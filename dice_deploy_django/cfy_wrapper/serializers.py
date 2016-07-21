@@ -16,14 +16,14 @@ class BlueprintSerializer(serializers.ModelSerializer):
     def update(*args, **kwargs):
         raise RuntimeError("Blueprint updating is not supported")
 
-class ContainerSerializer(serializers.ModelSerializer):
-    blueprint = BlueprintSerializer()
-    modified_date = serializers.DateTimeField(read_only=True)
 
+class ContainerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Container
         fields = ("id", "description", "blueprint", "modified_date")
+        read_only_fields = ("blueprint",)
 
+    blueprint = BlueprintSerializer()
 
 class InputSerializer(serializers.ModelSerializer):
     def validate_key(self, key):

@@ -7,6 +7,7 @@ from django.db import IntegrityError
 from django.db import models
 
 from jsonfield import JSONField
+from concurrency.fields import IntegerVersionField
 
 from . import utils
 
@@ -146,24 +147,45 @@ class Blueprint(Base):
         return self.error_set.all().order_by('-created_date')
 
 
+class ContainerQuerySet(models.QuerySet):
+    """
+    This query set is here just to make deletion slow and safe;)
+    """
+    def delete(self, *args, **kwargs):
+        for obj in self:
+            obj.delete()
+
+
 class Container(Base):
-    # Fields
+    objects = ContainerQuerySet.as_manager()
+
     id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False
     )
-    description = models.CharField(max_length=512, blank=True, null=True)
-    blueprint = models.ForeignKey(Blueprint, null=True, blank=True, on_delete=models.SET_NULL)
+    description = models.TextField()
+    blueprint = models.ForeignKey(Blueprint, null=True, blank=True,
+                                  on_delete=models.SET_NULL, related_name="+")
+    queue = models.ForeignKey(Blueprint, null=True, blank=True,
+                              on_delete=models.SET_NULL, related_name="+")
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
+    busy = models.BooleanField(default=False)
 
-    def delete(self, using=None, keep_parents=False):
-        if self.blueprint:
-            if self.blueprint.state in [Blueprint.State.undeployed.value,
-                                        Blueprint.State.error.value]:
-                self.blueprint.delete()
-            else:
-                raise IntegrityError('Cannot delete container with existing blueprint')
-        super(Container, self).delete(using, keep_parents)
+    # Optimistic concurrency protection
+    version = IntegerVersionField()
+
+    @property
+    def cfy_id(self):
+        return str(self.id)
+
+    def delete(self, *args, **kwargs):
+        if self.blueprint is not None:
+            msg = "Cannot delete container with existing blueprint"
+            raise IntegrityError(msg)
+        if self.busy:
+            msg = "Cannot delete busy container"
+            raise IntegrityError(msg)
+        super(Container, self).delete(*args, **kwargs)
 
 
 class Input(models.Model):

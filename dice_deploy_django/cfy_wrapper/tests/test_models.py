@@ -9,6 +9,7 @@ import os
 
 from cfy_wrapper.models import (
     Blueprint,
+    Container,
 )
 
 
@@ -156,3 +157,47 @@ class BlueprintTest(BaseTest):
             self.assertEqual(b.state_name, state.name)
             b = Blueprint.objects.create(state=-state)
             self.assertEqual(b.state_name, state.name)
+
+
+class ContainerTest(BaseTest):
+
+    def test_creation_and_deletion(self):
+        desc = "Sample description"
+        c = Container.objects.create(description=desc)
+
+        c = Container.get(str(c.id))
+        self.assertEqual(c.description, desc)
+        self.assertEqual(c.blueprint, None)
+
+        c.delete()
+        self.assertEqual([], list(Container.objects.all()))
+
+    def test_container_deletion_valid(self):
+        c = Container.objects.create()
+        c.delete()
+        self.assertEqual([], list(Container.objects.all()))
+
+    def test_container_deletion_invalid(self):
+        b = Blueprint.objects.create()
+        c = Container.objects.create(blueprint=b)
+        with self.assertRaises(IntegrityError):
+            c.delete()
+        Container.objects.get(id=c.id)
+        Blueprint.objects.get(id=b.id)
+
+    def test_prevent_blueprint_escaping_container(self):
+        b = Blueprint.objects.create()
+        c = Container.objects.create(blueprint=b)
+
+        b.delete()
+
+        c = Container.get(str(c.id))
+        self.assertIsNone(c.blueprint)
+
+    def test_concurent_modification_protection(self):
+        c = Container.objects.create()
+        c1 = Container.objects.get(id=c.id)
+        c2 = Container.objects.get(id=c.id)
+        c1.save()
+        with self.assertRaises(RecordModifiedError):
+            c2.save()
