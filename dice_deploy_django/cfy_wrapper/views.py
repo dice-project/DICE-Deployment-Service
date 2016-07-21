@@ -8,8 +8,7 @@ from django.shortcuts import get_object_or_404
 
 from . import tasks, utils
 from .models import Blueprint, Container, Input
-from .serializers import BlueprintSerializer, ContainerSerializer, InputSerializer, \
-    InputUpdateSerializer
+from .serializers import BlueprintSerializer, ContainerSerializer, InputSerializer
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.serializers import AuthTokenSerializer
@@ -261,14 +260,8 @@ class InputIdView(APIView):
     def patch(self, request, input_key):
         """
         Update input value and description. Key cannot be updated.
-        ---
-        serializer: cfy_wrapper.serializers.InputUpdateSerializer
         """
-        input = get_object_or_404(Input, pk=input_key)
-        s = InputUpdateSerializer(data=request.data, instance=input)
-        if s.is_valid(raise_exception=True):
-            s.save()
-        return Response(s.data)
+        return Response({})
 
 
 class AuthTokenView(APIView):

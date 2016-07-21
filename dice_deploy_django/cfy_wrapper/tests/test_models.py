@@ -10,6 +10,7 @@ import os
 from cfy_wrapper.models import (
     Blueprint,
     Container,
+    Input,
 )
 
 
@@ -201,3 +202,44 @@ class ContainerTest(BaseTest):
         c1.save()
         with self.assertRaises(RecordModifiedError):
             c2.save()
+
+
+class InputTest(BaseTest):
+
+    def test_creation_and_deletion(self):
+        Input.objects.create(key="key", value="value", description="desc")
+        i = Input.objects.get(key="key")
+        i.delete()
+        self.assertEqual([], list(Input.objects.all()))
+
+    def test_fail_if_no_key(self):
+        with self.assertRaises(IntegrityError):
+            Input.objects.create(value="value", description="desc")
+
+    def test_fail_if_no_value(self):
+        with self.assertRaises(IntegrityError):
+            Input.objects.create(key="key", description="desc")
+
+    def test_no_description_is_empty_string(self):
+        Input.objects.create(key="key", value="value")
+        i = Input.objects.get(key="key")
+        self.assertEqual("", i.description)
+
+    def test_fail_if_duplicate_key(self):
+        Input.objects.create(key="key", value="v1", description="dsc1")
+        with self.assertRaises(IntegrityError):
+            Input.objects.create(key="key", value="v2", description="dsc2")
+
+    def test_accept_long_values(self):
+        long_value_length = 5000
+        text = "x" * long_value_length
+        Input.objects.create(key="key", value=text, description="desc")
+        self.assertEqual(text, Input.objects.get(key="key").value)
+
+    def test_inputs_declaration(self):
+        Input.objects.create(key="key1", value="value1", description="desc1")
+        Input.objects.create(key="key2", value="value2", description="desc2")
+        self.assertEqual({
+            "key1": {"description": "desc1", "default": "value1"},
+            "key2": {"description": "desc2", "default": "value2"},
+        }, Input.get_inputs_declaration())

@@ -191,21 +191,22 @@ class Container(Base):
 class Input(models.Model):
     key = models.CharField(max_length=256, primary_key=True)
     value = models.TextField()
-    description = models.CharField(max_length=512, blank=True, null=True)
+    description = models.TextField(blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.key is None or self.key == "":
+            raise IntegrityError("Key cannot be empty")
+        if self.value is None or self.value == "":
+            raise IntegrityError("Value cannot be empty")
+        super(Input, self).save(*args, **kwargs)
 
     @staticmethod
-    def get_inputs_declaration_as_dict():
+    def get_inputs_declaration():
         """
         Reads all Inputs from database and forms a dict with their declaration.
         :return: dict that should be added to blueprint.yaml
         """
-        return {str(el.key): {str('description'): str(el.description) if el.description else ''}
-                for el in Input.objects.all()}
-
-    @staticmethod
-    def get_inputs_values_as_dict():
-        """
-        Reads all Inputs from database and forms a dict of key-value pairs.
-        :return: dict that should be passed to create_deployment cfy call
-        """
-        return {el.key: el.value for el in Input.objects.all()}
+        return {el.key: {
+            "description": el.description,
+            "default": el.value
+        } for el in Input.objects.all()}

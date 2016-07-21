@@ -9,6 +9,7 @@ import uuid
 from cfy_wrapper.serializers import (
     BlueprintSerializer,
     ContainerSerializer,
+    InputSerializer,
 )
 
 from cfy_wrapper.models import Input
@@ -92,3 +93,59 @@ class ContainerSerializerTest(BaseTest):
         self.assertTrue(s.is_valid(raise_exception=True))
         with self.assertRaises(Exception):
             s.save()
+
+
+class InputSerializerTest(BaseTest):
+
+    def test_valid_serialization(self):
+        data = {
+            "key": "sample-key",
+            "value": "sample-value",
+            "description": "sample-desc",
+        }
+        i = mock.MagicMock(**data)
+        d = InputSerializer(i).data
+        self.assertEqual(d, data)
+
+    def test_valid_save(self):
+        data = {
+            "key": "sample-key",
+            "value": "sample-value",
+            "description": "sample-desc",
+        }
+        s = InputSerializer(data=data)
+        self.assertTrue(s.is_valid(raise_exception=True))
+        s.save()
+        i = Input.objects.get(key=data["key"])
+        for k, v in data.items():
+            self.assertEqual(getattr(i, k), v)
+
+    def test_prevent_duplicate_key(self):
+        data = {
+            "key": "sample-key",
+            "value": "sample-value",
+            "description": "sample-desc",
+        }
+        Input.objects.create(**data)
+        s = InputSerializer(data=data)
+        with self.assertRaises(ValidationError):
+            s.is_valid(raise_exception=True)
+
+    def test_updating(self):
+        orig = {
+            "key": "sample-key",
+            "value": "sample-value",
+            "description": "sample-desc",
+        }
+        data = {
+            "key": "sample-key",
+            "value": "new-value",
+            "description": "new-desc",
+        }
+        i = Input.objects.create(**orig)
+        s = InputSerializer(i, data=data)
+        self.assertTrue(s.is_valid(raise_exception=True))
+        s.save()
+        i.refresh_from_db()
+        for k, v in data.items():
+            self.assertEqual(getattr(i, k), v)
