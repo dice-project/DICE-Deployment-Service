@@ -200,11 +200,10 @@ CFY_MANAGER_URL = "172.16.95.115"
 
 Next, we run the web application and the web service from the VM:
 
-```bash
-python manage.py runserver 0.0.0.0:8080
-```
+    $ ./run.sh
+
 Now the web GUI is available at `localhost:7080` from your host machine.
-Default username is `root` with password `root`. Navigate to `/admin` 
+Default username is `admin` with password `changeme`. Navigate to `/admin`
 page to add new users. Direct access to REST API is given at `/docs`.
 Visualization of your asynchronous tasks is available at `localhost:8055`.
 

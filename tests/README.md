@@ -137,7 +137,7 @@ listed below should work for default vagrant setup):
     export DEPLOYMENT_SERVICE_USERNAME=admin
     export DEPLOYMENT_SERVICE_PASSWORD=changeme
 
-Now simply run `python -m unittest discover` and be amazed.
+Now simply run `python -m unittest discover`.
 
 
 # Running bootstrap and teardown tests from local machine
