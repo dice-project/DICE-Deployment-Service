@@ -267,3 +267,39 @@ class AuthTokenView(APIView):
             'username': user.username,
             'token': token.key
         })
+
+
+# Backwards compatibility API views
+class BlueprintsView(APIView):
+
+    def get(self, request):
+        s = BlueprintSerializer(Blueprint.objects.all(), many=True)
+        return Response(s.data)
+
+
+class BlueprintIdView(APIView):
+
+    def get(self, request, blueprint_id):
+        s = BlueprintSerializer(Blueprint.get(blueprint_id))
+        return Response(s.data)
+
+    def delete(self, request, blueprint_id):
+        containers = list(Blueprint.get(blueprint_id).container.all())
+        if len(containers) != 1:
+            return Response({"detail": "Blueprint not deployed"},
+                            status=status.HTTP_409_CONFLICT)
+
+        container = containers[0]
+        success, msg = tasks.sync_container(container, None)
+
+        if success:
+            return Response(BlueprintSerializer(container.blueprint).data,
+                            status=status.HTTP_202_ACCEPTED)
+        return Response({"detail": msg}, status=status.HTTP_409_CONFLICT)
+
+
+class BlueprintOutputsView(APIView):
+
+    def get(self, request, blueprint_id):
+        blueprint = Blueprint.get(blueprint_id)
+        return Response({"outputs": blueprint.outputs})

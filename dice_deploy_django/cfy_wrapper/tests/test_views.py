@@ -7,6 +7,7 @@ from cfy_wrapper.views import (
     ContainerIdView,
     ContainerBlueprintView,
     InputsView,
+    BlueprintIdView
 )
 
 from django.core.urlresolvers import reverse
@@ -21,7 +22,7 @@ CONTAINER_FIELDS = (
     Field("id", str, "id"),
     Field("description", identity, "description"),
     Field("modified_date", date2str, "modified_date"),
-    # Blueprint field is tested separatelly
+    # Blueprint field is tested separately
 )
 
 BLUEPRINT_FIELDS = (
@@ -603,3 +604,45 @@ class InputsTest(BaseViewTest):
 
         self.assertEqual(status.HTTP_204_NO_CONTENT, resp.status_code)
         self.assertEqual(0, Input.objects.all().count())
+
+
+class BlueprintIdTest(BaseViewTest):
+
+    @mock.patch("cfy_wrapper.tasks.sync_container", return_value=(True, "OK"))
+    def test_delete_sync_success(self, mock_sync):
+        b = Blueprint.objects.create()
+        c = Container.objects.create(blueprint=b)
+        kw = dict(blueprint_id=str(b.id))
+        req = self.delete(reverse("blueprint_id", kwargs=kw), auth=True)
+
+        resp = BlueprintIdView.as_view()(req, **kw)
+
+        self.assertEqual(status.HTTP_202_ACCEPTED, resp.status_code)
+        mock_sync.assert_called_once()
+        self.assertEqual(mock_sync.mock_calls[0][1][0], c)
+        self.assertIsNone(mock_sync.mock_calls[0][1][1])
+
+    @mock.patch("cfy_wrapper.tasks.sync_container", return_value=(True, "OK"))
+    def test_delete_sync_fail_no_container(self, mock_sync):
+        b = Blueprint.objects.create()
+        kw = dict(blueprint_id=str(b.id))
+        req = self.delete(reverse("blueprint_id", kwargs=kw), auth=True)
+
+        resp = BlueprintIdView.as_view()(req, **kw)
+
+        self.assertEqual(status.HTTP_409_CONFLICT, resp.status_code)
+        mock_sync.assert_not_called()
+
+    @mock.patch("cfy_wrapper.tasks.sync_container", return_value=(False, "NO"))
+    def test_delete_sync_fail(self, mock_sync):
+        b = Blueprint.objects.create()
+        c = Container.objects.create(blueprint=b)
+        kw = dict(blueprint_id=str(b.id))
+        req = self.delete(reverse("blueprint_id", kwargs=kw), auth=True)
+
+        resp = BlueprintIdView.as_view()(req, **kw)
+
+        self.assertEqual(status.HTTP_409_CONFLICT, resp.status_code)
+        mock_sync.assert_called_once()
+        self.assertEqual(mock_sync.mock_calls[0][1][0], c)
+        self.assertIsNone(mock_sync.mock_calls[0][1][1])
