@@ -9,6 +9,10 @@ from .views import (
     ContainerBlueprintView,
 
     InputsView,
+
+    BlueprintsView,
+    BlueprintIdView,
+    BlueprintOutputsView,
 )
 
 urlpatterns = [
@@ -29,4 +33,12 @@ urlpatterns = [
     # Inputs
     url(r"^inputs/?$",
         InputsView.as_view(), name="inputs"),
+
+    # Compatibility routes - not really needed, but part of public API
+    url(r"^blueprints/?$",
+        BlueprintsView.as_view(), name="blueprints"),
+    url(r"^blueprints/(?P<blueprint_id>[0-9a-f-]+)/?$",
+        BlueprintIdView.as_view(), name="blueprint_id"),
+    url(r"^blueprints/(?P<blueprint_id>[0-9a-f-]+)/outputs/?$",
+        BlueprintOutputsView.as_view(), name="blueprint_outputs"),
 ]

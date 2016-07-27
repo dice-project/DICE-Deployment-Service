@@ -164,7 +164,8 @@ class Container(Base):
     )
     description = models.TextField()
     blueprint = models.ForeignKey(Blueprint, null=True, blank=True,
-                                  on_delete=models.SET_NULL, related_name="+")
+                                  on_delete=models.SET_NULL,
+                                  related_name="container")
     queue = models.ForeignKey(Blueprint, null=True, blank=True,
                               on_delete=models.SET_NULL, related_name="+")
     created_date = models.DateTimeField(auto_now_add=True)
