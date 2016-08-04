@@ -157,3 +157,40 @@ class InputSerializerTest(BaseTest):
         i.refresh_from_db()
         for k, v in data.items():
             self.assertEqual(getattr(i, k), v)
+
+    def test_bulk_create(self):
+        inputs = [
+            dict(key="k1", value="v1"),
+            dict(key="k2", value="v2")
+        ]
+        s = InputSerializer(data=inputs, many=True)
+        self.assertTrue(s.is_valid(raise_exception=True))
+        s.save()
+        ins = list(Input.objects.all())
+        self.assertEqual(len(ins), len(inputs))
+        for input in inputs:
+            i = Input.objects.get(key=input["key"])
+            self.assertEqual(input["value"], i.value)
+
+    def test_bulk_create_duplicated_key(self):
+        inputs = [
+            dict(key="k1", value="v1"),
+            dict(key="k1", value="v2", description="d2")
+        ]
+        s = InputSerializer(data=inputs, many=True)
+        with self.assertRaises(ValidationError):
+            s.is_valid(raise_exception=True)
+
+    def test_bulk_create_duplicated_key_restore_state(self):
+        Input.objects.create(key="ko", value="vo")
+        inputs = [
+            dict(key="k1", value="v1"),
+            dict(key="k1", value="v2", description="d2")
+        ]
+        s = InputSerializer(data=inputs, many=True)
+        with self.assertRaises(ValidationError):
+            s.is_valid(raise_exception=True)
+        ins = list(Input.objects.all())
+        self.assertEqual(1, len(ins))
+        self.assertEqual(ins[0].key, "ko")
+        self.assertEqual(ins[0].value, "vo")
