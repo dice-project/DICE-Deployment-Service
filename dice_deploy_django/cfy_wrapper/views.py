@@ -43,9 +43,6 @@ class CeleryDebugView(APIView):
 
 
 class ContainersView(APIView):
-    """
-    Manage containers.
-    """
 
     def get(self, request):
         containers = Container.objects.all()
@@ -69,13 +66,10 @@ class ContainersView(APIView):
             - blueprint
 
         """
-        container = Container()
-        container.description = request.data.get('description', None)
-        container.save()  # all default is good
-
-        container.refresh_from_db()
-        s = ContainerSerializer(container)
-        return Response(data=s.data, status=status.HTTP_201_CREATED)
+        s = ContainerSerializer(data=request.data)
+        s.is_valid(raise_exception=True)
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
 
 
 class ContainerIdView(APIView):

@@ -18,12 +18,12 @@ class BlueprintSerializer(serializers.ModelSerializer):
 
 
 class ContainerSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Container
         fields = ("id", "description", "blueprint", "modified_date")
-        read_only_fields = ("blueprint",)
 
-    blueprint = BlueprintSerializer()
+    blueprint = BlueprintSerializer(read_only=True)
 
 
 class InputSerializer(serializers.ModelSerializer):

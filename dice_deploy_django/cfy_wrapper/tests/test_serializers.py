@@ -12,7 +12,7 @@ from cfy_wrapper.serializers import (
     InputSerializer,
 )
 
-from cfy_wrapper.models import Input
+from cfy_wrapper.models import Input, Container
 
 
 class BlueprintSerializerTest(BaseTest):
@@ -76,7 +76,10 @@ class ContainerSerializerTest(BaseTest):
             }
         }, d)
 
-    def test_prevent_saving(self):
+    def test_ignore_fields_when_saving(self):
+        """
+        Make sure serializer discards all but description field.
+        """
         id = uuid.uuid4()
         data = {
             "id": str(id),
@@ -89,10 +92,15 @@ class ContainerSerializerTest(BaseTest):
                 "outputs": {"k": "v"},
             }
         }
+
         s = ContainerSerializer(data=data)
         self.assertTrue(s.is_valid(raise_exception=True))
-        with self.assertRaises(Exception):
-            s.save()
+        s.save()
+
+        c = Container.objects.all()[0]
+        self.assertNotEqual(c.id, id)
+        self.assertEqual(c.description, data["description"])
+        self.assertIsNone(c.blueprint)
 
 
 class InputSerializerTest(BaseTest):
