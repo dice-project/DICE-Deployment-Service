@@ -1,0 +1,449 @@
+swagger: "2.0"
+
+info:
+  title: DICE Ddeployment Service
+  description: |
+    All available API endpoints for DICE Deployment Service. Note that this
+    document is dynamic and shows only what user is authorized to view. If
+    you feel that there is something missing, try logging in.
+
+    **NOTE:** There seems to be a bug when it comes to authorization with
+    Swagger. In order to successfully log in, you need to:
+
+     1. Obtain token using POST request in auth section.
+     2. Reload API docs.
+     3. Authorize by specifying value as `Token YOUR_TOKEN`.
+  version: "0.1.0"
+
+schemes:
+  - http
+  - https
+
+consumes:
+  - application/json
+
+produces:
+  - application/json
+
+securityDefinitions:
+  # TODO: Swagger does not support token auth just yet, so this is basically
+  # placeholder for future expansion
+  token:
+    type: apiKey
+    name: Authorization
+    in: header
+
+
+tags:
+  - name: debug
+    description: Debug endpoints
+  - name: auth
+    description: Authentication
+  - name: containers
+    description: Container management
+  - name: inputs
+    description: Blueprint inputs handling
+
+
+definitions:
+
+  Blueprint:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      state_name:
+        type: string
+      modified_date:
+        type: string
+        format: date-time
+      outputs:
+        type: object
+    required:
+      - id
+      - state_name
+      - modified_date
+
+  Container:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      description:
+        type: string
+      blueprint:
+        $ref: "#/definitions/Blueprint"
+      modified_date:
+        type: string
+        format: date-time
+    required:
+      - id
+      - modified_date
+      - description
+
+  ContainerList:
+    type: array
+    items:
+      $ref: "#/definitions/Container"
+
+  ContainerCreate:
+    type: object
+    properties:
+      description:
+        type: string
+    required:
+      - description
+
+  Input:
+    type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: string
+      description:
+        type: string
+    required:
+      - key
+      - value
+
+  InputList:
+    type: array
+    items:
+      $ref: "#/definitions/Input"
+
+  Credentials:
+    type: object
+    properties:
+      username:
+        type: string
+      password:
+        type: string
+        format: password
+    required:
+      - username
+      - password
+
+  Token:
+    type: object
+    properties:
+      username:
+        type: string
+      token:
+        type: string
+    required:
+      - username
+      - token
+
+  Message:
+    type: object
+    properties:
+      msg:
+        type: string
+    required:
+      - msg
+
+
+parameters:
+
+  ContainerId:
+    name: id
+    in: path
+    description: Container id
+    required: true
+    type: string
+    format: uuid
+
+
+responses:
+
+  InvalidAuth:
+    description: Authentication failed
+
+  ParameterValidationFailed:
+    description: Parameter validation failed
+
+  NotFound:
+    description: Resource does not exist
+
+
+paths:
+
+  /heartbeat:
+    get:
+      summary: Test service liveness
+      description: >-
+        This endpoint is not protected and should be used to check if the
+        service is online.
+      operationId: heartbeat
+      x-needs-login: false
+      tags:
+        - debug
+      responses:
+         "200":
+           description: Successful request
+           schema:
+             $ref: "#/definitions/Message"
+
+  /celery:
+    get:
+      summary: Test Celery service liveness
+      description: Test if Celery service is working properly.
+      operationId: celeryTest
+      tags:
+        - debug
+      responses:
+         "200":
+           description: Successful request
+           schema:
+             $ref: "#/definitions/Message"
+
+  /auth/get-token:
+    post:
+      summary: Authentication endpoint
+      description: |
+        This endpoint should be used to obtain user token that can be then
+        used for all other requests.
+      operationsId: get_token
+      x-needs-login: false
+      tags:
+        - auth
+      parameters:
+        - name: credentials
+          in: body
+          description: User credentials.
+          required: true
+          schema:
+            $ref: "#/definitions/Credentials"
+      responses:
+        "200":
+          description: Successful request
+          schema:
+            $ref: "#/definitions/Token"
+        "400":
+          $ref: "#/responses/ParameterValidationFailed"
+
+  /containers:
+    get:
+      summary: List all available containers
+      description: |
+        This endpoint lists all user-owned containers. For now, all containers
+        are globally accessible, but in the future, this will change.
+      operationId: listContainers
+      tags:
+        - containers
+      responses:
+        "200":
+          description: Successful request
+          schema:
+            $ref: "#/definitions/ContainerList"
+        "401":
+          $ref: "#/responses/InvalidAuth"
+
+    post:
+      summary: Create new container
+      description: |
+        Create new container. TODO: Explain, who can create new container.
+      operationId: createContainer
+      tags:
+        - containers
+      parameters:
+        - name: container
+          in: body
+          description: Container parameters
+          required: true
+          schema:
+            $ref: "#/definitions/ContainerCreate"
+      responses:
+        "201":
+          description: Successfully created new container
+          schema:
+            $ref: "#/definitions/Container"
+        "400":
+          $ref: "#/responses/ParameterValidationFailed"
+
+  /containers/{id}:
+    parameters:
+      - $ref: "#/parameters/ContainerId"
+
+    get:
+      summary: Display container details
+      operationId: showContainer
+      tags:
+        - containers
+      responses:
+        "200":
+          description: Successful request
+          schema:
+            $ref: "#/definitions/Container"
+        "401":
+          $ref: "#/responses/InvalidAuth"
+        "404":
+          $ref: "#/responses/NotFound"
+
+    delete:
+      summary: Delete selected container
+      description: |
+        Container can only be deleted when there is no blueprint inside it.
+        Any attempt at removing non-empty container will be ignored and error
+        will be reported.
+      operationId: deleteContainer
+      tags:
+        - containers
+      responses:
+        "204":
+          description: Container has been successfully deleted
+        "400":
+          description: Cannot delete non-empty container
+        "401":
+          $ref: "#/responses/InvalidAuth"
+        "404":
+          $ref: "#/responses/NotFound"
+
+  /containers/{id}/blueprint:
+    parameters:
+      - $ref: "#/parameters/ContainerId"
+
+    get:
+      summary: Display blueprint information
+      description: |
+        Get information about currently deployed blueprint. If there is no
+        blueprint present, a `400` error will be returned.
+
+        Note though that this operation might return information that seems
+        wrong at first. One such example would be when user uploads new
+        blueprint into non-empty container. In this case, old blueprint needs
+        to be torn down first and during the tear down operation, this
+        endpoint will return information about old blueprint.
+      operationId: showBlueprint
+      tags:
+        - containers
+      responses:
+        "200":
+          description: Successful request
+          schema:
+            $ref: "#/definitions/Blueprint"
+        "400":
+          description: No blueprint present
+        "401":
+          $ref: "#/responses/InvalidAuth"
+        "404":
+          $ref: "#/responses/NotFound"
+
+    post:
+      summary: Upload new blueprint to container
+      description: |
+        This endpoint should be used to upload blueprint files. File formats
+        that are supported are:
+
+         1. **Bare blueprints:** blueprints that are completely contained
+            within single YAML file.
+         2. **Rich blueprints:** blueprint tarballs (gzipped) that can contain
+            various auxiliary resources. Not that tarball should contain
+            single top-level folder where contents reside. Inside that
+            top-level folder should be `blueprint.yaml` file that should
+            contain main blueprint file.
+
+        If these prerequisites are not fulfilled, response with status code
+        400 will be returned. If upload was successful, asynchronous
+        deployment process will start and 202 response will be returned.
+
+        Deployment progress can be monitored by polling the container or
+        blueprint endpoint.
+
+        Note that new blueprint can be uploaded to container only when
+        container is in idle state (no blueprint operation is executing in the
+        background). If this is not true, upload will be rejected with status
+        code 409.
+      opertionId: uploadBlueprint
+      tags:
+        - containers
+      consumes:
+        - multipart/form-data
+      parameters:
+        - name: file
+          in: formData
+          description: Blueprint data (YAML or tarball)
+          required: true
+          type: file
+      responses:
+        "202":
+          description: Successful upload and start of the deployment process
+          schema:
+            $ref: "#/definitions/Blueprint"
+        "400":
+          description: Invalid upload
+        "401":
+          $ref: "#/responses/InvalidAuth"
+        "404":
+          $ref: "#/responses/NotFound"
+        "409":
+          description: Container is busy
+
+    delete:
+      summary: Delete blueprint from container
+      description: |
+        Deleting blueprint from container involves doing tear down and is thus
+        executed in asynchronously. Deletion can only be done if the container
+        is in idle state.
+      operationId: deleteBlueprint
+      tags:
+        - containers
+      responses:
+        "202":
+          description: Blueprint deletion has been scheduled successfully
+        "400":
+          description: No blueprint in container
+        "401":
+          $ref: "#/responses/InvalidAuth"
+        "404":
+          $ref: "#/responses/NotFound"
+        "409":
+          description: Container is busy
+
+  /inputs:
+    get:
+      summary: List all available inputs
+      operationId: listInputs
+      tags:
+        - inputs
+      responses:
+        "200":
+          description: Successful request
+          schema:
+            $ref: "#/definitions/InputList"
+        "401":
+          $ref: "#/responses/InvalidAuth"
+
+    post:
+      summary: Replace all blueprint inputs
+      operationId: replaceInputs
+      tags:
+        - inputs
+      parameters:
+        - name: inputs
+          in: body
+          description: New set of blueprint inputs
+          required: true
+          schema:
+            $ref: "#/definitions/InputList"
+      responses:
+        "201":
+          description: Inputs replaces successfully
+          schema:
+            $ref: "#/definitions/InputList"
+        "400":
+          $ref: "#/responses/ParameterValidationFailed"
+        "401":
+          $ref: "#/responses/InvalidAuth"
+
+    delete:
+      summary: Delete all blueprint inputs
+      operationId: eleteInputs
+      tags:
+        - inputs
+      responses:
+        "204":
+          description: Successfully removed all inputs

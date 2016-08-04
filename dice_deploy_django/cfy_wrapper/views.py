@@ -1,9 +1,14 @@
 import logging
 
+from rest_framework_swagger.renderers import SwaggerUIRenderer
+
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import status
+
 from django.db import IntegrityError, transaction
 
 from . import tasks
@@ -13,10 +18,19 @@ from .serializers import (
     ContainerSerializer,
     InputSerializer,
 )
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.serializers import AuthTokenSerializer
+from .api_docs import OpenAPIRenderer, get_api_reference
 
 logger = logging.getLogger("views")
+
+
+class APIDocView(APIView):
+
+    permission_classes = (AllowAny,)
+    renderer_classes = (SwaggerUIRenderer, OpenAPIRenderer)
+
+    def get(self, request):
+        schema = get_api_reference(request.auth is not None)
+        return Response(schema)
 
 
 class HeartBeatView(APIView):
@@ -34,8 +48,6 @@ class CeleryDebugView(APIView):
     """
     View that should be used to test Celery
     """
-
-    permission_classes = (AllowAny,)
 
     def get(self, request):
         tasks.debug_task.apply_async()
@@ -55,16 +67,6 @@ class ContainersView(APIView):
     def post(self, request):
         """
         Create empty container.
-        ---
-        output_serializer: cfy_wrapper.serializers.ContainerSerializer
-        parameters:
-            - name: description
-              description: Container description
-              required: true
-              type: string
-        omit_parameters:
-            - blueprint
-
         """
         s = ContainerSerializer(data=request.data)
         s.is_valid(raise_exception=True)
@@ -77,8 +79,6 @@ class ContainerIdView(APIView):
     def get(self, request, id):
         """
         Get container details.
-        ---
-        output_serializer: cfy_wrapper.serializers.ContainerSerializer
         """
         container = Container.get(id)
         s = ContainerSerializer(container)
@@ -87,10 +87,6 @@ class ContainerIdView(APIView):
     def delete(self, request, id):
         """
         Remove virtual container
-        ---
-        responseMessages:
-            - code: 400
-              message: Cannot delete container with existing blueprint
         """
         container = Container.get(id)
         try:
@@ -106,12 +102,6 @@ class ContainerBlueprintView(APIView):
     def get(self, request, id):
         """
         Show information about blueprint that is uploaded to container
-        ---
-        responseMessages:
-            - code: 400
-              message: No blueprint present in container
-            - code: 404
-              message: Container does not exist
         """
         c = Container.get(id)
         if c.blueprint is None:
@@ -122,21 +112,6 @@ class ContainerBlueprintView(APIView):
     def post(self, request, id):
         """
         Upload blueprint to container and begin deployment flow.
-        ---
-        parameters:
-            - name: file
-              description: Must be .tar.gz file with blueprint or yaml file.
-              required: true
-              type: file
-        responseMessages:
-            - code: 202
-              message: Blueprint deployment has started
-            - code: 400
-              message: Invalid upload
-            - code: 404
-              message: Container does not exist
-            - code: 409
-              message: Container is busy
         """
         container = Container.get(id)
 
@@ -156,7 +131,7 @@ class ContainerBlueprintView(APIView):
         success, msg = tasks.sync_container(container, blueprint)
 
         if success:
-            return Response(ContainerSerializer(container).data,
+            return Response(BlueprintSerializer(blueprint).data,
                             status=status.HTTP_202_ACCEPTED)
         blueprint.delete()
         return Response({"detail": msg}, status=status.HTTP_409_CONFLICT)
@@ -164,17 +139,6 @@ class ContainerBlueprintView(APIView):
     def delete(self, request, id):
         """
         Undeploy blueprint and delete it from container
-        ---
-        omit_serializer: true
-        responseMessages:
-            - code: 202
-              message: Blueprint undeployment has started
-            - code: 400
-              message: No blueprint present in container
-            - code: 404
-              message: Container does not exists
-            - code: 409
-              message: Container is busy
         """
         container = Container.get(id)
         if container.blueprint is None:
@@ -183,17 +147,13 @@ class ContainerBlueprintView(APIView):
         success, msg = tasks.sync_container(container, None)
 
         if success:
-            return Response(ContainerSerializer(container).data,
+            return Response(BlueprintSerializer(container.blueprint).data,
                             status=status.HTTP_202_ACCEPTED)
         return Response({"detail": msg}, status=status.HTTP_409_CONFLICT)
 
     def put(self, request, id):
         """
         Redeploy blueprint which is within this container.
-        ---
-        responseMessages:
-            - code: 404
-              message: No blueprint to redeploy
         """
         return Response({"detail": "PUT not implemented yet"},
                         status=status.HTTP_501_NOT_IMPLEMENTED)
@@ -212,23 +172,6 @@ class InputsView(APIView):
         """
         Add new inputs to deployment service. Note that uploading new set of
         inputs will delete all existing inputs. You have been warned.
-        ---
-        parameters:
-            - name: key
-              description: input unique name
-              required: true
-              type: string
-            - name: value
-              description: input value
-              required: true
-              type: string
-            - name: description
-              description: input description
-              required: true
-              type: string
-        post:
-            consumes:
-                - application/json
         """
         s = InputSerializer(data=request.data, many=True)
         with transaction.atomic():

@@ -154,14 +154,7 @@ GUNICORN_STATICS = True
 GUNICORN_STATICS = True
 
 SWAGGER_SETTINGS = {
-    'api_key': '',
-    'info': {
-        'title': 'DICE Deployment Service',
-        'description': 'Please make sure you have started a session at '
-                       '<a href="/admin" target="_blank">ADMIN</a>.<br>'
-                       'Alternatively, you can provide a valid token into API_KEY field above and '
-                       'click "Explore".',
-    },
+    "USE_SESSION_AUTH": False,
 }
 
 # Local overrides

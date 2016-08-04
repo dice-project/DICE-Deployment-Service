@@ -1,6 +1,8 @@
 from django.conf.urls import url
 
 from .views import (
+    APIDocView,
+
     HeartBeatView,
     CeleryDebugView,
 
@@ -16,10 +18,14 @@ from .views import (
 )
 
 urlpatterns = [
+    # Docs
+    url(r"^docs/?$",
+        APIDocView.as_view(), name="docs"),
+
     # Heartbeat
     url(r"^heartbeat/?$",
         HeartBeatView.as_view(), name="heartbeat"),
-    url(r"^debug/?$",
+    url(r"^celery/?$",
         CeleryDebugView.as_view(), name="celery"),
 
     # Containers
