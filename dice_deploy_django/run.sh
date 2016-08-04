@@ -38,9 +38,21 @@ function reset()
     --email "${SUPERUSER_EMAIL}"
 }
 
+function run_tests()
+{
+  echo "Running unit tests ..."
+  rm -rf cfy_wrapper/migrations
+  python manage.py makemigrations cfy_wrapper
+  python manage.py test $1
+}
+
 case $1 in
   reset)
     reset "$2" "$3" "$4"
+    ;;
+
+  test)
+    run_tests "$2"
     ;;
 
   *)

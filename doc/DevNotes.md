@@ -81,7 +81,7 @@ integration tests.
 Unit tests are stored in application folders under `tests` and are hooked up
 to Django's management command. To run unit tests, execute
 
-    $ python manage.py test
+    $ ./run.sh test
 
 Integration tests are stored in top-level `tests` folder. For usage
 instructions, consult accompanying [README.md file][integraton-docs].
