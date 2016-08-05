@@ -48,36 +48,70 @@
             var BLUEPRINT_UPLOAD_URL_TEMPLATE = '/containers/{id}/blueprint';
             var BLUEPRINT_DEPLOY_STATES = {
                 stateNames: [
-                    'pending',
-                    'uploaded',
-                    'ready_to_deploy',
-                    'preparing_deploy',
-                    'working',
+                    'present',
+                    'uploading_to_cloudify',
+                    'uploaded_to_cloudify',
+                    'preparing_deployment',
+                    'prepared_deployment',
+                    'installing',
+                    'installed',
+                    'fetching_outputs',
                     'deployed'
                 ],
                 statePrettyNames: [
-                    {prettyName: 'Upload', stateNames: ['pending']},
-                    {prettyName: 'Create Deployment', stateNames: ['uploaded']},
-                    {prettyName: 'Prepare Environment', stateNames: ['ready_to_deploy', 'preparing_deploy']},
-                    {prettyName: 'Deploy', stateNames: ['working']}
+                    {
+                        prettyName: 'Upload',
+                        stateNames: [
+                            'present', 'uploading_to_cloudify'
+                        ]
+                    }, {
+                        prettyName: 'Create Deployment',
+                        stateNames: [
+                            'uploaded_to_cloudify'
+                        ]
+                    }, {
+                        prettyName: 'Prepare Environment',
+                        stateNames: [
+                            'preparing_deployment', 'prepared_deployment'
+                        ]
+                    }, {
+                        prettyName: 'Deploy',
+                        stateNames: [
+                            'installing', 'installed', 'fetching_outputs'
+                        ]
+                    }
                 ],
                 completedStateName: 'deployed'
             };
             var BLUEPRINT_UNDEPLOY_STATES = {
                 stateNames: [
                     'uninstalling',
+                    'uninstalled',
                     'deleting_deployment',
-                    'deleting_blueprint',
-                    'undeployed'
+                    'deleted_deployment',
+                    'deleting_from_cloudify',
+                    'present'
                 ],
                 statePrettyNames: [
-                    {prettyName: 'Uninstall', stateNames: ['uninstalling']},
-                    {prettyName: 'Delete Deployment', stateNames: ['deleting_deployment']},
-                    {prettyName: 'Delete Blueprint', stateNames: ['deleting_blueprint']}
+                    {
+                        prettyName: 'Uninstall',
+                        stateNames: [
+                            'uninstalling', 'uninstalled'
+                        ]
+                    }, {
+                        prettyName: 'Delete Deployment',
+                        stateNames: [
+                          'deleting_deployment', 'deleted_deployment'
+                        ]
+                    }, {
+                        prettyName: 'Delete Blueprint',
+                        stateNames: [
+                            'deleting_from_cloudify'
+                        ]
+                    }
                 ],
-                completedStateName: 'undeployed'
+                completedStateName: 'present'
             };
-            var BLUEPRINT_ERROR_STATE = 'error';
         </script>
         <base href="/" />
     </head>

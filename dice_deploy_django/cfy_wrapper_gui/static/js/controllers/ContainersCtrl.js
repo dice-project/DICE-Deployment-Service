@@ -139,16 +139,18 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     $scope.isBlueprintBeingDeployed = function(blueprint){
         if(!blueprint) return false;
         if($scope.isBlueprintDeployed(blueprint)) return false;
+        if(blueprint.in_error) return false;
         return BLUEPRINT_DEPLOY_STATES.stateNames.indexOf(blueprint.state_name) >= 0;
     };
     $scope.isBlueprintBeingUndeployed = function(blueprint){
         if(!blueprint) return false;
         if($scope.isBlueprintUndeployed(blueprint)) return false;
+        if(blueprint.in_error) return false;
         return BLUEPRINT_UNDEPLOY_STATES.stateNames.indexOf(blueprint.state_name) >= 0;
     };
     $scope.isBlueprintError = function(blueprint){
         if(!blueprint) return false;
-        return blueprint.state_name == BLUEPRINT_ERROR_STATE;
+        return blueprint.in_error;
     };
     $scope.getBlueprintDatetimeStr = function(blueprint){
         if(blueprint) {
