@@ -49,6 +49,7 @@ class Blueprint(Base):
         generic.
         """
         present = 1  # This is initial state + after uninstall finishes
+
         # Installation
         uploading_to_cloudify = 2
         uploaded_to_cloudify = 3
@@ -57,7 +58,9 @@ class Blueprint(Base):
         installing = 6
         installed = 7  # This is what we reach after install workflow finishes
         fetching_outputs = 8
-        fetched_outputs = 9  # This is idle state
+
+        deployed = 9  # This is idle state
+
         # Uninstall workflow
         uninstalling = 10
         uninstalled = 11

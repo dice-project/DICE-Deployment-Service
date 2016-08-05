@@ -294,7 +294,7 @@ class FetchOutputsTest(BaseCeleryTest):
 
         b.refresh_from_db()
         self.assertEqual(b.outputs, result)
-        self.assertEqual(b.state, Blueprint.State.fetched_outputs)
+        self.assertEqual(b.state, Blueprint.State.deployed)
 
     def test_success_empty(self, mock_cfy):
         b = Blueprint.objects.create()
@@ -316,7 +316,7 @@ class FetchOutputsTest(BaseCeleryTest):
 
         b.refresh_from_db()
         self.assertEqual(b.outputs, result)
-        self.assertEqual(b.state, Blueprint.State.fetched_outputs)
+        self.assertEqual(b.state, Blueprint.State.deployed)
 
     def test_success_missing_desc(self, mock_cfy):
         b = Blueprint.objects.create()
@@ -347,7 +347,7 @@ class FetchOutputsTest(BaseCeleryTest):
 
         b.refresh_from_db()
         self.assertEqual(b.outputs, result)
-        self.assertEqual(b.state, Blueprint.State.fetched_outputs)
+        self.assertEqual(b.state, Blueprint.State.deployed)
 
     def test_success_empty_desc(self, mock_cfy):
         b = Blueprint.objects.create()
@@ -371,7 +371,7 @@ class FetchOutputsTest(BaseCeleryTest):
 
         b.refresh_from_db()
         self.assertEqual(b.outputs, result)
-        self.assertEqual(b.state, Blueprint.State.fetched_outputs)
+        self.assertEqual(b.state, Blueprint.State.deployed)
 
 
 @mock.patch.object(tasks, "_run_workflow")

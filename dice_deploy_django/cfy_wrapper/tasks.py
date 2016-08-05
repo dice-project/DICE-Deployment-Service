@@ -182,7 +182,7 @@ def fetch_blueprint_outputs(task, container_id):
     blueprint = Blueprint.get(id)
     blueprint.outputs = outs
     blueprint.save()
-    _update_state(id, Blueprint.State.fetched_outputs)
+    _update_state(id, Blueprint.State.deployed)
 
 
 @shared_task(bind=True)
@@ -280,6 +280,7 @@ def process_container_queue(container_id):
 
 @shared_task
 def release_container(container_id):
+    logger.info("Releasing container {}".format(container_id))
     container = Container.get(container_id)
     container.busy = False
     container.save()
@@ -309,10 +310,12 @@ def _get_undeploy_pipe(container):
         Blueprint.State.uploaded_to_cloudify:    2,
         Blueprint.State.preparing_deployment:    2,
         Blueprint.State.prepared_deployment:     1,
-        Blueprint.State.installing:              1,
+        Blueprint.State.installing:              0,
         Blueprint.State.installed:               0,
         Blueprint.State.fetching_outputs:        0,
-        Blueprint.State.fetched_outputs:         0,
+
+        Blueprint.State.deployed:                0,
+
         Blueprint.State.uninstalling:            0,
         Blueprint.State.uninstalled:             0,
         Blueprint.State.deleting_deployment:     1,
@@ -325,7 +328,7 @@ def _get_undeploy_pipe(container):
         delete_deployment.si(id),
         delete_blueprint.si(id),
     ]
-    index = index_map[container.blueprint.state]
+    index = index_map[abs(container.blueprint.state)]
     return pipe[index:]
 
 
@@ -355,11 +358,11 @@ def sync_container(container, blueprint):
 
      2. Deleting existing deployment:
          - find container [c = Container.get(uuid_of_container)]
-         - commit changes [success, msg = sync_container(c, b)]
+         - commit changes [success, msg = sync_container(c, None)]
 
      3. Redeploying same blueprint:
          - find container [c = Container.get(uuid_of_container)]
-         - commit changes [success, msg = sync_container(c, b)]
+         - commit changes [success, msg = sync_container(c, c.blueprint)]
 
      4. Replacing blueprint in container:
          - find container       [c = Container.get(uuid_of_container)]
