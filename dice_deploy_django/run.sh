@@ -5,11 +5,11 @@ function run()
   # Start celery worker
   echo "Starting celery worker ..."
   celery worker -A dice_deploy -Q dice_deploy -l debug --without-gossip \
-   --without-mingle --purge &
+    --without-mingle --purge > celery-out.log 2> celery-err.log &
   local celery_pid=$!
 
   # Start celery flower
-  celery flower --port=5555 &
+  celery flower --port=5555 > flower-out.log 2> flower-err.log &
   local flower_pid=$!
 
   # Start server
