@@ -4,7 +4,7 @@ from celery import shared_task, chain
 from celery.utils.log import get_task_logger
 
 from . import utils
-from .models import Blueprint, Container
+from .models import Blueprint, Container, Input
 
 from cloudify_rest_client import exceptions, executions
 from concurrency.exceptions import RecordModifiedError
@@ -98,6 +98,7 @@ def upload_blueprint(task, container_id):
 
     logger.info("Creating archive for '{}'.".format(id))
     blueprint = Blueprint.get(id)
+    blueprint.update_inputs(Input.get_inputs_declaration())
     archive = blueprint.pack()
 
     try:

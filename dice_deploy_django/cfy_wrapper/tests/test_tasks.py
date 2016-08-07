@@ -146,6 +146,7 @@ class UploadBlueprintTest(BaseCeleryTest):
 
     def test_valid_blueprint_upload(self, mock_cfy, mock_cancel):
         b = Blueprint.objects.create()
+        self.wd.write((str(b.id), "blueprint.yaml"), b"test: pair")
         c = Container.objects.create(blueprint=b)
         call = mock_cfy.return_value.blueprints.publish_archive
 
@@ -158,6 +159,7 @@ class UploadBlueprintTest(BaseCeleryTest):
 
     def test_invalid_blueprint_upload(self, mock_cfy, mock_cancel):
         b = Blueprint.objects.create()
+        self.wd.write((str(b.id), "blueprint.yaml"), b"test: pair")
         c = Container.objects.create(blueprint=b)
         call = mock_cfy.return_value.blueprints.publish_archive
         call.side_effect = CloudifyClientError("test")
