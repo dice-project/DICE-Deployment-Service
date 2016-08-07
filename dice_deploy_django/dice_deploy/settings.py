@@ -88,6 +88,8 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_ENABLE_UTC = True
 CELERY_DEFAULT_QUEUE = 'dice_deploy'
+CELERY_DEFAULT_ROUTING_KEY = 'dice_deploy'
+CELERY_ROUTES = {'dice_deploy': 'dice_deploy'}
 
 # Cloudify settings
 CFY_MANAGER_URL = "172.16.95.115"
@@ -141,6 +143,7 @@ LOGGING = {
 }
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # angular configuration
 ANGULAR_ENDPOINT = '/'
