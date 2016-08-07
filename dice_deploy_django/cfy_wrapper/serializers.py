@@ -24,7 +24,8 @@ class ContainerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Container
-        fields = ("id", "description", "blueprint", "modified_date")
+        fields = ("id", "description", "blueprint", "modified_date", "busy")
+        read_only_fields = ("busy",)
 
     blueprint = BlueprintSerializer(read_only=True)
 

@@ -78,10 +78,13 @@ definitions:
       modified_date:
         type: string
         format: date-time
+      busy:
+        type: boolean
     required:
       - id
       - modified_date
       - description
+      - busy
 
   ContainerList:
     type: array

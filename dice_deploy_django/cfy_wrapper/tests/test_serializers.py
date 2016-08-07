@@ -56,7 +56,8 @@ class ContainerSerializerTest(BaseTest):
                            modified_date=datetime.datetime(2015, 10, 3),
                            in_error=True)
         c = mock.MagicMock(id=c_id, description="desc", blueprint=b,
-                           modified_date=datetime.datetime(2016, 11, 2))
+                           modified_date=datetime.datetime(2016, 11, 2),
+                           busy=False)
         d = ContainerSerializer(c).data
 
         # Blueprint field is at this stage a OrderedDict, which would break
@@ -67,6 +68,7 @@ class ContainerSerializerTest(BaseTest):
             "id": str(c_id),
             "description": "desc",
             "modified_date": "2016-11-02T00:00:00",
+            "busy": False,
             "blueprint": {
                 "id": str(b_id),
                 "state_name": "test",
