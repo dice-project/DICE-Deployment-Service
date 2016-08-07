@@ -60,10 +60,13 @@ definitions:
         format: date-time
       outputs:
         type: object
+      in_error:
+        type: boolean
     required:
       - id
       - state_name
       - modified_date
+      - in_error
 
   Container:
     type: object
@@ -228,7 +231,7 @@ paths:
       description: |
         This endpoint should be used to obtain user token that can be then
         used for all other requests.
-      operationsId: get_token
+      operationId: getToken
       x-needs-login: false
       tags:
         - auth
@@ -379,7 +382,7 @@ paths:
         container is in idle state (no blueprint operation is executing in the
         background). If this is not true, upload will be rejected with status
         code 409.
-      opertionId: uploadBlueprint
+      operationId: uploadBlueprint
       tags:
         - containers
       consumes:
@@ -484,7 +487,7 @@ paths:
 
     delete:
       summary: Delete all blueprint inputs
-      operationId: eleteInputs
+      operationId: deleteInputs
       tags:
         - inputs
       responses:
