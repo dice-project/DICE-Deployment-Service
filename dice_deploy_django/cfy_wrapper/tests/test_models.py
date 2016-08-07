@@ -110,6 +110,14 @@ class BlueprintTest(BaseTest):
             "key": "value"
         }, result)
 
+    def test_update_inputs_unicode(self):
+        b = Blueprint.objects.create()
+        self.wd.write((str(b.id), "blueprint.yaml"), b"test: pair")
+        b.update_inputs({u"new": u"key"})
+        with open(self.wd.getpath((str(b.id), "blueprint.yaml"))) as f:
+            raw_data = f.read()
+        self.assertFalse("!!python/unicode" in raw_data)
+
     def test_store_content_yaml(self):
         b = Blueprint.objects.create()
         file = "test.yaml"

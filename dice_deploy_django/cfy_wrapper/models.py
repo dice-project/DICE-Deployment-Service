@@ -143,7 +143,7 @@ class Blueprint(Base):
         else:
             data.update({"inputs": inputs})
         with open(self.content_blueprint, "w") as file:
-            yaml.dump(data, file)
+            yaml.safe_dump(data, file)
 
     @property
     def errors(self):
