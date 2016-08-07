@@ -49,3 +49,10 @@ class InputSerializer(serializers.ModelSerializer):
         model = Input
         fields = ("key", "value", "description")
         list_serializer_class = InputListSerializer
+
+
+class NodeSerializer(serializers.Serializer):
+
+    id = serializers.CharField()
+    node_id = serializers.CharField()
+    ip = serializers.CharField(source="runtime_properties.ip")

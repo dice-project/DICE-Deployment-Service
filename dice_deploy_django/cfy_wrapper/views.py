@@ -12,11 +12,13 @@ from rest_framework import status
 from django.db import IntegrityError, transaction
 
 from . import tasks
+from . import utils
 from .models import Blueprint, Container, Input
 from .serializers import (
     BlueprintSerializer,
     ContainerSerializer,
     InputSerializer,
+    NodeSerializer,
 )
 from .api_docs import OpenAPIRenderer, get_api_reference
 
@@ -157,6 +159,24 @@ class ContainerBlueprintView(APIView):
         """
         return Response({"detail": "PUT not implemented yet"},
                         status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+class ContainerNodesView(APIView):
+
+    def get(self, request, id):
+        """
+        Get ip addresses of machines, running in selected container
+        """
+        container = Container.get(id)
+        instances = []
+        if container.blueprint is not None:
+            client = utils.get_cfy_client()
+            instances = client.node_instances.list(
+                deployment_id=container.blueprint.cfy_id,
+            )
+            instances = [i for i in instances if "ip" in i.runtime_properties]
+        s = NodeSerializer(instances, many=True)
+        return Response(s.data)
 
 
 class InputsView(APIView):

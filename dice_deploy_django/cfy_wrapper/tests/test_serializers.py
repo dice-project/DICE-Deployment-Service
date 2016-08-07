@@ -10,6 +10,7 @@ from cfy_wrapper.serializers import (
     BlueprintSerializer,
     ContainerSerializer,
     InputSerializer,
+    NodeSerializer,
 )
 
 from cfy_wrapper.models import Input, Container
@@ -196,3 +197,17 @@ class InputSerializerTest(BaseTest):
         self.assertEqual(1, len(ins))
         self.assertEqual(ins[0].key, "ko")
         self.assertEqual(ins[0].value, "vo")
+
+
+class NodeSerializerTest(BaseTest):
+
+    def test_valid_serialization(self):
+        data = {
+            "id": "my-id",
+            "node_id": "my-node-id",
+            "ip": "127.0.0.1",
+        }
+        n = mock.MagicMock(id="my-id", node_id="my-node-id",
+                           runtime_properties=dict(ip="127.0.0.1"))
+        d = NodeSerializer(n).data
+        self.assertEqual(d, data)

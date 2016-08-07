@@ -148,6 +148,25 @@ definitions:
     required:
       - msg
 
+  Node:
+    type: object
+    properties:
+      id:
+        type: string
+      node_id:
+        type: string
+      ip:
+        type: string
+    required:
+      - id
+      - node_id
+      - ip
+
+  Nodes:
+    type: array
+    items:
+      $ref: "#/definitions/Node"
+
 
 parameters:
 
@@ -405,6 +424,27 @@ paths:
           $ref: "#/responses/NotFound"
         "409":
           description: Container is busy
+
+  /containers/{id}/nodes:
+    parameters:
+      - $ref: "#/parameters/ContainerId"
+
+    get:
+      summary: Display compute instances in container
+      description: |
+        Returns list of compute instances this container has.
+      operationId: listNodeInstances
+      tags:
+        - containers
+      responses:
+        "200":
+          description: Successful request
+          schema:
+            $ref: "#/definitions/Nodes"
+        "401":
+          $ref: "#/responses/InvalidAuth"
+        "404":
+          $ref: "#/responses/NotFound"
 
   /inputs:
     get:

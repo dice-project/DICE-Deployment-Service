@@ -6,6 +6,7 @@ from cfy_wrapper.views import (
     ContainersView,
     ContainerIdView,
     ContainerBlueprintView,
+    ContainerNodesView,
     InputsView,
     BlueprintIdView
 )
@@ -604,6 +605,59 @@ class InputsTest(BaseViewTest):
 
         self.assertEqual(status.HTTP_204_NO_CONTENT, resp.status_code)
         self.assertEqual(0, Input.objects.all().count())
+
+
+class ContainerNodesTest(BaseViewTest):
+
+    def test_not_auth(self):
+        c = Container.objects.create()
+        kw = dict(id=c.cfy_id)
+        req = self.get(reverse("container_nodes", kwargs=kw), auth=False)
+        resp = ContainerNodesView.as_view()(req, **kw)
+        self.assertEqual(status.HTTP_401_UNAUTHORIZED, resp.status_code)
+
+    @mock.patch.object(ContainerNodesView, "get", return_value=Response({}))
+    def test_get_route(self, mock_method):
+        c = Container.objects.create()
+        kw = dict(id=c.cfy_id)
+        url = reverse("container_nodes", kwargs=kw)
+        self.client.get(url)
+        mock_method.assert_called_once()
+
+    def test_get_empty(self):
+        c = Container.objects.create()
+        kw = dict(id=c.cfy_id)
+        req = self.get(reverse("container_nodes", kwargs=kw), auth=True)
+
+        resp = ContainerNodesView.as_view()(req, **kw)
+
+        self.assertEqual(status.HTTP_200_OK, resp.status_code)
+        self.assertEqual(len(resp.data), 0)
+
+    @mock.patch("cfy_wrapper.utils.CloudifyClient")
+    def test_get_non_empty(self, mock_cfy):
+        b = Blueprint.objects.create()
+        c = Container.objects.create(blueprint=b)
+        kw = dict(id=c.cfy_id)
+        req = self.get(reverse("container_nodes", kwargs=kw), auth=True)
+        list_call = mock_cfy.return_value.node_instances.list
+        list_call.return_value = [
+            mock.Mock(id="id1", node_id="nid1",
+                      runtime_properties=dict(ip="127.0.0.1")),
+            mock.Mock(id="id2", node_id="nid2",
+                      runtime_properties=dict(pi="127.0.0.2")),
+            mock.Mock(id="id3", node_id="nid3",
+                      runtime_properties=dict(ip="127.0.0.3")),
+        ]
+        reference = [
+            {"id": "id1", "node_id": "nid1", "ip": "127.0.0.1"},
+            {"id": "id3", "node_id": "nid3", "ip": "127.0.0.3"},
+        ]
+
+        resp = ContainerNodesView.as_view()(req, c.cfy_id)
+
+        self.assertEqual(status.HTTP_200_OK, resp.status_code)
+        self.assertEqual(reference, resp.data)
 
 
 class BlueprintIdTest(BaseViewTest):
