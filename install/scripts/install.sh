@@ -2,26 +2,25 @@
 
 set -e
 
-ctx logger info "Host name setting, hack key update"
-echo "127.0.1.1 $HOSTNAME" | sudo tee -a /etc/hosts
-# Matej
-echo "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAsrH2o/WY+DLTJ/gxzIIV4slSkk0b+qQTteIDYidjcSdl0sp5HaE3UVhJ0xRP3LSVK4+SKC6LW/42N6/XzXX1V+O0CmAEVXxfhu97ZMbK1C8+iyo4bNVzabgI5pzUIAsh8c8WWBMgrey5O9MJkzDv8heZaauB+C1uw6G/uF5fFrhvYGVPokb1YaFKsq0cqkPG6usINByxPmgDV2LIHXkPKMktodyGFXmvk+Z9wWqVEzyzaQbnarXXaTd73LupFJAJBQdwm08LCasDs/sunSrr9m4KxDv+sKN0ybxZFjPIOrK2fUzMF1t6u4WTsdZ107G6u/KieEuMlchGVbJ3UDMsnQ== matej@virtubuntutej" >> ~/.ssh/authorized_keys
-echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+DWIPXKhHM+DUdxvglfDMDW3ZOAR56h1CBOYdAod+i563lTwpUirsitmO/JtnIRYGpKfwp6TIVtryAu9hY8kdtE6gr+iq+vFzbPyCsOtZSjx3mk1ySdLy6hV3yFW0Z4o2i4O7/cvkoUZ14lJSwNJhSnQt4jbXmBhy3Wm681UvgszWNMzDL3MreW6zIlJy9MDyuDlyD0kRpAUhyY0uapt9zgbDfKxctHAFyLNV3Gk7f20p3J/Vo/+K3ukkQKy9mh4Upv/aR+muqxaGlWL2kf912QpmoZl8onaXOhb1DnOI8/LWRcwHQ9qcf3Z9/wAFh2I6QfkCMv5byZHs6VeFDWev matej@UbuntuVB" >> ~/.ssh/authorized_keys
-
-# Miha
-echo "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEA3Yd5NraU2eXCK+yQdaUIjh6nvVxEZNIuhUfIDxG6mfIanz/8BmJKFv0CtCxLypKKA757HK8A4VMT22OvI016D5v+OfWRg4VfE2mxDXBLVZ5zQyzrVtI3oMYZdg+sgtvY5AeUfqSE5lZhgwb8eIgeQyOdYIfvMSuKLvBEnq6rNDE= miha-WINDOWS" >> ~/.ssh/authorized_keys
-
-# Break free of cloudify agent virtual env cage
-ctx logger info "Break from agent virtual env"
+ctx logger info "Breaking from agent virtual env"
 unset VIRTUALENV
 export PATH=/usr/bin:$PATH
 
-# Admin part
-ctx logger info "Installing system dependencies"
+ctx logger info "Settings hostname"
+echo "127.0.1.1 $HOSTNAME" | sudo tee -a /etc/hosts
 
+key=$(ctx node properties ssh_key)
+if [[ -n "$key" ]]
+then
+  ctx logger info "Installing additional ssh key"
+  echo "$key" >> /home/ubuntu/.ssh/authorized_keys
+fi
+
+ctx logger info "Installing system dependencies"
 sudo apt-get update
 sudo apt-get install -y \
   rabbitmq-server       \
+  nginx                 \
   python-virtualenv     \
   python-dev            \
   npm                   \
@@ -36,8 +35,7 @@ fi
 cd /home/ubuntu
 
 ctx logger info "Installing virtualenv"
-# remove it first to make the operation indempotent
-[ -e venv ] && rm -rf venv
+rm -rf venv
 virtualenv venv
 . venv/bin/activate
 pip install -U pip
@@ -68,7 +66,50 @@ superuser_email="$(ctx node properties superuser_email)"
 bash run.sh reset "$superuser_username" "$superuser_password" \
 	"$superuser_email"
 
-ctx logger info "Install gunicorn"
-pip install gunicorn
+ctx logger info "Preparing static files"
+python manage.py collectstatic --no-input
+
+ctx logger info "Configuring nginx"
+ctx download-resource resources/dice-deployment-service \
+  /tmp/dice-deployment-service
+sudo cp /tmp/dice-deployment-service /etc/nginx/sites-available
+sudo ln -s /etc/nginx/sites-available/dice-deployment-service \
+  /etc/nginx/sites-enabled
+sudo rm /etc/nginx/sites-enabled/default
+rm /tmp/dice-deployment-service
+sudo service nginx restart
+
+ctx logger info "Installing uWSGI"
+pip install uwsgi
+sudo mkdir -p /etc/uwsgi/sites
+sudo mkdir -p /var/log/uwsgi
+sudo chown ubuntu:ubuntu /var/log/uwsgi
+ctx download-resource resources/uwsgi.conf /tmp/uwsgi.conf
+sudo cp /tmp/uwsgi.conf /etc/init
+rm /tmp/uwsgi.conf
+ctx download-resource resources/dice-deployment-service.ini \
+  /tmp/dice-deployment-service.ini
+sudo cp /tmp/dice-deployment-service.ini /etc/uwsgi/sites
+rm /tmp/dice-deployment-service.ini
+
+ctx logger info "Installing Celery service"
+sudo mkdir -p /var/log/celery
+sudo chown ubuntu:ubuntu /var/log/celery
+ctx download-resource resources/celery.conf /tmp/celery.conf
+sudo cp /tmp/celery.conf /etc/init
+rm /tmp/celery.conf
+
+debug_mode=$(ctx node properties debug_mode)
+if [[ "$debug_mode" == "True" ]]
+then
+  ctx logger info "Installing Flower service"
+  ctx download-resource resources/flower.conf /tmp/flower.conf
+  sudo cp /tmp/flower.conf /etc/init
+  rm /tmp/flower.conf
+
+  ctx logger info "Enabling RabbitMQ web UI"
+  sudo rabbitmq-plugins enable rabbitmq_management
+  sudo service rabbitmq-server restart
+fi
 
 deactivate

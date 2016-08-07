@@ -4,7 +4,8 @@ set -e
 
 function get_platforms ()
 {
-  echo $(find install -iname '*.yaml' -exec basename {} .yaml \;)
+  echo $(find install -iname '*.yaml' -exec basename {} .yaml \; \
+           | grep -v example)
 }
 
 PLATFORMS="$(get_platforms)"
@@ -17,7 +18,7 @@ function usage ()
 
 USAGE:
 
-  $NAME PLATFORM
+  $NAME PLATFORM [DEPLOY_NAME]
 
 Available platforms: $PLATFORMS
 

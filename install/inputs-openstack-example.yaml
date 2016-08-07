@@ -1,5 +1,5 @@
 # OpenStack related parameters
-# 
+#
 # Set the ID of the image to be used as the basis for the DICE Deployment
 # Service VM. It is possible to look up this ID using the nova client, e.g.:
 # $ nova --os-username $USERNAME --os-tenant-name $TENANT \
@@ -39,3 +39,11 @@ superuser_username: admin
 superuser_password: changeme
 # This is the e-mail address to be used by the created superuser.
 superuser_email: admin@example.com
+
+# If you wish to enable debug installation, set this to 'true'. If you leave
+# this commented, debug mode is disabled
+#enable_debug: true
+
+# You can add one additional ssh key to the server. If this is commented out,
+# no additional key is added.
+#ssh_key: ssh-rsa AAAAB3NzaC1yc2Eksnkljsdnfksncasalwerujwlicuniudiww4nk5j98foajcdsinvie587thhnvksjacbHJhbkjBNKJNBSKJBDFKJBKHJBjbkdjfbvkjdsnaliuuz4r87jLKHKIFHUkdnflčykndslckvdjnstrhugnkjdsnvXhm7RptKmRG5OtrZTBLmpIuef0chMcH6dRnbr/ZAbe7nZlqn0Jnn6wL3TKtSC0i4ceAbxv989mKH+s83Uvt1ENkQu7PGDkzBQHAHM/GPOZXWZT18KImCHttKjuv95MGTyPRxV8Dznfklz9JOOfnr84m/UXfcoH1RbX2aCD0YgOJUGjydVsUBttWQ/jYsyXZ9h4N3R+Q==
