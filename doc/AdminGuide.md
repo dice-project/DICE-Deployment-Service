@@ -1,24 +1,17 @@
 # DICE deployment service administration guide
 
-This document describes the steps that an administrator needs to carry out to
-set up and maintain the DICE deployment service. The goal of this activity is
-to:
+Table of Contents:
 
-* [bootstrap Cloudify Manager](#cloudify-management-installation),
-* [deploy the DICE deployment service](#dice-deployment-service-installation),
-* [provide configuration to DICE deployment service](#dice-deployment-service-configuration)
+1. [Prerequisites](Prerequisites.md)
+2. [Bootstrapping Cloudify Manager](#cloudify-manager-installation)
+3. [Deploying the DICE deployment service](#dice-deployment-service-installation)
+4. [DICE deployment service configuration](#dice-deployment-service-configuration)
+  1. [OpenStack inputs](OpenStack-inputs)
+  2. [FCO inputs](FCO-inputs)
+5. [Container management](Container-management)
+6. [Testing installation](Testing-installation)
 
-## Requirements
-
-* Orchestrator: Cloudify 3.4.0
-* Supported platforms:
-  * OpenStack Kilo (see [compatibility](http://docs.getcloudify.org/3.3.1/plugins/openstack/#compatibility)
-    for Cloudify 3.3.1)
-  * Flexiant cloud Orchestrator
-* CentOS 7 cloud image for Cloudify
-* Ubuntu 14.04 cloud image for DICE deployment service
-
-## Cloudify Management installation
+## Cloudify Manager installation
 
 The DICE deployment service relies on an instance of a Cloudify
 Manager running in the network. Here are our notes and instructions on
@@ -28,34 +21,28 @@ bootstrapping the Cloudify Manager:
 
 ## DICE Deployment service installation
 
-Cloudify is the back-end of our deployment service with the main purpose of
-making deployment of new services as simple as possible. Therefore, the first
-service to be deployed with Cloudify should be the DICE deployment service.
-
-As an alternative method of DICE deployment service intstallation, we provide
-a Vagant script. However, this method is only usable for experimentaiton and
-development of the service, and it still needs a running Cloudify Manager.
+Once Cloudify is installed in our network, we can use it to bootstrap the DICE
+deployment service.
 
 ### Getting the DICE Deployment service
 
-Regardless of the method, first download the DICE deployment tools using git or
-a package download. With git, run the following steps:
+First download the DICE deployment tools using git or a package download. With
+git, run the following steps:
 
 ```bash
 $ mkdir -p ~/dice ; cd ~/dice
 $ git clone https://github.com/dice-project/DICE-Deployment-Service.git
 $ cd DICE-Deployment-Service
-$ git checkout -b v0.2.2 tags/0.2.2
 ```
 
 Or, to obtain the bundle, use the following steps:
 
 ```bash
 $ mkdir -p ~/dice ; cd ~/dice
-$ wget https://github.com/dice-project/DICE-Deployment-Service/archive/0.2.2.tar.gz
-$ tar xzfv 0.2.2.tar.gz
+$ wget https://github.com/dice-project/DICE-Deployment-Service/archive/master.tar.gz
+$ tar xzfv master.tar.gz
 # This step is only to unify the result with the one from the git download
-$ mv DICE-Deployment-Service-0.2.2 DICE-Deployment-Service
+$ mv DICE-Deployment-Service-master DICE-Deployment-Service
 $ cd DICE-Deployment-Service
 ```
 
@@ -164,53 +151,10 @@ By default, this script will remove the deployment and blueprint named
 ```bash
 $ ./dw.sh staging_deployment
 ```
-
-
-### Vagrant installation
-
-The goal of the Vagrant installation is currently to set up a working
-development deployment as quickly as possible. It sets up
-a Django project with some javascript libraries for web GUI.
-The service internally uses  Celery that enables the application to run
-time-consuming tasks asynchronously i.e., after it has already responded with
-HTTP response.
-
-To get started, make sure VirtualBox is installed and then execute:
-```bash
-$ vagrant up --provider virtualbox
-``` 
-
-This creates a new VM is created with everything installed, but the application 
-is neither configured nor running yet.
-
-Next, we connect to the VM and configure the endpoint of the Cloudify Manager.
-
-```bash
-vagrant ssh
-cd dice_deploy_django
-nano dice_deploy/local_settings.py
-```
-
-Assuming that the Cloudify Manager is located on `172.16.95.115`, the 
-`dice_deploy/local_settings.py` should then contain the following line:
-
-```ruby
-CFY_MANAGER_URL = "172.16.95.115"
-```
-
-Next, we run the web application and the web service from the VM:
-
-    $ ./run.sh
-
-Now the web GUI is available at `localhost:7080` from your host machine.
-Default username is `admin` with password `changeme`. Navigate to `/admin`
-page to add new users. Direct access to REST API is given at `/docs`.
-Visualization of your asynchronous tasks is available at `localhost:8055`.
-
 ## DICE deployment service configuration
 
 The TOSCA blueprints can define a list of parameters called
-[inputs](http://docs.getcloudify.org/3.3.1/blueprints/spec-inputs/). In DICE
+[inputs][cfy-spec-inputs]. In DICE
 technology librariy, we use the inputs to provide elements related to the
 environment or the platform in which the application is being deployed.
 Considering that this configuration is relatively static for each instance
@@ -396,9 +340,9 @@ If all of the tests finished, deployment service is set up correctly and ready
 for real work.
 
 
-## What is next
-
-This concludes the installation and administration of the DICE deployment
-service. The users can now start using it through the web GUI, the command
-line interface or completely indirectly through Continuous Integration. The
-[user guide](UserGuide.md) provides further instructions.
+[cfy-spec-inputs]: http://docs.getcloudify.org/3.3.1/blueprints/spec-inputs/
+[Prerequisites-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Prerequisites
+[Installation-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Installation
+[Getting-Started-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Getting-Started
+[Links-and-References-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Links-and-References
+[Changelog-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Changelog

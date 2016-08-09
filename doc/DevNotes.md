@@ -1,7 +1,53 @@
 # Development notes
 
 This document contains some guides for prospective developers with the main
-aim of making initial setup as simple as possible.
+aim of making initial setup as simple as possible. We assume that Cloudify
+is running at a known network location. See
+[Cloudify Management installation](AdminGuide.md#cloudify-management-installation)
+for further instructons.
+
+## Vagrant installation
+
+The goal of the Vagrant installation is currently to set up a working
+development deployment as quickly as possible. It sets up
+a Django project with some javascript libraries for web GUI.
+The service internally uses  Celery that enables the application to run
+time-consuming tasks asynchronously i.e., after it has already responded with
+HTTP response.
+
+To get started, first
+[obtain the DICE deployment service release](AdminGuide.md#getting-the-dice-deployment-service)
+Then make sure VirtualBox is installed and then execute:
+```bash
+$ vagrant up --provider virtualbox
+```
+
+This creates a new VM is created with everything installed, but the application
+is neither configured nor running yet.
+
+Next, we connect to the VM and configure the endpoint of the Cloudify Manager.
+
+```bash
+vagrant ssh
+cd dice_deploy_django
+nano dice_deploy/local_settings.py
+```
+
+Assuming that the Cloudify Manager is located on `172.16.95.115`, the
+`dice_deploy/local_settings.py` should then contain the following line:
+
+```ruby
+CFY_MANAGER_URL = "172.16.95.115"
+```
+
+Next, we run the web application and the web service from the VM:
+
+    $ ./run.sh
+
+Now the web GUI is available at `localhost:7080` from your host machine.
+Default username is `admin` with password `changeme`. Navigate to `/admin`
+page to add new users. Direct access to REST API is given at `/docs`.
+Visualization of your asynchronous tasks is available at `localhost:8055`.
 
 
 ## Developing with PyCharm
