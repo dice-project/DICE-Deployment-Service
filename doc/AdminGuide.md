@@ -6,10 +6,10 @@ Table of Contents:
 2. [Bootstrapping Cloudify Manager](#cloudify-manager-installation)
 3. [Deploying the DICE deployment service](#dice-deployment-service-installation)
 4. [DICE deployment service configuration](#dice-deployment-service-configuration)
-  1. [OpenStack inputs](OpenStack-inputs)
-  2. [FCO inputs](FCO-inputs)
-5. [Container management](Container-management)
-6. [Testing installation](Testing-installation)
+  1. [OpenStack inputs](#OpenStack-inputs)
+  2. [FCO inputs](#FCO-inputs)
+5. [Container management](#Container-management)
+6. [Testing installation](#Testing-installation)
 
 ## Cloudify Manager installation
 
