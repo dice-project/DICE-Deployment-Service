@@ -132,4 +132,45 @@ to Django's management command. To run unit tests, execute
 Integration tests are stored in top-level `tests` folder. For usage
 instructions, consult accompanying [README.md file][integraton-docs].
 
+## Releases and updating Wiki
+
+In GitLab, each tool needs to also have a wiki page containing crucial
+information on the tool, namely:
+
+* Home - a quick introduction and brief presentation of the tool
+* Prerequisites
+* Installation
+* Getting Started - instructions and tutorial for a quick start
+* Links and References
+* Changelog
+
+For the DICE deployment services, the wiki page is [here][wiki]. GitHub keeps
+a dedicated repository mapped to each project, so that it can be edited like
+any other project. Anyone can clone the wiki documents:
+
+```bash
+$ git clone https://github.com/dice-project/DICE-Deployment-Service.wiki.git
+```
+
+Yes, the protocol here is only `https`, which means pushing the changes back
+will require entry of the username and password at the console.
+
+The structure is always flat, so creating subdirectories and putting documents
+there will not change anything, because GitHub treats all the documents as if
+they were in the root directory.
+
+At release time, use the `tools/docs-to-wiki.sh` command to transform tool's
+documentation into an updated wiki page. The command takes one parameter, which
+is the path to the local wiki repository clone. E.g.:
+
+[wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki
+
+```bash
+$ cd DICE-Deployment-Service/tools
+$ ./docs-to-wiki.sh ../../DICE-Deployment-Service.wiki
+```
+
+Finish the updating by a regular push of changes of the local wiki repository
+into the github's master branch.
+
 [integration-docs]: ../tests/README.md
