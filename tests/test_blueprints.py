@@ -37,6 +37,8 @@ class BlueprintTest(BaseTest):
                 break
 
         data = self.get(blueprint_url, True).json()
+        self.assertTrue(data["in_error"],
+            "Error condition in state {}".format(data["state_name"]))
         self.assertEqual(data["state_name"], "deployed")
         # TODO: check for proper outputs
 
