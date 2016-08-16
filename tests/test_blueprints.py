@@ -5,7 +5,7 @@ import time
 
 class BlueprintTest(BaseTest):
 
-    TERMINAL_STATES = {"fetched_outputs", "present"}
+    TERMINAL_STATES = {"deployed", "present"}
 
     def test_valid_blueprint_deploy_undeploy(self):
         blueprint = self.get_blueprint("test-setup.yaml")
@@ -29,11 +29,15 @@ class BlueprintTest(BaseTest):
             resp = self.get(blueprint_url, True)
             if resp.status_code != 200:
                 continue
+            if resp.json()["state_name"] == "present":
+                continue
             if resp.json()["state_name"] in self.TERMINAL_STATES:
+                break
+            if resp.json()["in_error"]:
                 break
 
         data = self.get(blueprint_url, True).json()
-        self.assertEqual(data["state_name"], "fetched_outputs")
+        self.assertEqual(data["state_name"], "deployed")
         # TODO: check for proper outputs
 
         resp = self.delete(blueprint_url, True)
