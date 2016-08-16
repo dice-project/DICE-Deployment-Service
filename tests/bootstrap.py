@@ -167,12 +167,8 @@ def verify_installation(deployment_id):
     check("http_endpoint" in outputs, "No http endpoint present in outputs.")
 
     http_endpoint = outputs["http_endpoint"]
-    m = re.match("https?://[^:]+:[0-9]+", http_endpoint)
+    m = re.match("https?://[^:]+(:[0-9]+)?", http_endpoint)
     check(m is not None, "Bad URL in outputs: {}.".format(http_endpoint))
-
-    r = requests.get("{}/heartbeat/".format(http_endpoint))
-    check(r.status_code == 200,
-          "API not available. Got {} heartbeat.".format(r.status_code))
 
     r = requests.get("{}/heartbeat/".format(http_endpoint))
     check(r.status_code == 200,
