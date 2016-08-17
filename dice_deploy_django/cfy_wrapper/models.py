@@ -145,9 +145,11 @@ class Blueprint(Base):
         with open(self.content_blueprint, "w") as file:
             yaml.safe_dump(data, file)
 
-    @property
-    def errors(self):
-        return self.error_set.all().order_by('-created_date')
+    def log_error(self, msg):
+        """
+        Log error for this blueprint
+        """
+        self.errors.create(message=msg)
 
 
 class ContainerQuerySet(models.QuerySet):

@@ -168,6 +168,32 @@ class BlueprintTest(BaseTest):
             b = Blueprint.objects.create(state=-state)
             self.assertEqual(b.state_name, state.name)
 
+    def test_log_error_simple(self):
+        msg = "Sample error"
+        b = Blueprint.objects.create()
+
+        b.log_error(msg)
+
+        es = list(Error.objects.all())
+        self.assertEqual(1, len(es))
+        self.assertEqual(msg, es[0].message)
+        self.assertEqual(b, es[0].blueprint)
+
+        b.refresh_from_db()
+        es = list(b.errors.all())
+        self.assertEqual(1, len(es))
+        self.assertEqual(msg, es[0].message)
+        self.assertEqual(b, es[0].blueprint)
+
+    def test_delete_error_on_blueprint_delete(self):
+        msg = "Sample error"
+        b = Blueprint.objects.create()
+        b.log_error(msg)
+
+        b.delete()
+
+        self.assertEqual(0, Error.objects.all().count())
+
 
 class ContainerTest(BaseTest):
 
