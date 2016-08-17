@@ -2,7 +2,14 @@ import collections
 
 from rest_framework import serializers
 
-from .models import Blueprint, Container, Input
+from .models import Blueprint, Container, Input, Error
+
+
+class ErrorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Error
+        fields = ("id", "created", "message")
 
 
 class BlueprintSerializer(serializers.ModelSerializer):

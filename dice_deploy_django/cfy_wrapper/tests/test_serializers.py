@@ -11,6 +11,7 @@ from cfy_wrapper.serializers import (
     ContainerSerializer,
     InputSerializer,
     NodeSerializer,
+    ErrorSerializer,
 )
 
 from cfy_wrapper.models import Input, Container
@@ -210,4 +211,15 @@ class NodeSerializerTest(BaseTest):
         n = mock.MagicMock(id="my-id", node_id="my-node-id",
                            runtime_properties=dict(ip="127.0.0.1"))
         d = NodeSerializer(n).data
+        self.assertEqual(d, data)
+
+
+class ErrorSerializerTest(BaseTest):
+
+    def test_valid_serialization(self):
+        data = {"id": "abc", "message": "Error message", "created": "Created"}
+        e = mock.MagicMock(**data)
+
+        d = ErrorSerializer(e).data
+
         self.assertEqual(d, data)
