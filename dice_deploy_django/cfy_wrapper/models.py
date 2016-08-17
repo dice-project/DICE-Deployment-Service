@@ -214,3 +214,14 @@ class Input(models.Model):
             "description": el.description,
             "default": el.value
         } for el in Input.objects.all()}
+
+
+class Error(models.Model):
+
+    id = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False
+    )
+    message = models.TextField()
+    blueprint = models.ForeignKey(Blueprint, on_delete=models.CASCADE,
+                                  related_name="errors")
+    created = models.DateTimeField(auto_now_add=True)

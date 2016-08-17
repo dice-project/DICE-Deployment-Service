@@ -11,6 +11,7 @@ from cfy_wrapper.models import (
     Blueprint,
     Container,
     Input,
+    Error,
 )
 
 
@@ -251,3 +252,26 @@ class InputTest(BaseTest):
             "key1": {"description": "desc1", "default": "value1"},
             "key2": {"description": "desc2", "default": "value2"},
         }, Input.get_inputs_declaration())
+
+
+class ErrorTest(BaseTest):
+
+    def test_creation_single(self):
+        b = Blueprint.objects.create()
+        msg = "Error msg"
+
+        Error.objects.create(blueprint=b, message=msg)
+
+        self.assertEqual(1, Error.objects.all().count())
+        e = list(Error.objects.all())[0]
+        self.assertEqual(e.message, msg)
+        self.assertEqual(e.blueprint, b)
+
+    def test_delete_error_on_blueprint_delete(self):
+        b = Blueprint.objects.create()
+        msg = "Error msg"
+        Error.objects.create(blueprint=b, message=msg)
+
+        b.delete()
+
+        self.assertEqual(0, Error.objects.all().count())
