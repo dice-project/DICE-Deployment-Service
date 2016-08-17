@@ -14,7 +14,7 @@ from cfy_wrapper.serializers import (
     ErrorSerializer,
 )
 
-from cfy_wrapper.models import Input, Container
+from cfy_wrapper.models import Input, Container, Blueprint
 
 
 class BlueprintSerializerTest(BaseTest):
@@ -31,6 +31,7 @@ class BlueprintSerializerTest(BaseTest):
             "modified_date": "2015-10-03T00:00:00",
             "outputs": {"k": "v"},
             "in_error": False,
+            "errors": [],
         }, d)
 
     def test_prevent_saving(self):
@@ -47,6 +48,17 @@ class BlueprintSerializerTest(BaseTest):
         self.assertTrue(s.is_valid(raise_exception=True))
         with self.assertRaises(Exception):
             s.save()
+
+    def test_with_real_blueprint(self):
+        b = Blueprint()
+        b.log_error("message")
+
+        d = BlueprintSerializer(b).data
+
+        for field in ("state_name", "outputs", "in_error"):
+            self.assertEqual(getattr(b, field), d[field])
+        self.assertEqual(1, len(d["errors"]))
+        self.assertEqual(d["errors"][0]["message"], "message")
 
 
 class ContainerSerializerTest(BaseTest):
@@ -77,6 +89,7 @@ class ContainerSerializerTest(BaseTest):
                 "modified_date": "2015-10-03T00:00:00",
                 "outputs": {"k": "v"},
                 "in_error": True,
+                "errors": [],
             }
         }, d)
 

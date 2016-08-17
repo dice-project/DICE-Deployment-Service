@@ -16,9 +16,11 @@ class BlueprintSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Blueprint
-        fields = ("id", "state_name", "modified_date", "outputs", "in_error")
+        fields = ("id", "state_name", "modified_date", "outputs",
+                  "in_error", "errors")
 
-    outputs = serializers.JSONField()
+    outputs = serializers.JSONField(read_only=True)
+    errors = ErrorSerializer(read_only=True, many=True)
 
     def save(*args, **kwargs):
         raise RuntimeError("Blueprint saving is not supported")
