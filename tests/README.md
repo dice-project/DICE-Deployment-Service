@@ -145,6 +145,7 @@ Now simply run `python -m unittest discover`.
 This is also quite simple to do. First, create `inputs-<platform>.yaml` file
 in the root of the project and fill in proper values. Now execute
 
+    export TARGET_PLATFORM=<platform>
     export CLOUDIFY_ADDRESS=10.10.43.35
     export CLOUDIFY_USERNAME=cloudify_username
     export CLOUDIFY_PASSWORD=cloudify_password
