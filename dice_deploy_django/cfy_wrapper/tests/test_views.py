@@ -1,12 +1,13 @@
 from .base import BaseViewTest, date2str, identity, Field
 
-from cfy_wrapper.models import Blueprint, Container, Input
+from cfy_wrapper.models import Blueprint, Container, Input, Error
 from cfy_wrapper.views import (
     HeartBeatView,
     ContainersView,
     ContainerIdView,
     ContainerBlueprintView,
     ContainerNodesView,
+    ContainerErrorsView,
     InputsView,
     BlueprintIdView
 )
@@ -37,6 +38,12 @@ INPUT_FIELDS = (
     Field("key", identity, "key"),
     Field("value", identity, "value"),
     Field("description", identity, "description"),
+)
+
+ERROR_FIELDS = (
+    Field("id", str, "id"),
+    Field("message", identity, "message"),
+    Field("created", date2str, "created"),
 )
 
 
@@ -700,3 +707,71 @@ class BlueprintIdTest(BaseViewTest):
         mock_sync.assert_called_once()
         self.assertEqual(mock_sync.mock_calls[0][1][0], c)
         self.assertIsNone(mock_sync.mock_calls[0][1][1])
+
+
+class ContainerErrorsTest(BaseViewTest):
+
+    def test_not_auth(self):
+        c = Container.objects.create()
+        kw = dict(id=c.cfy_id)
+        req = self.get(reverse("container_errors", kwargs=kw), auth=False)
+        resp = ContainerErrorsView.as_view()(req, **kw)
+        self.assertEqual(status.HTTP_401_UNAUTHORIZED, resp.status_code)
+
+    @mock.patch.object(ContainerErrorsView, "get", return_value=Response({}))
+    def test_get_route(self, mock_method):
+        c = Container.objects.create()
+        kw = dict(id=c.cfy_id)
+        url = reverse("container_errors", kwargs=kw)
+        self.client.get(url)
+        mock_method.assert_called_once()
+
+    def test_get_empty(self):
+        b = Blueprint.objects.create()
+        c = Container.objects.create(blueprint=b)
+        kw = dict(id=c.cfy_id)
+        req = self.get(reverse("container_errors", kwargs=kw), auth=True)
+
+        resp = ContainerErrorsView.as_view()(req, **kw)
+
+        self.assertEqual(status.HTTP_200_OK, resp.status_code)
+        self.assertEqual([], resp.data)
+
+    def test_get_render_empty(self):
+        b = Blueprint.objects.create()
+        c = Container.objects.create(blueprint=b)
+        kw = dict(id=c.cfy_id)
+        url = reverse("container_errors", kwargs=kw)
+
+        resp = self.client.get(url)
+
+        self.assertEqual(status.HTTP_200_OK, resp.status_code)
+        data = json.loads(resp.content)
+        self.assertEqual([], data)
+
+    def test_get_non_empty(self):
+        b = Blueprint.objects.create()
+        b.log_error("message 1")
+        b.log_error("message 2")
+        c = Container.objects.create(blueprint=b)
+        kw = dict(id=c.cfy_id)
+        req = self.get(reverse("container_errors", kwargs=kw), auth=True)
+
+        resp = ContainerErrorsView.as_view()(req, **kw)
+
+        self.assertEqual(status.HTTP_200_OK, resp.status_code)
+        self.compare(ERROR_FIELDS, resp.data, list(Error.objects.all()))
+
+    def test_get_render_non_empty(self):
+        b = Blueprint.objects.create()
+        b.log_error("message 1")
+        b.log_error("message 2")
+        c = Container.objects.create(blueprint=b)
+        kw = dict(id=c.cfy_id)
+        url = reverse("container_errors", kwargs=kw)
+
+        resp = self.client.get(url)
+
+        self.assertEqual(status.HTTP_200_OK, resp.status_code)
+        data = json.loads(resp.content)
+        self.compare(ERROR_FIELDS, data, list(Error.objects.all()))

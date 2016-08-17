@@ -10,6 +10,7 @@ from .views import (
     ContainerIdView,
     ContainerBlueprintView,
     ContainerNodesView,
+    ContainerErrorsView,
 
     InputsView,
 
@@ -38,6 +39,8 @@ urlpatterns = [
         ContainerBlueprintView.as_view(), name="container_blueprint"),
     url(r"^containers/(?P<id>[0-9a-f-]+)/nodes?$",
         ContainerNodesView.as_view(), name="container_nodes"),
+    url(r"^containers/(?P<id>[0-9a-f-]+)/errors?$",
+        ContainerErrorsView.as_view(), name="container_errors"),
 
     # Inputs
     url(r"^inputs/?$",

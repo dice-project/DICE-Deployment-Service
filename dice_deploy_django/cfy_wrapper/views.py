@@ -19,6 +19,7 @@ from .serializers import (
     ContainerSerializer,
     InputSerializer,
     NodeSerializer,
+    ErrorSerializer,
 )
 from .api_docs import OpenAPIRenderer, get_api_reference
 
@@ -177,6 +178,19 @@ class ContainerNodesView(APIView):
             instances = [i for i in instances if "ip" in i.runtime_properties]
         s = NodeSerializer(instances, many=True)
         return Response(s.data)
+
+
+class ContainerErrorsView(APIView):
+
+    def get(self, request, id):
+        """
+        Return errors for selected container.
+        """
+        container = Container.get(id)
+        if container.blueprint is None:
+            return Response([])
+        errors = ErrorSerializer(container.blueprint.errors, many=True)
+        return Response(errors.data)
 
 
 class InputsView(APIView):
