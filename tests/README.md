@@ -70,51 +70,57 @@ $ pip install cloudify==3.4.0
 
 Then provide the context information as a set of environment properties. Use
 either the Jenkins' Environment variables in the Global properties section of
-`/jenkins/configure`.
+`/jenkins/configure`. Note that all of the variables start with prefix `TEST_`
+that should make it clear what process they control.
 
-  Name                          | Example value
-  ----                          | -------------
-  `TARGET_PLATFORM`             | `openstack`
-  `CLOUDIFY_ADDRESS`            | `10.10.43.48`
-  `CLOUDIFY_USERNAME`           | `admin`
-  `CLOUDIFY_PASSWORD`           | `2Big1Secret`
-  `DEPLOYMENT_SERVICE_USERNAME` | `ds-user`
-  `DEPLOYMENT_SERVICE_PASSWORD` | `ds-pass`
+| Name                      | Example     | Description                       |
+|---------------------------|-------------|-----------------------------------|
+| TEST_AGENT_USER           | ubuntu      | SSH user for plain host           |
+| TEST_CFY_MANAGER          | 10.10.43.48 | Address of manager                |
+| TEST_CFY_MANAGER_USERNAME | admin       | Username for manager              |
+| TEST_CFY_MANAGER_PASSWORD | 2Big1Secret | Password for manager              |
+| TEST_SUPERUSER_USERNAME   | ds-user     | Admin user for deployment service |
+| TEST_SUPERUSER_PASSWORD   | ds-pass     | Admin pass for deployment service |
+| TEST_SUPERUSER_EMAIL      | t@x.com     | Admin email address               |
 
+Variables in the table above are required regardless of the platform being
+used. Each supported platform has some additional required variables that need
+to be set. Consult tables below for more information.
 
-Prepare the inputs that will be valid for your environment. Make sure to
-name the inputs file as `inputs-$TARGET_PLATFORM.yaml`. Put it into
-`$HOME/jobs/Deployment-Service-01-unit-tests/`. Also make sure that last two
-variables in the preceding table are consistent with the values in the inputs
-yaml file.
+| OpenStack var | Example    | Description         |
+|---------------|------------|---------------------|
+| TEST_IMAGE    | ca123...0a | OpenStack image ID  |
+| TEST_FLAVOR   | d3046...fa | OpenStack flavor ID |
+
+| FCO var               | Example                         | Description     |
+|-----------------------|---------------------------------|-----------------|
+| TEST_FCO_URL          | https://cp.project.flexiant.net | API endpoint    |
+| TEST_FCO_USERNAME     | fb3c9...12                      | FCO username ID |
+| TEST_FCO_PASSWORD     | MyS3cr37Pa55                    | FCO password    |
+| TEST_FCO_CUSTOMER     | ae568...cc                      | FCO customer ID |
+| TEST_FCO_IMAGE_UUID   | 12345...bb                      | image uuid      |
+| TEST_FCO_VDC_UUID     | abcde...98                      | VDC uuid        |
+| TEST_FCO_NETWORK_UUID | 1a2b3...9f                      | network uuid    |
+| TEST_FCO_AGENT_KEY    | ab12c...f9                      | agent key uuid  |
 
 Then create a Cloudify job, e.g., `Deployment-Service-02-integration-tests`. 
 Click on **Advanced ...** and check **Use custom workspace**. In the Directory,
 provide the path to the Unit tests workspace set up earlier:
 
-`$HOME/jobs/Deployment-Service-01-unit-tests/workspace`
+    $HOME/jobs/Deployment-Service-01-unit-tests/workspace
 
 Leave the **Display Name** field blank.
 
 To the **Build** section add an **Execute shell** build step:
 
-```bash
-cp ../inputs-$TARGET_PLATFORM.yaml .
-
-PATH="$WORKSPACE/../cfy-34/bin":/usr/local/bin:$PATH
-
-. "$WORKSPACE/../cfy-34/bin/activate"
-
-if [ ! -e ".cloudify" ]
-then
-  cfy init
-fi
-
-cfy use -t $CLOUDIFY_ADDRESS
-
-cd tests
-./run-integration-tests.sh
-```
+    PATH="$WORKSPACE/../cfy-34/bin":/usr/local/bin:$PATH
+    . "$WORKSPACE/../cfy-34/bin/activate"
+    if [ ! -e ".cloudify" ]
+    then
+      cfy init
+    fi
+    cd tests
+    ./run-integration-tests.sh platform  # or fco
 
 The job is now ready to run. As the last step, go back to the
 `Deployment-Service-01-unit-tests`, go to the **Post-build Actions** section
@@ -133,25 +139,21 @@ manager endpoint (settings that need to be checked are `CFY_MANAGER_URL`,
 variables (change contents to fit your development environment, defaults
 listed below should work for default vagrant setup):
 
-    export DEPLOYMENT_SERVICE_ADDRESS="http://localhost:8080"
-    export DEPLOYMENT_SERVICE_USERNAME=admin
-    export DEPLOYMENT_SERVICE_PASSWORD=changeme
+    export TEST_DEPLOYMENT_SERVICE_ADDRESS="http://localhost:8080"
+    export TEST_SUPERUSER_USERNAME=admin
+    export TEST_SUPERUSER_PASSWORD=changeme
 
 Now simply run `python -m unittest discover`.
 
 
 # Running bootstrap and teardown tests from local machine
 
-This is also quite simple to do. First, create `inputs-<platform>.yaml` file
-in the root of the project and fill in proper values. Now execute
+This is also quite simple to do. Simply export all variables that are
+described in section about setting up integration tests. For convenience, two
+shell scripts that can be edited and then sourced are provided:
+`set-env-vars.sh` will set required variables and `unset-env-vars.sh` will
+clean them up.
 
-    export TARGET_PLATFORM=<platform>
-    export CLOUDIFY_ADDRESS=10.10.43.35
-    export CLOUDIFY_USERNAME=cloudify_username
-    export CLOUDIFY_PASSWORD=cloudify_password
-    export DEPLOYMENT_SERVICE_USERNAME=admin
-    export DEPLOYMENT_SERVICE_PASSWORD=changeme
-
-where values should be consistent with the ones in the inputs file. Now simply
-run `./run-integration-tests.sh` script. The script should start bootstraping
-the deployment service and execute tests after bootstrap is done.
+After variables are properly set up, run `./run-integration-tests.sh platform`
+script.  The script should start bootstraping the deployment service and
+execute tests after bootstrap is done.

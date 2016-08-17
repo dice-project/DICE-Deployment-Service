@@ -6,7 +6,6 @@ import os
 import re
 
 import requests
-import settings
 import utils
 
 
@@ -62,46 +61,43 @@ def check(condition, msg):
 
 def check_config():
     logger.info("Checking configuration")
-    if not os.path.isfile(settings.INPUTS_FILE_PATH):
-        logger.error("Inputs file not found in {}.".format(
-            settings.INPUTS_FILE_PATH
-        ))
-        sys.exit(EXIT_NOTHING_DONE_FAIL)
-    if settings.CLOUDIFY_ADDRESS is None:
-        logger.error("Please define the CLOUDIFY_ADDRESS variable or setting")
+    vars = ("TEST_CFY_MANAGER", "TEST_CFY_MANAGER_USERNAME",
+            "TEST_CFY_MANAGER_PASSWORD")
+    missing = [v for v in vars if v not in os.environ or os.environ[v] == ""]
+    if len(missing) > 0:
+        logger.error("Please define next variable(s): {}".format(missing))
         sys.exit(EXIT_NOTHING_DONE_FAIL)
 
 
 def prepare_cfy_env():
     logger.info("Preparing environment variables")
     cfy_env = os.environ.copy()
-    cfy_env["CLOUDIFY_USERNAME"] = settings.CLOUDIFY_USERNAME
-    cfy_env["CLOUDIFY_PASSWORD"] = settings.CLOUDIFY_PASSWORD
+    cfy_env["CLOUDIFY_USERNAME"] = os.environ["TEST_CFY_MANAGER_USERNAME"]
+    cfy_env["CLOUDIFY_PASSWORD"] = os.environ["TEST_CFY_MANAGER_PASSWORD"]
     return cfy_env
 
 
 def prepare_cfy_sandbox(cfy_env):
     logger.info("Initializing cfy sandbox using {} as a server".format(
-        settings.CLOUDIFY_ADDRESS
+        os.environ["TEST_CFY_MANAGER"]
     ))
-    proc = shell_call("cfy", "use", "-t", settings.CLOUDIFY_ADDRESS,
-                      env=cfy_env, cwd=settings.BASE_DIR)
+    proc = shell_call("cfy", "use", "-t", os.environ["TEST_CFY_MANAGER"],
+                      env=cfy_env, cwd=utils.BASE_DIR)
     retcode = proc.wait()
     if retcode != 0:
         logger.error(
             "Failed to connect to the Cloudify manager. Check the "
-            "CLOUDIFY_ADDRESS, CLOUDIFY_USERNAME and CLOUDIFY_PASSWORD "
-            "settings values or environment parameters."
+            "TEST_CFY_MANAGER, TEST_CFY_MANAGER_USERNAME and "
+            "TEST_CFY_MANAGER_PASSWORD environment variables."
         )
         sys.exit(EXIT_NOTHING_DONE_FAIL)
 
 
-def execute_up(deployment_id, cfy_env):
-    logger.info("Running ./up.sh {} {}".format(settings.TARGET_PLATFORM,
-                                               deployment_id))
-    proc = shell_call("./up.sh", settings.TARGET_PLATFORM, deployment_id,
+def execute_up(platform, deployment_id, cfy_env):
+    logger.info("Running ./up.sh {} {}".format(platform, deployment_id))
+    proc = shell_call("./up.sh", platform, deployment_id,
                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                      env=cfy_env, cwd=os.path.dirname(settings.BASE_DIR))
+                      env=cfy_env, cwd=os.path.dirname(utils.BASE_DIR))
     wait_for_process(proc)
     logger.info("Done running ./up.sh")
 
@@ -183,7 +179,7 @@ def update_state_file(file, deployment_id):
     logger.info("Writing test state file.")
 
     outputs = get_outputs(deployment_id)
-    content = 'export DEPLOYMENT_SERVICE_ADDRESS="{}"\n'
+    content = 'export TEST_DEPLOYMENT_SERVICE_ADDRESS="{}"\n'
     content = content.format(outputs["http_endpoint"])
     logger.debug("Content: {}".format(content))
 
@@ -191,13 +187,13 @@ def update_state_file(file, deployment_id):
         f.write(content)
 
 
-def bootstrap(test_state_file):
+def bootstrap(platform, test_state_file):
     deployment_id = os.path.basename(test_state_file)
 
     check_config()
     cfy_env = prepare_cfy_env()
     prepare_cfy_sandbox(cfy_env)
-    execute_up(deployment_id, cfy_env)
+    execute_up(platform, deployment_id, cfy_env)
     wait_for_installation(deployment_id)
     verify_installation(deployment_id)
 
@@ -207,4 +203,4 @@ def bootstrap(test_state_file):
 
 
 if __name__ == "__main__":
-    bootstrap(sys.argv[1])
+    bootstrap(*sys.argv[1:3])

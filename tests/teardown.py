@@ -30,6 +30,8 @@ def uninstall(deployment_id):
         logger.info("No installation present. Skipping.")
         return
 
+    # TODO: Check if we are canceling installation and wait for it.
+
     logger.info("Running uninstall workflow.")
     execution = exec_client.start(deployment_id=deployment_id,
                                   workflow_id="uninstall")

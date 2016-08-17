@@ -1,7 +1,6 @@
 from unittest import TestCase
 
 import requests
-import settings
 import utils
 import uuid
 import os
@@ -10,9 +9,9 @@ import os
 class BaseTest(TestCase):
 
     def setUp(self):
-        assert settings.DEPLOYMENT_SERVICE_ADDRESS is not ""
-        assert settings.DEPLOYMENT_SERVICE_USERNAME is not ""
-        assert settings.DEPLOYMENT_SERVICE_PASSWORD is not ""
+        assert os.environ["TEST_DEPLOYMENT_SERVICE_ADDRESS"] is not ""
+        assert os.environ["TEST_SUPERUSER_USERNAME"] is not ""
+        assert os.environ["TEST_SUPERUSER_PASSWORD"] is not ""
 
         self.cfy = utils.get_cfy_client()
         self.cleanup_queue = []
@@ -27,15 +26,16 @@ class BaseTest(TestCase):
 
     @staticmethod
     def get_url(suffix):
-        return "{}/{}".format(settings.DEPLOYMENT_SERVICE_ADDRESS, suffix)
+        return "{}/{}".format(os.environ["TEST_DEPLOYMENT_SERVICE_ADDRESS"],
+                              suffix)
 
     # Wrappers for requests that optionally add authentication
     @staticmethod
     def _request(method, suffix, auth, **kwargs):
         if auth:
             auth_url = BaseTest.get_url("auth/get-token")
-            data = dict(username=settings.DEPLOYMENT_SERVICE_USERNAME,
-                        password=settings.DEPLOYMENT_SERVICE_PASSWORD)
+            data = dict(username=os.environ["TEST_SUPERUSER_USERNAME"],
+                        password=os.environ["TEST_SUPERUSER_PASSWORD"])
             token = requests.post(auth_url, json=data).json()["token"]
             kwargs["headers"] = {
                 "Authorization": "Token {}".format(token),
@@ -57,7 +57,7 @@ class BaseTest(TestCase):
     # Helpers for retrieving test data, generating (almost) unique names, etc.
     @staticmethod
     def get_blueprint(name):
-        blueprint = os.path.join(settings.BASE_DIR, "blueprints", name)
+        blueprint = os.path.join(utils.BASE_DIR, "blueprints", name)
         assert os.path.isfile(blueprint)
         return blueprint
 
