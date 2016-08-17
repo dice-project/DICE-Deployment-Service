@@ -106,9 +106,10 @@ def upload_blueprint(task, container_id):
         client.blueprints.publish_archive(archive, id)
         _update_state(id, Blueprint.State.uploaded_to_cloudify)
         logger.info("Blueprint '{}' upload succeeded.".format(id))
-    except exceptions.CloudifyClientError:
+    except exceptions.CloudifyClientError as e:
         _update_state(id, Blueprint.State.uploading_to_cloudify, False)
         logger.info("Blueprint '{}' upload failed.".format(id))
+        blueprint.log_error(e.message)
         _cancel_chain_execution(task, container_id)
 
 

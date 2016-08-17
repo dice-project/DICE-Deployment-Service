@@ -171,6 +171,9 @@ class UploadBlueprintTest(BaseCeleryTest):
         mock_cancel.assert_called_once()
         self.assertEqual(c.cfy_id, mock_cancel.mock_calls[0][1][1])
         self.assertEqual(b.state, -Blueprint.State.uploading_to_cloudify)
+        self.assertEqual(1, b.errors.all().count())
+        e = b.errors.all()[0]
+        self.assertEqual(e.message, "test")
 
 
 @mock.patch.object(tasks, "_cancel_chain_execution")
