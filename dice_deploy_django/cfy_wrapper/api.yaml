@@ -47,6 +47,27 @@ tags:
 
 definitions:
 
+  Error:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      message:
+        type: string
+      created:
+        type: string
+        format: date-time
+    required:
+      - id
+      - message
+      - created
+
+  ErrorList:
+    type: array
+    items:
+      $ref: "#/definitions/Error"
+
   Blueprint:
     type: object
     properties:
@@ -62,11 +83,19 @@ definitions:
         type: object
       in_error:
         type: boolean
+      errors:
+        $ref: "#/definitions/ErrorList"
     required:
       - id
       - state_name
       - modified_date
       - in_error
+      - errors
+
+  BlueprintList:
+    type: array
+    items:
+      $ref: "#/defintions/Blueprint"
 
   Container:
     type: object
@@ -165,7 +194,7 @@ definitions:
       - node_id
       - ip
 
-  Nodes:
+  NodeList:
     type: array
     items:
       $ref: "#/definitions/Node"
@@ -177,6 +206,14 @@ parameters:
     name: id
     in: path
     description: Container id
+    required: true
+    type: string
+    format: uuid
+
+  BlueprintId:
+    name: blueprint_id
+    in: path
+    description: Blueprint id
     required: true
     type: string
     format: uuid
@@ -443,7 +480,28 @@ paths:
         "200":
           description: Successful request
           schema:
-            $ref: "#/definitions/Nodes"
+            $ref: "#/definitions/NodeList"
+        "401":
+          $ref: "#/responses/InvalidAuth"
+        "404":
+          $ref: "#/responses/NotFound"
+
+  /containers/{id}/errors:
+    parameters:
+      - $ref: "#/parameters/ContainerId"
+
+    get:
+      summary: Display errors for selected container
+      description: |
+        Returns list of errors that occurred during container executions.
+      operationId: listErrors
+      tags:
+        - containers
+      responses:
+        "200":
+          description: Successful request
+          schema:
+            $ref: "#/definitions/ErrorList"
         "401":
           $ref: "#/responses/InvalidAuth"
         "404":
@@ -493,3 +551,79 @@ paths:
       responses:
         "204":
           description: Successfully removed all inputs
+
+# Deprecated API access points
+  /blueprints:
+    get:
+      summary: List all available blueprints
+      description: |
+        This endpoint lists all user-owned blueprints. For now, all blueprints
+        are globally accessible, but in the future, this will change.
+      operationId: listBlueprints
+      deprecated: true
+      tags:
+        - blueprints
+      responses:
+        "200":
+          description: Successful request
+          schema:
+            $ref: "#/definitions/BlueprintList"
+        "401":
+          $ref: "#/responses/InvalidAuth"
+
+  /blueprints/{id}:
+    parameters:
+      - $ref: "#/parameters/BlueprintId"
+
+    get:
+      summary: Display blueprint details
+      description: Use `GET /containers/{id}/blueprint`.
+      operationId: showBlueprint
+      deprecated: true
+      tags:
+        - blueprints
+      responses:
+        "200":
+          description: Successful request
+          schema:
+            $ref: "#/definitions/Blueprint"
+        "401":
+          $ref: "#/responses/InvalidAuth"
+        "404":
+          $ref: "#/responses/NotFound"
+
+    delete:
+      summary: Delete selected blueprint
+      description: Please use `DELETE /containers/{id}/blueprint`.
+      operationId: deleteBlueprint
+      deprecated: true
+      tags:
+        - blueprints
+      responses:
+        "202":
+          description: Container has been successfully deleted
+        "401":
+          $ref: "#/responses/InvalidAuth"
+        "404":
+          $ref: "#/responses/NotFound"
+        "409":
+          description: Blueprint cannot be deleted
+
+  /blueprints/{id}/outputs:
+    parameters:
+      - $ref: "#/parameters/BlueprintId"
+
+    get:
+      summary: Display blueprint output information
+      description: Use `GET /containers/{id}/blueprint` instead.
+      operationId: showBlueprintOutputs
+      deprecated: true
+      tags:
+        - blueprints
+      responses:
+        "200":
+          description: Successful request
+        "401":
+          $ref: "#/responses/InvalidAuth"
+        "404":
+          $ref: "#/responses/NotFound"
