@@ -71,8 +71,8 @@ def delete_blueprint(blueprint_id):
 
     try:
         blue_client.delete(blueprint_id)
-    except CloudifyClientError:
-        pass
+    except CloudifyClientError as e:
+        logger.error(e)
 
 
 def teardown(test_state_file):
