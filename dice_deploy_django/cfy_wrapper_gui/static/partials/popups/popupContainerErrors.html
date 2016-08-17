@@ -10,8 +10,7 @@
 
                 <div class="container-error-list">
                     <div ng-repeat="err in errors" class="container-error-single">
-                        <div><em>{{ parentScope.getDatetimeStr(err.created_date) }}</em></div>
-                        <div>Reported while: <b>{{ parentScope.getPrettyStateName(err.state_name) }}</b></div>
+                        <div><b>{{ parentScope.getDatetimeStr(err.created_date) }}</b></div>
                         <code>{{ err.message }}</code>
                         <div class="container-error-single-separator" ng-hide="$last"></div>
                     </div>
