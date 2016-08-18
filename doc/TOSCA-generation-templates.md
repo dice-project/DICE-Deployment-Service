@@ -12,6 +12,11 @@ document presents relevant parts of the templates.
 In each section, there are the mandatory contents, which all have to be in place
 for the blueprint to work. Optional parts depend on the users' preferences.
 
+1. [Common parts](#common-parts)
+2. [Zookeeper](#zookeeper)
+3. [Storm](#storm)
+4. [Cassandra](#cassandra)
+
 ## Common parts
 
 ### Language definition version and imports
@@ -20,26 +25,32 @@ Variables:
 
 * `PLATFORM`: specifies the platform to deploy the application to. Currently
   supported platforms: `fco`, `openstack`
-* `FCO_PLUGIN_VERSION`: specifies the version of the plugin containing the DICE
-  technology library definitions, which apply to the FCO platform. (default:
-  `master`)
-* `FCO_CLIENT_PLUGIN_VERSION`: specifies the version of the plugin, which
-  provides support for the FCO platform to Cloudify. (default: `develop`)
-
-*Note*: the `imports` part is still subject to change. How do we specify
-OpenStack for the platform?
+* `PLATFORM_PLUGIN`: the URL of the plug-in supporting the selected platform.
+* `LIBRARY_VERSION`: specifies the version of the plugin containing the DICE
+  technology library definitions.
+* `PLATFORM_PLUGIN_VERSION`: specifies the version of the plugin, which
+  provides support for the selected platform to Cloudify.
 
 ```yaml
 tosca_definitions_version: cloudify_dsl_1_2
  
 imports:
   - http://www.getcloudify.org/spec/cloudify/3.3.1/types.yaml
-  - https://raw.githubusercontent.com/dice-project/DICE-FCO-Plugin-Cloudify/${FCO_CLIENT_PLUGIN_VERSION}/plugin.yaml
-  - http://www.getcloudify.org/spec/chef-plugin/1.3.1/plugin.yaml
-  - http://dice-project.github.io/DICE-Deployment-Cloudify/spec/${PLATFORM}/${FCO_CLIENT_VERSION}/plugin.yaml
+  - ${PLATFORM_PLUGIN}
+  - http://dice-project.github.io/cloudify-chef-plugin/1.3.2/plugin.yaml
+  - http://dice-project.github.io/DICE-Deployment-Cloudify/spec/${PLATFORM}/${LIBRARY_VERSION}/plugin.yaml
 ```
 
-## Zookeeper <a name="zookeeper"></a>
+The `PLATFORM_PLUGIN` may be the following:
+
+* FCO: `http://dice-project.github.io/DICE-FCO-Plugin-Cloudify/${PLATFORM_PLUGIN_VERSION}/plugin.yaml`
+* OpenStack: `http://dice-project.github.io/cloudify-openstack-plugin/${PLATFORM_PLUGIN_VERSION}/plugin.yaml`
+
+*Note*: the `imports` part is still subject to change. In particular, the
+`cloudify-chef-plugin` is currently in the DICE's project before changes get
+accepted upstream.
+
+## Zookeeper
 
 Variables:
 
@@ -76,11 +87,11 @@ Variables:
 ```
 
 Optional part (tentative version) if the user wants to expose Zookeeper to the
-public internet (not a likely scenario):
+public internet (not a likely scenario) **- planned update**:
 
 ```yaml
   ${ZOOKEEPER}_firewall:
-    type: dice.firewall_rules.Zookeeper
+    type: dice.firewall_rules.zookeeper.Common
 
   ${ZOOKEEPER}_virtual_ip:
     type: dice.virtual_ip
@@ -99,7 +110,7 @@ public internet (not a likely scenario):
     value: { concat: [ { get_attribute: [${ZOOKEEPER}_virtual_ip, virtual_ip] }, ':2181' ] }
 ```
 
-## Storm <a name="storm"></a>
+## Storm
 
 Depends on:
 
@@ -126,18 +137,25 @@ Variables:
   used in the Storm.
 * `STORM_TOPOLOGY_CLASS`: the class name with the main function, which
   implements the Storm topology.
+* `STORM_TOPOLOGY_CONFIGURATION`: a dictionary containing the configuration of
+  the `${STORM_TOPOLOGY}` instance.
 
 ### Node templates
 
 ```yaml
   ${STORM}_firewall:
-    type: dice.firewall_rules.StormNimbus
+    type: dice.firewall_rules.storm.NimbusAndGui
 
   ${STORM}_virtual_ip:
     type: dice.virtual_ip
 
   ${STORM}_nimbus_vm:
     type: dice.hosts.Medium
+    relationships:
+      - type: dice.relationships.ProtectedBy
+        target: ${STORM}_firewall
+      - type: dice.relationships.IpAvailableFrom
+        target: ${STORM}_virtual_ip
 
   ${STORM}_nimbus:
     type: dice.components.storm.Nimbus
@@ -177,10 +195,11 @@ submit with the blueprint:
       application: ${STORM_TOPOLOGY_JAR_URL}
       topology_name: ${STORM_TOPOLOGY_NAME}
       topology_class: ${STORM_TOPOLOGY_CLASS}
+      configuration: ${STORM_TOPOLOGY_CONFIGURATION}
    relationships:
      - type: dice.relationships.storm.SubmitTopologyFromVM
        target: ${STORM}_nimbus_vm
-     - type: cloudify.relationships.depends_on
+     - type: dice.relationships.Needs
        target: ${STORM}
 ```
 
@@ -189,7 +208,7 @@ submit with the blueprint:
 ```yaml
   ${STORM}_nimbus_address:
     description: The address to be used by the storm client of "${STORM}"
-    value: { get_attribute: [${STORM}_nimbus_virtual_ip, ip] }
+    value: { get_attribute: [${STORM}_nimbus_virtual_ip, virtual_ip] }
   ${STORM}_nimbus_gui:
     description: URL of the Storm nimbus gui of "${STORM}"
     value: { concat: [ 'http://', { get_attribute: [${STORM}_virtual_ip, virtual_ip] }, ':8080' ] }
@@ -201,4 +220,53 @@ Optional:
   ${STORM_TOPOLOGY}_id:
     description: Unique Storm topology ID for "${STORM_TOPOLOGY}"
     value: { get_attribute: [ ${STORM_TOPOLOGY}, topology_id ] }
+```
+
+## Cassandra
+
+Variables:
+
+* `CASSANDRA`: the name of the Cassandra instance (default: `cassandra`)
+* `CASSANDRA_CONFIGURATION`: a dictionary containing the configuration of the
+  `${CASSANDRA}` instance.
+* `CASSANDRA_INSTANCE_COUNT`: number of Cassandra worker instances, specific to
+  the `${CASSANDRA}` instance (default: 1)
+
+### Node templates
+
+```yaml
+  ${CASSANDRA}_firewall:
+    type: dice.firewall_rules.cassandra.Common
+
+  ${CASSANDRA}_seed_vm:
+    type: dice.hosts.Medium
+    relationships:
+      - type: dice.relationships.ProtectedBy
+        target: ${CASSANDRA}_firewall
+
+  ${CASSANDRA}_seed:
+    type: dice.components.cassandra.Seed
+    properties:
+      configuration: ${CASSANDRA_CONFIGURATION}
+    relationships:
+      - type: dice.relationships.ContainedIn
+        target: ${CASSANDRA}_seed_vm
+
+  ${CASSANDRA}_worker_vm:
+    type: dice.hosts.Medium
+    instances:
+      deploy: ${CASSANDRA_INSTANCE_COUNT}
+    relationships:
+      - type: dice.relationships.ProtectedBy
+        target: ${CASSANDRA}_firewall
+
+  ${CASSANDRA}_worker:
+    type: dice.components.cassandra.Worker
+    properties:
+      configuration: ${CASSANDRA_CONFIGURATION}
+    relationships:
+      - type: dice.relationships.ContainedIn
+        target: ${CASSANDRA}_seed_vm
+      - type: dice.relationships.cassandra.ConnectedToSeed
+        target: ${CASSANDRA}_seed
 ```
