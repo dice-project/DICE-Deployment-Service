@@ -197,14 +197,25 @@ The UUIDs for images and flavours can be obtained using the `nova` client. See
 [this document](Cloudify-3.3.1-OpenStack.md#preparing-inputs) to get
 examples of the client usage.
 
+To prepare the inputs, open a text file named `openstack-inputs.yaml` with
+contents like in the following example:
+
+```json
+[
+    {"key": "agent_user",       "value": "ubuntu",                               "description": "Agent user"},
+    {"key": "small_image_id",   "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea", "description": "Small image id"},
+    {"key": "small_flavor_id",  "value": "070005dc-9bd5-4c0c-b2c6-88f81a7b7239", "description": "Small flavour id"},
+    {"key": "medium_image_id",  "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea", "description": "Medium image id"},
+    {"key": "medium_flavor_id", "value": "45170672-5608-473e-af9c-9097510472d6", "description": "Medium flavour id"},
+    {"key": "large_image_id",   "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea", "description": "Large image id"},
+    {"key": "large_flavor_id",  "value": "1bd34fe1-57b3-4937-bf60-5edd35382b78", "description": "Large flavour id"}
+]
+```
+
+Then submit the inputs to the deployment service:
+
 ```bash
-dice-deploy-cli input-add agent_user "ubuntu" "Agent user"
-dice-deploy-cli input-add small_image_id "36dbc4e8-81dd-49f5-9e43-f44a179a64ea" "Small image id"
-dice-deploy-cli input-add small_flavor_id "070005dc-9bd5-4c0c-b2c6-88f81a7b7239" "Small flavour id"
-dice-deploy-cli input-add medium_image_id "36dbc4e8-81dd-49f5-9e43-f44a179a64ea" "Medium image id"
-dice-deploy-cli input-add medium_flavor_id "45170672-5608-473e-af9c-9097510472d6" "Medium flavour id"
-dice-deploy-cli input-add large_image_id "36dbc4e8-81dd-49f5-9e43-f44a179a64ea" "Large image id"
-dice-deploy-cli input-add large_flavor_id "1bd34fe1-57b3-4937-bf60-5edd35382b78" "Large flavour id"
+$ dice-deploy-cli set-inputs openstack-inputs.yaml
 ```
 
 ### FCO inputs
@@ -262,24 +273,26 @@ inputs:
  inputs. Before calling them, replace the values in the example with the
  appropriate ones for your environment:
 
- ```bash
-dice-deploy-cli input-add agent_user ubuntu "Agent user"
-dice-deploy-cli input-add small_image_id 87978c6d-5ceb-39b2-8e8b-935503ad0307 "Small image id"
-dice-deploy-cli input-add small_server_type "2 GB / 1 CPU" "Small server type"
-dice-deploy-cli input-add small_disk "30Gb Storage" "Small disk"
-dice-deploy-cli input-add medium_image_id 87978c6d-5ceb-39b2-8e8b-935503ad0307 v
-dice-deploy-cli input-add medium_server_type "2 GB / 1 CPU" "Medium server type"
-dice-deploy-cli input-add medium_disk "30Gb Storage" "Medium disk"
-dice-deploy-cli input-add large_image_id 87978c6d-5ceb-39b2-8e8b-935503ad0307 Large image
-dice-deploy-cli input-add large_server_type "2 GB / 1 CPU" "Large server type"
-dice-deploy-cli input-add large_disk "30Gb Storage" "Large disk"
-dice-deploy-cli input-add username 089e2a3a-5ae9-34e4-b03c-c694268acf1c "FCO username"
-dice-deploy-cli input-add password 'p@ssword' "FCO password"
-dice-deploy-cli input-add customer e50bfd1b-253a-3290-85ff-95e218398b7e "FCO customer"
-dice-deploy-cli input-add service_url "https://cp.diceproject.flexiant.net" "Service URL"
-dice-deploy-cli input-add agent_key 288f0541-9921-37a8-a07b-bb47eb27dc10 "Agent key"
-dice-deploy-cli input-add vdc 9799fe42-02ef-3929-88d4-c993a02cbe1d "FCO VDC"
-dice-deploy-cli input-add network 5264edab-8d29-329d-b4f9-5f8ca17cff78 "FCO network"
+ ```json
+[
+    {"key": "agent_user",         "value": "ubuntu",                               "description": "Agent user"},
+    {"key": "small_image_id",     "value": "87978c6d-5ceb-39b2-8e8b-935503ad0307", "description": "Small image id"},
+    {"key": "small_server_type",  "value": "2 GB / 1 CPU",                         "description": "Small server type"},
+    {"key": "small_disk",         "value": "30Gb Storage",                         "description": "Small disk"},
+    {"key": "medium_image_id",    "value": "87978c6d-5ceb-39b2-8e8b-935503ad0307", "description": "Medium image id"},
+    {"key": "medium_server_type", "value": "2 GB / 1 CPU",                         "description": "Medium server type"},
+    {"key": "medium_disk",        "value": "30Gb Storage",                         "description": "Medium disk"},
+    {"key": "large_image_id",     "value": "87978c6d-5ceb-39b2-8e8b-935503ad0307", "description": "Large image id"},
+    {"key": "large_server_type",  "value": "2 GB / 1 CPU",                         "description": "Large server type"},
+    {"key": "large_disk",         "value": "30Gb Storage",                         "description": "Large disk"},
+    {"key": "username",           "value": "089e2a3a-5ae9-34e4-b03c-c694268acf1c", "description": "FCO username"},
+    {"key": "password",           "value": "p@ssword",                             "description": "FCO password"},
+    {"key": "customer",           "value": "e50bfd1b-253a-3290-85ff-95e218398b7e", "description": "FCO customer"},
+    {"key": "service_url",        "value": "https://cp.diceproject.flexiant.net",  "description": "Service URL"},
+    {"key": "agent_key",          "value": "288f0541-9921-37a8-a07b-bb47eb27dc10", "description": "Agent key"},
+    {"key": "vdc",                "value": "9799fe42-02ef-3929-88d4-c993a02cbe1d", "description": "FCO VDC"},
+    {"key": "network",            "value": "5264edab-8d29-329d-b4f9-5f8ca17cff78", "description": "FCO network"}
+]
 ```
 
 ## Container management
