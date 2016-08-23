@@ -355,6 +355,52 @@ class WaitForDeploy(Command):
         logger.info("Deployment is done")
 
 
+class Outputs(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser(
+            "outputs", help="Obtain outputs from container",
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+        parser.add_argument("uuid", help="Container UUID")
+
+        return parser
+
+    def execute(self):
+        uuid = self.args.uuid
+        logger.info("Obtaining outputs for container {}".format(uuid))
+        response = self.get("/containers/{}".format(uuid))
+        if response.status_code != 200:
+            fail("Cannot retrieve container info")
+        blueprint = response.json()["blueprint"]
+        print({"outputs": blueprint["outputs"]} if blueprint else {})
+        logger.info("Information successfully obtained")
+
+
+class Status(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser(
+            "status", help="Obtain container status",
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+        parser.add_argument("uuid", help="Container UUID")
+
+        return parser
+
+    def execute(self):
+        uuid = self.args.uuid
+        logger.info("Obtaining status for container {}".format(uuid))
+        response = self.get("/containers/{}".format(uuid))
+        if response.status_code != 200:
+            fail("Cannot retrieve container info")
+        blueprint = response.json()["blueprint"]
+        print(blueprint["state_name"] if blueprint else "empty")
+        logger.info("Information successfully obtained")
+
+
 # Entry point
 def create_parser():
     def is_command(item):
