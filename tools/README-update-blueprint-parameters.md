@@ -29,7 +29,7 @@ To use the tool, we need the following:
 To update a TOSCA blueprint with new configuration, invoke:
 
 ```bash
-$ ./update_blueprint_parameters.py \
+$ ./update-blueprint-parameters.py \
     --options expconfig.yaml \
     --blueprint blueprint.yaml \
     --configuration config.json \
