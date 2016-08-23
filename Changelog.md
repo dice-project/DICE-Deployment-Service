@@ -22,6 +22,14 @@
 * Used upstart jobs for all services.
 * Enabled a debug mode, which opens celery flower on port 5555.
 
+## 0.2.4
+
+* Enabled support and documentation for Cloudify 3.4.0.
+* Added an integration test for bootstrapping the DICE deployment service
+  wrapper.
+* Added an OpenStack tester tool to assess viability of successful bootstrapping
+  in the target OpenStack testbed.
+
 ## 0.2.3
 
 Add test blueprints and usage documentation
