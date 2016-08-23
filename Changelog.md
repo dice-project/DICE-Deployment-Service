@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.3.1
+
+* Replaced gunicorn with uWSGI. The default ports for the deployment tools are
+  now standard HTTP(S) ports.
+* Improved handling of containers, which now behave atomically.
+* Improved management of uploaded blueprints. Better validation of blueprints
+  discovers early a wider range of blueprint faults.
+* Updated API to move most of actions to container resources instead of
+  blueprint resources. Some of frequently used blueprint resources are still
+  available for backwards compatibility, but internally they are mapped to
+  actions on a container.
+* Switched to OpenAPI documentation in Swagger.
+* Better error reporting in API and on GUI.
+* Containers are now able to indicate if they are busy processing a task or
+  idle.
+* Improved installation procedure for Cloudify 3.4.0
+* Unify the naming schemes of the tools: Dashes instead of underscores for
+  configuration optimization support.
+* Improved unit tests and added deployment tests.
+* Used upstart jobs for all services.
+* Enabled a debug mode, which opens celery flower on port 5555.
+
 ## 0.2.3
 
 Add test blueprints and usage documentation
