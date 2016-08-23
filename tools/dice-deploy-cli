@@ -1,443 +1,391 @@
-#!/bin/bash
+#!/usr/bin/env python2
 
-# ########################################################################## #
-# Global configuration                                                       #
-# ########################################################################## #
+from __future__ import print_function
 
-# Url of dice deployment service
-DICE_DEPLOY_URL_FILE=".dice-deploy-url"
-# The authentication token
-DICE_DEPLOY_AUTH_TOKEN_FILE=".dice-deploy-auth"
-# Blueprint ID field
-CST_BLUEPRINT_ID_FIELD="id"
+import argparse
+import logging
+import inspect
+import json
+import time
+import sys
+import os
 
-# ########################################################################## #
-# Helper functions for various tasks                                         #
-# ########################################################################## #
+import requests
 
-# Log things to stderr (be pipe-friendly)
-function log ()
-{
-  echo "$1" >&2
-}
+# Logging
+fmt_stream = logging.Formatter("[%(levelname)s] - %(message)s")
+handler_stream = logging.StreamHandler()
+handler_stream.setFormatter(fmt_stream)
+handler_stream.setLevel(logging.INFO)
 
-# Read the token from the file. Use authenticate function to create one
-function get-authentication ()
-{
-  if [[ -f "$DICE_DEPLOY_AUTH_TOKEN_FILE" ]]
-  then
-    cat $DICE_DEPLOY_AUTH_TOKEN_FILE
-  else
-    log "Authentication required. Please run:"
-    log "  $0 authenticate USERNAME PASSWORD"
-    log ""
-    exit -2
-  fi
-}
+fmt_file = logging.Formatter(
+    "%(asctime)s %(name)s:%(lineno)s [%(levelname)s] - %(message)s"
+)
+handler_file = logging.FileHandler(".dds.log")
+handler_file.setFormatter(fmt_file)
+handler_file.setLevel(logging.DEBUG)
 
-# Check if the service URL is set
-function get-service-url ()
-{
-  if [[ -n $DICE_DEPLOY ]]
-  then
-    echo $DiCE_DEPLOY
-  elif [[ -f "$DICE_DEPLOY_URL_FILE" ]]
-  then
-    cat $DICE_DEPLOY_URL_FILE
-  else
-    log "DICE deployment service URL not set. Please run:"
-    log "  $0 use SERVICE_ADDRESS"
-    exit -3
-  fi
-}
-
-# Wrapper around curl that adds authentication header, provides proper
-# switches and checks return value.
-function request-impl ()
-{
-  local auth=$1 && shift
-  local method=${1^^} && shift
-  local endpoint=$1 && shift
-
-  local out
-
-  case $method in
-    GET|POST|PUT|DELETE|PATCH) ;;
-    *)
-      echo "Unsupported method: '$method'."
-      exit 1;
-      ;;
-  esac
-  local url="$(get-service-url)${endpoint}"
-
-  if [[ $auth == "yes" ]]
-  then
-    local token=$(get-authentication)
-    out=$(curl -s -S -f -k -X $method -H "Authorization: Token $token" \
-      "$@" "$url" 2>&1)
-  else
-    out=$(curl -s -S -f -k -X $method "$@" "$url" 2>&1)
-  fi
-
-  if [[ $? -ne 0 ]]
-  then
-    log "Request failed:"
-    log
-    log "$out"
-    exit -1
-  fi
-  echo "$out"
-}
-
-function request-noauth ()
-{
-  request-impl "no" "$@"
-}
-
-function request ()
-{
-  request-impl "yes" "$@"
-}
-
-# ########################################################################## #
-# Main script executors (help system and dispatch function)                  #
-# ########################################################################## #
-
-# Output the usage of the tool
-function usage ()
-{
-  log "Usage:"
-
-  if [[ -z "$1" ]]
-  then
-    log "$0 ACTION [PARAM ...]"
-    log
-    log "Available actions:"
-    for doc in "${DOCS[@]}"
-    do
-      echo "$doc" | sed -n 2p
-    done | sort >&2
-  else
-    log "${DOCS[$1]}"
-  fi
-}
-
-# Main action dispatch
-function dispatch ()
-{
-  # Make sure that any overrides come first in case
-  local action=$1 && shift
-  func=${ACTIONS[$action]}
-  if [[ "x$func" == "x" ]]
-  then
-    log "Unknown command: '$action'"
-    usage
-    exit 1
-  fi
-  if [[ $# -lt ${PARAMS[$action]} ]]
-  then
-    log "Bad number of arguments: $# (expected ${PARAMS[$action]})"
-    usage $action
-    exit 1
-  fi
-  $func "$@"
-}
-
-# ########################################################################## #
-# Supported actions (with provided documentation)                            #
-# ########################################################################## #
-
-# List of valid actions and associated functions with docs
-declare -A ACTIONS
-declare -A PARAMS
-declare -A DOCS
-
-# Actual functionality definition
-ACTIONS[help]=usage
-PARAMS[help]=0
-DOCS[help]="
-  help: display help
-    parameters: [command]
-    example: $0 help
-    example: $0 help deploy
-"
-
-ACTIONS[use]=use
-PARAMS[use]=1
-DOCS[use]="
-  use: use the URL as the DICE deployment service URL
-    parameters: url
-    example: $0 use http://109.231.122.46:8000
-"
-function use ()
-{
-  local url=${1%\/}
-
-  log "Using $1 as the URL for the DICE deployment tool service"
-  # We don't use request helpers here because we have no url fixed
-  curl -s -S -k -f "${url}/docs" &> /dev/null
-  if [[ $? -ne 0 ]]
-  then
-    log "Connection to $1 failed. We will not use this URL."
-    log
-    exit -1
-  fi
-  log
-
-  echo "$url" > $DICE_DEPLOY_URL_FILE
-}
-
-ACTIONS[authenticate]=authenticate
-PARAMS[authenticate]=2
-DOCS[authenticate]="
-  authenticate: provide username and password to obtain the authentication
-                token
-    parameters: username password
-    example: $0 authenticate testuser 123456
-"
-function authenticate ()
-{
-  log "Obtaining the authentication token"
-  out=$(request-noauth post /auth/get-token -d "username=${1}&password=${2}")
-  token=$(echo $out | grep -Po '(?<="'token'":")[^"]*')
-  echo $token > "$DICE_DEPLOY_AUTH_TOKEN_FILE"
-  log "Authenticated"
-}
-
-ACTIONS[create]=create-container
-PARAMS[create]=0
-DOCS[create]="
-  create: creates a new container
-    parameters: description (optional)
-    returns: container-uuid
-    example: $0 create
-    example: $0 create \"Smart Energy streaming application\"
-"
-function create-container ()
-{
-  log -n "Creating a new container ... "
-  out=$(request post /containers -d "description=$1")
-  uuid=$(echo $out | grep -Eo '"[0-9A-Fa-f-]+"' | grep -Eo '[0-9A-Fa-f-]+')
-  log "DONE."
-  echo "Container UUID: $uuid"
-}
-
-ACTIONS[delete]=delete-container
-PARAMS[delete]=1
-DOCS[delete]="
-  delete: deletes an existing container
-    parameters: container-uuid
-    example: $0 delete 14132d9b-d86d-48e9-a24c-deb949d9f3d7
-"
-function delete-container ()
-{
-  log -n "Deleting deployment ... "
-  request delete /containers/$1
-  log "DONE."
-}
-
-ACTIONS[deploy]=deploy
-PARAMS[deploy]=2
-DOCS[deploy]="
-  deploy: creates a new deployment in the container
-    parameters: container-uuid package-file-name
-    returns: deployment-uuid
-    example: $0 deploy 14132d9b-d86d-48e9-a24c-deb949d9f3d7 pi-cluster.tar.gz
-"
-function deploy ()
-{
-  CONTAINER_UUID="$1"
-  FILE_NAME="$2"
-
-  log -n "Creating a new deployment ... "
-  out=$(request post /containers/$1/blueprint -F "file=@$2")
-  uuids=$(echo $out | grep -Po '(?<="'$CST_BLUEPRINT_ID_FIELD'":")[^"]*')
-  log "DONE."
-  # there are two UUIDs: one is from the container, the other one from deploy
-  for uuid in $uuids
-  do
-    if [ "$uuid" != "$CONTAINER_UUID" ]
-    then
-      echo "Deployment UUID: $uuid"
-    fi
-  done
-}
-
-ACTIONS[container-info]=container-info
-PARAMS[container-info]=1
-DOCS[container-info]="
-  container-info: reports container state
-    parameters: container-uuid
-    returns: container information
-    example: $0 container-info b8af9e0b-ec5a-408f-8ad8-0a754b47c976
-"
-function container-info ()
-{
-  log -n "Obtaining the container details ..."
-  out=$(request get /containers/$1)
-  log "DONE."
-  echo $out
-}
-
-ACTIONS[teardown]=teardown
-PARAMS[teardown]=1
-DOCS[teardown]="
-  teardown: uninstalls and deletes an existing deployment
-    parameters: deployment-uuid
-    example: $0 teardown 8f151bb0-db92-48e1-88a0-397258e01f11
-"
-function teardown ()
-{
-  log -n "Deleting deployment ... "
-  request delete /blueprints/$1
-  log "DONE."
-}
-
-ACTIONS[extract-deploy-id]=extract-deploy-id
-PARAMS[extract-deploy-id]=1
-DOCS[extract-deploy-id]="
-  extract-deploy-id: get deployment ID from selected container
-    parameters: container-uuid
-    example: $0 extract-deploy-id b8af9e0b-ec5a-408f-8ad8-0a754b47c976
-"
-function extract-deploy-id ()
-{
-  out=$(container-info $1 | tail -n 1)
-  ids=$(echo $out | grep -Po '(?<="'$CST_BLUEPRINT_ID_FIELD'":")[^"]*')
-
-  # grep isn't good at discerning between nested-in ids and the
-  # ids of the parent, so this is a hack to get the right one out
-  for id in $ids
-  do
-    if [ "$id" != "$1" ]
-    then
-      echo $id
-      return
-    fi
-  done
-}
-
-ACTIONS[status]=deployment-status
-PARAMS[status]=1
-DOCS[status]="
-  status: get deployment status
-    parameters: deployment-uuid
-    returns: the deployment's current status
-    example: $1 status 8f151bb0-db92-48e1-88a0-397258e01f11
-"
-function deployment-status ()
-{
-  log "Obtaining deployment status ..."
-  out=$(request get /blueprints/$1)
-  status=$(echo "${out}" | grep -Po '(?<="state_name":")[^"]*')
-  echo "$status"
-}
-
-ACTIONS[wait-deploy]=wait-deploy
-PARAMS[wait-deploy]=1
-DOCS[wait-deploy]="
-  wait-deploy: after calling deploy, this will block until deploy finishes
-    parameters: container-uuid
-    example: $1 wait-deploy 14132d9b-d86d-48e9-a24c-deb949d9f3d7
-"
-function wait-deploy ()
-{
-  DEPLOYMENT_UUID=$(extract-deploy-id $1)
-
-  status=$(deployment-status $DEPLOYMENT_UUID | tail -n 1)
-  while [[ ( "$status" != "deployed" ) && \
-          ( "$status" != "request_failed" ) && \
-          ( "$status" != "error") ]]
-  do
-    if [ "$?" != "0" ]
-    then
-      exit -3
-    fi
-    log "Current status: $status"
-    sleep 5
-    status=$(deployment-status $DEPLOYMENT_UUID | tail -n 1)
-  done
-  if [[ ( "$status" == "error" ) ]]
-  then
-    exit -3
-  fi
-}
-
-ACTIONS[outputs]=outputs
-PARAMS[outputs]=1
-DOCS[outputs]="
-  outputs: get deployment parameters
-    parameters: container-uuid
-    returns: dict of deployment parameters
-    example: $0 outputs 14132d9b-d86d-48e9-a24c-deb949d9f3d7
-"
-function outputs ()
-{
-  local blueprint=$(extract-deploy-id $1)
-  request get /blueprints/$blueprint/outputs
-}
-
-ACTIONS[nodes]=node-list
-PARAMS[nodes]=1
-DOCS[nodes]="
-  nodes: get a list of nodes and their properties in the container
-    parameters: container-uuid [raw]
-    returns: list of dictionaries of node properties
-    example: $0 nodes 14132d9b-d86d-48e9-a24c-deb949d9f3d7
-"
-function node-list ()
-{
-  request get /containers/$1/nodes/?$2
-}
-
-ACTIONS[node-ips]=node-list-ips
-PARAMS[node-ips]=1
-DOCS[node-ips]="
-  node-ips (DEPRECATED): get a list of node IP host addresses in the container
-    parameters: container-uuid
-    returns: list of dictionaries of node properties
-    example: $0 node-ips 14132d9b-d86d-48e9-a24c-deb949d9f3d7
-    replacement: use nodes with second parameter set to \"raw\"
-"
-function node-list-ips ()
-{
-  request get /containers/$1/nodes/?raw
-}
-
-ACTIONS[input-add]=input-add
-PARAMS[input-add]=3
-DOCS[input-add]="
-  input-add: add an input that is added to all yamls (not archives!)
-    parameters: key value description
-    returns: dict, representing new input
-    example: $0 input-add large_flavor_id 654fee342 \"OpenStack flavor\"
-"
-function input-add ()
-{
-  local key=$1 && shift
-  local val=$1 && shift
-  request post /inputs -d "key=$key&value=$val&description=$*"
-}
-
-ACTIONS[input-delete]=input-delete
-PARAMS[input-delete]=1
-DOCS[input-delete]="
-  input-delete: delete an input
-    parameters: key
-    returns: None
-    example: $0 input-delete large_flavor_id
-"
-function input-delete ()
-{
-  request delete /inputs/$1 &> /dev/null
-}
+logger = logging.getLogger("dds-client")
+logger.addHandler(handler_stream)
+logger.addHandler(handler_file)
+logger.setLevel(logging.DEBUG)
 
 
-# Parameter check
-if [[ $# -eq 0 ]]
-then
-  usage
-  exit 0
-fi
+# Helpers
+def fail(msg, *args):
+    logger.error(msg.format(*args))
+    sys.exit(1)
 
-dispatch "$@"
+
+class ArgParser(argparse.ArgumentParser):
+    """
+    Argument parser that displays help on error
+    """
+
+    def error(self, message):
+        sys.stderr.write("error: {}\n".format(message))
+        self.print_help()
+        sys.exit(2)
+
+
+class Config:
+
+    valid_keys = {"url", "token"}
+    invalid_key_msg = "Invalid settings key: {}"
+
+    def __init__(self, data={}):
+        invalid = [k for k in data.keys() if k not in self.valid_keys]
+        if len(invalid) != 0:
+            fail("Invalid settings key(s) found: {}", ",".join(invalid))
+        for k, v in data.items():
+            setattr(self, k, v)
+
+    def save(self, path):
+        data = {k: getattr(self, k)
+                for k in self.valid_keys if hasattr(self, k)}
+        with open(path, "wb") as f:
+            json.dump(data, f, indent=2)
+
+    @staticmethod
+    def load_from_file(path, fail_on_missing=False):
+        try:
+            with open(path) as f:
+                data = json.load(f)
+        except IOError:
+            if fail_on_missing:
+                fail("File {} is missing", path)
+            data = {}  # Missing file simply means no settings are present yet
+        except:
+            fail("File {} is not valid JSON", path)
+        return Config(data)
+
+
+# Commands
+class Command(object):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        raise NotImplementedError("Command is an abstract class")
+
+    def __init__(self, args):
+        self.config = Config.load_from_file(args.config)
+        self.args = args
+
+    def execute(self):
+        raise NotImplementedError("Command is an abstract class")
+
+
+    def check_endpoint(self):
+        logger.info("Checking DICE Deployment Service URL")
+        url = self.config.url
+        try:
+            resp = requests.get("{}/heartbeat".format(url))
+            logger.debug(resp.content)
+        except Exception as e:
+            logger.debug(e)
+            fail("URL '{}' is not valid", url)
+        if resp.status_code != 200:
+            fail("URL '{}' did not respond properly", url)
+        try:
+            message = resp.json()["msg"]
+        except Exception as e:
+            logger.debug(e)
+            fail("URL '{}' did not return valid JSON", url)
+        if message != "DICE Deployment Service Heart Beat":
+            fail("URL '{}' does not point to deployment service", url)
+
+    def check_auth(self):
+        logger.info("Checking DICE Deployment Service authentication data")
+        resp = self.get("/heartbeat")
+        logger.debug(resp.content)
+        if resp.status_code == 401:
+            fail("Authorization token is invalid")
+
+    def request(self, method, endpoint, auth, **kwargs):
+        # Add authentication header
+        headers = kwargs.get("headers", {})
+        if auth:
+            headers = headers.copy()
+            headers["Authorization"] = "Token {}".format(self.config.token)
+            kwargs["headers"] = headers
+        # Execute call
+        url = "{}{}".format(self.config.url, endpoint)
+        resp = method(url, **kwargs)
+        logger.debug(resp.content)
+        return resp
+
+    def get(self, endpoint, auth=True, **kwargs):
+        return self.request(requests.get, endpoint, auth, **kwargs)
+
+    def post(self, endpoint, auth=True, **kwargs):
+        return self.request(requests.post, endpoint, auth, **kwargs)
+
+    def put(self, endpoint, auth=True, **kwargs):
+        return self.request(requests.put, endpoint, auth, **kwargs)
+
+    def delete(self, endpoint, auth=True, **kwargs):
+        return self.request(requests.delete, endpoint, auth, **kwargs)
+
+
+class Use(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser("use",
+                                       help="Set DICE Deployment Service URL")
+        parser.add_argument("url", help="Service address")
+        return parser
+
+    def check_endpoint(self):
+        pass  # Check can only be done from execute method
+
+    def check_auth(self):
+        pass  # We need to override this method since auth is not needed
+
+    def execute(self):
+        logger.info("Trying to set DICE Deployment Service URL")
+        self.config.url = self.args.url.rstrip("/")
+        super(Use, self).check_endpoint()
+        self.config.save(self.args.config)
+        logger.info("URL set successfully")
+
+
+class Authenticate(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser("authenticate",
+                                       help="Obtain authentication token")
+        parser.add_argument("username",
+                            help="Username used to log into service")
+        parser.add_argument("password",
+                            help="Password used to log into service")
+        return parser
+
+    def check_auth(self):
+        pass  # We need to override this method since auth is being obtained
+
+    def execute(self):
+        logger.info("Authenticating")
+        data = {"username": self.args.username, "password": self.args.password}
+        response = self.post("/auth/get-token", auth=False, json=data)
+        if response.status_code != 200:
+            fail("Cannot authenticate with provided credentials")
+
+        self.config.token = response.json()["token"]
+        self.config.save(self.args.config)
+        logger.info("Authorization succeeded")
+
+
+class ContainerInfo(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser(
+            "container-info", help="Report container status",
+        )
+        parser.add_argument("uuid", help="Container UUID")
+        return parser
+
+    def execute(self):
+        uuid = self.args.uuid
+        logger.info("Getting information about container {}".format(uuid))
+        response = self.get("/containers/{}".format(uuid))
+        if response.status_code != 200:
+            fail("Cannot retrieve container info")
+        print(response.content)
+        logger.info("Information successfully obtained")
+
+
+class Create(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser("create", help="Create new container")
+        parser.add_argument("description",
+                            help="Container description")
+        return parser
+
+    def execute(self):
+        logger.info("Creating new container")
+        response = self.post("/containers",
+                             json=dict(description=self.args.description))
+        if response.status_code != 201:
+            fail("Cannot create container")
+        print(response.json()["id"])
+        logger.info("Successfully created new container")
+
+
+class Delete(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser("delete", help="Delete container")
+        parser.add_argument("uuid", help="Container UUID")
+        return parser
+
+    def execute(self):
+        uuid = self.args.uuid
+        logger.info("Deleting container {}".format(uuid))
+        response = self.delete("/containers/{}".format(uuid))
+        if response.status_code != 204:
+            fail("Container deletion failed")
+        logger.info("Deletion succeeded")
+
+
+class Deploy(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser("deploy",
+                                       help="Deploy blueprint in container")
+        parser.add_argument("uuid", help="Container UUID")
+        parser.add_argument("package",
+                            help="Blueprint (tar.gz package ot YAML file)",
+                            type=argparse.FileType())
+        return parser
+
+    def execute(self):
+        uuid = self.args.uuid
+        logger.info("Starting blueprint deployment")
+        response = self.post("/containers/{}/blueprint".format(uuid),
+                             files=dict(file=self.args.package))
+        if response.status_code != 202:
+            fail("Cannot start deploy")
+        logger.info("Successfully started new deploy")
+
+
+class Teardown(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser("teardown",
+                                       help="Remove deployment from container")
+        parser.add_argument("uuid", help="Container UUID")
+        return parser
+
+    def execute(self):
+        uuid = self.args.uuid
+        logger.info("Removing deployment from container {}".format(uuid))
+        response = self.delete("/containers/{}/blueprint".format(uuid))
+        if response.status_code != 202:
+            fail("Deployment teardown cannot start")
+        logger.info("Deployment removal started successfully")
+
+
+class SetInputs(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser("set-inputs",
+                                       help="Set service inputs")
+        parser.add_argument("inputs",
+                            help="JSON file with inputs",
+                            type=argparse.FileType())
+        return parser
+
+    def execute(self):
+        logger.info("Replacing service inputs")
+        try:
+            data = json.load(self.args.inputs)
+            response = self.post("/inputs", json=data)
+        except:
+            fail("Invalid data file passed as parameter")
+        if response.status_code != 201:
+            fail("Invalid data file passed as parameter")
+        logger.info("Successfully updated inputs")
+
+
+class WaitForDeploy(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser(
+            "wait-deploy", help="Wait for deploy termination",
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+        parser.add_argument("uuid", help="Container UUID")
+        parser.add_argument("--poll-interval", default=5, type=int,
+                            help="Poll interval in seconds")
+        return parser
+
+    def execute(self):
+        logger.info("Waiting for deployment to terminate")
+
+        endpoint = "/containers/{}".format(self.args.uuid)
+        response = self.get(endpoint)
+        if response.status_code != 200:
+            fail("Cannot retrieve container info")
+        data = response.json()
+
+        while data["busy"]:
+            msg = "Container busy, blueprint is {}"
+            if data["blueprint"] is None:
+                logger.info(msg.format("not present"))
+            else:
+                logger.info(msg.format(data["blueprint"]["state_name"]))
+            time.sleep(self.args.poll_interval)
+            response = self.get(endpoint)
+            if response.status_code != 200:
+                fail("Cannot retrieve container info")
+            data = response.json()
+
+        if data.get("blueprint", {}).get("in_error", False):
+            fail("Deployment terminated in error")
+        logger.info("Deployment is done")
+
+
+# Entry point
+def create_parser():
+    def is_command(item):
+        return (inspect.isclass(item) and item != Command
+                and issubclass(item, Command))
+
+    parser = ArgParser(description="DICE Deployment Service CLI",
+                       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("--config", help="Configuration file to use",
+                        default=".dds.conf")
+    subparsers = parser.add_subparsers()
+
+    commands = inspect.getmembers(sys.modules[__name__], is_command)
+    for _, cls in commands:
+        sub = cls.add_subparser(subparsers)
+        sub.set_defaults(cls=cls)
+
+    return parser
+
+
+def execute_command(cmd):
+    cmd.check_endpoint()
+    cmd.check_auth()
+    cmd.execute()
+
+
+def main():
+    parser = create_parser()
+    args = parser.parse_args()
+    execute_command(args.cls(args))
+
+
+if __name__ == "__main__":
+    main()
