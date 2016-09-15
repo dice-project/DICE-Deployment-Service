@@ -72,7 +72,7 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
 
     $scope.undeployBlueprint = function(cont){
         PopupServices.popupConfirm('Are you sure that you want to UNDEPLOY BLUEPRINT with id <br><code>' + cont.blueprint.id + '</code>?').then(function(){
-			RestServices.blueprint.delete(cont.blueprint, function(){
+			RestServices.containerBlueprint.delete({id: cont.id}, function(){
                 $scope.syncContainers($scope.embeddedMode ? $scope.embeddedMode.containerId : undefined);
 			}, $scope.showServerError);
 		});
@@ -187,7 +187,7 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     // POPUPS
     //
     $scope.showContainerErrors = function(container){
-        RestServices.containerErrors.query(container, function(errors){
+        RestServices.containerErrors.query({id: container.id}, function(errors){
             PopupServices.popupContainerErrors(container, errors, $scope);
         });
     };
