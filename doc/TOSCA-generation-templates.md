@@ -25,30 +25,15 @@ Variables:
 
 * `PLATFORM`: specifies the platform to deploy the application to. Currently
   supported platforms: `fco`, `openstack`
-* `PLATFORM_PLUGIN`: the URL of the plug-in supporting the selected platform.
 * `LIBRARY_VERSION`: specifies the version of the plugin containing the DICE
   technology library definitions.
-* `PLATFORM_PLUGIN_VERSION`: specifies the version of the plugin, which
-  provides support for the selected platform to Cloudify.
 
 ```yaml
-tosca_definitions_version: cloudify_dsl_1_2
- 
+tosca_definitions_version: cloudify_dsl_1_3
+
 imports:
-  - http://www.getcloudify.org/spec/cloudify/3.3.1/types.yaml
-  - ${PLATFORM_PLUGIN}
-  - http://dice-project.github.io/cloudify-chef-plugin/1.3.2/plugin.yaml
   - http://dice-project.github.io/DICE-Deployment-Cloudify/spec/${PLATFORM}/${LIBRARY_VERSION}/plugin.yaml
 ```
-
-The `PLATFORM_PLUGIN` may be the following:
-
-* FCO: `http://dice-project.github.io/DICE-FCO-Plugin-Cloudify/${PLATFORM_PLUGIN_VERSION}/plugin.yaml`
-* OpenStack: `http://dice-project.github.io/cloudify-openstack-plugin/${PLATFORM_PLUGIN_VERSION}/plugin.yaml`
-
-*Note*: the `imports` part is still subject to change. In particular, the
-`cloudify-chef-plugin` is currently in the DICE's project before changes get
-accepted upstream.
 
 ## Zookeeper
 
