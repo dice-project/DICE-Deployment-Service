@@ -3,6 +3,8 @@ from .base import BaseTest
 from django.db import IntegrityError
 from concurrency.exceptions import RecordModifiedError
 
+import mock
+
 import tarfile
 import yaml
 import os
@@ -74,50 +76,33 @@ class BlueprintTest(BaseTest):
             os.path.join(str(b.id), "blueprint.yaml"),
         }, content)
 
-    def test_update_inputs_add(self):
+    @mock.patch("cfy_wrapper.models.parser.parse_from_path")
+    def test_prepare_inputs_present(self, mock_parse):
+        mock_parse.return_value = {"inputs": {"1": "_1", "3": "_3"}}
+        for i in range(5):
+            Input.objects.create(key=str(i), value="val-{}".format(i))
         b = Blueprint.objects.create()
-        self.wd.write((str(b.id), "blueprint.yaml"), b"test: pair")
-        b.update_inputs({"new": "key"})
-        with open(self.wd.getpath((str(b.id), "blueprint.yaml"))) as f:
-            result = yaml.load(f)
-        self.assertEqual({
-            "test": "pair",
-            "inputs": {
-                "new": "key"
-            }
-        }, result)
 
-    def test_update_inputs_replace(self):
-        b = Blueprint.objects.create()
-        self.wd.write((str(b.id), "blueprint.yaml"),
-                      b"inputs:\n  test: pair")
-        b.update_inputs({"new": "key"})
-        with open(self.wd.getpath((str(b.id), "blueprint.yaml"))) as f:
-            result = yaml.load(f)
-        self.assertEqual({
-            "inputs": {
-                "new": "key"
-            }
-        }, result)
+        success, inputs = b.prepare_inputs()
 
-    def test_update_inputs_remove(self):
-        b = Blueprint.objects.create()
-        self.wd.write((str(b.id), "blueprint.yaml"),
-                      b"key: value\ninputs:\n  test: pair")
-        b.update_inputs({})
-        with open(self.wd.getpath((str(b.id), "blueprint.yaml"))) as f:
-            result = yaml.load(f)
-        self.assertEqual({
-            "key": "value"
-        }, result)
+        mock_parse.assert_called_once_with(b.content_blueprint)
+        self.assertTrue(success)
+        self.assertEqual({"1": "val-1", "3": "val-3"}, inputs)
 
-    def test_update_inputs_unicode(self):
+    @mock.patch("cfy_wrapper.models.parser.parse_from_path")
+    def test_prepare_inputs_missing(self, mock_parse):
+        mock_parse.return_value = {
+            "inputs": {"1": "_1", "7": "_7"}
+        }
+        for i in range(5):
+            Input.objects.create(key=str(i), value="val-{}".format(i))
         b = Blueprint.objects.create()
-        self.wd.write((str(b.id), "blueprint.yaml"), b"test: pair")
-        b.update_inputs({u"new": u"key"})
-        with open(self.wd.getpath((str(b.id), "blueprint.yaml"))) as f:
-            raw_data = f.read()
-        self.assertFalse("!!python/unicode" in raw_data)
+
+        success, inputs = b.prepare_inputs()
+
+        mock_parse.assert_called_once_with(b.content_blueprint)
+        self.assertFalse(success)
+        self.assertEqual({"7"}, inputs)
 
     def test_store_content_yaml(self):
         b = Blueprint.objects.create()

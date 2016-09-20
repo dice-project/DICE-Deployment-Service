@@ -1,6 +1,6 @@
 from .base import BaseTest
 
-from cfy_wrapper.models import Blueprint, Container
+from cfy_wrapper.models import Blueprint, Container, Input
 from cfy_wrapper import tasks
 
 from cloudify_rest_client.exceptions import CloudifyClientError
@@ -176,12 +176,13 @@ class UploadBlueprintTest(BaseCeleryTest):
         self.assertEqual(e.message, "test")
 
 
+@mock.patch("cfy_wrapper.models.parser.parse_from_path")
 @mock.patch.object(tasks, "_cancel_chain_execution")
 @mock.patch.object(tasks, "_wait_for_execution")
 @mock.patch("cfy_wrapper.utils.CloudifyClient")
 class CreateDeploymentTest(BaseCeleryTest):
 
-    def test_valid(self, mock_cfy, mock_wait, mock_cancel):
+    def test_valid(self, mock_cfy, mock_wait, mock_cancel, mock_parse):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
         c_call = mock_cfy.return_value.deployments.create
@@ -189,32 +190,54 @@ class CreateDeploymentTest(BaseCeleryTest):
         l_call.return_value = \
             [mock.Mock(workflow_id="create_deployment_environment")]
         mock_wait.return_value = True
+        mock_parse.return_value = {"inputs": {"1": "_1", "3": "_3"}}
+        [Input.objects.create(key=str(i), value="v") for i in range(5)]
 
         tasks.create_deployment(c.cfy_id)
 
         b.refresh_from_db()
-        c_call.assert_called_once_with(b.cfy_id, b.cfy_id)
+        c_call.assert_called_once_with(b.cfy_id, b.cfy_id,
+                                       inputs={"1": "v", "3": "v"})
         l_call.assert_called_once_with(b.cfy_id)
         mock_wait.assert_called_once()
         mock_cancel.assert_not_called()
         self.assertEqual(b.state, Blueprint.State.prepared_deployment)
 
-    def test_invalid(self, mock_cfy, mock_wait, mock_cancel):
+    def test_invalid_input(self, mock_cfy, mock_wait, mock_cancel, mock_parse):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
         c_call = mock_cfy.return_value.deployments.create
-        c_call.side_effect = CloudifyClientError("test")
+        mock_parse.return_value = {"inputs": {"1": "_1", "7": "_7"}}
+        [Input.objects.create(key=str(i), value="v") for i in range(5)]
 
         tasks.create_deployment(c.cfy_id)
 
         b.refresh_from_db()
-        c_call.assert_called_once_with(b.cfy_id, b.cfy_id)
+        c_call.assert_not_called()
         mock_wait.assert_not_called()
         mock_cancel.assert_called_once()
         self.assertEqual(c.cfy_id, mock_cancel.mock_calls[0][1][1])
         self.assertEqual(b.state, -Blueprint.State.preparing_deployment)
 
-    def test_invalid_wait(self, mock_cfy, mock_wait, mock_cancel):
+    def test_invalid(self, mock_cfy, mock_wait, mock_cancel, mock_parse):
+        b = Blueprint.objects.create()
+        c = Container.objects.create(blueprint=b)
+        c_call = mock_cfy.return_value.deployments.create
+        c_call.side_effect = CloudifyClientError("test")
+        mock_parse.return_value = {"inputs": {"1": "_1", "3": "_3"}}
+        [Input.objects.create(key=str(i), value="v") for i in range(5)]
+
+        tasks.create_deployment(c.cfy_id)
+
+        b.refresh_from_db()
+        c_call.assert_called_once_with(b.cfy_id, b.cfy_id,
+                                       inputs={"1": "v", "3": "v"})
+        mock_wait.assert_not_called()
+        mock_cancel.assert_called_once()
+        self.assertEqual(c.cfy_id, mock_cancel.mock_calls[0][1][1])
+        self.assertEqual(b.state, -Blueprint.State.preparing_deployment)
+
+    def test_invalid_wait(self, mock_cfy, mock_wait, mock_cancel, mock_parse):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
         c_call = mock_cfy.return_value.deployments.create
@@ -222,11 +245,14 @@ class CreateDeploymentTest(BaseCeleryTest):
         l_call.return_value = \
             [mock.Mock(workflow_id="create_deployment_environment")]
         mock_wait.return_value = False
+        mock_parse.return_value = {"inputs": {"1": "_1", "3": "_3"}}
+        [Input.objects.create(key=str(i), value="v") for i in range(5)]
 
         tasks.create_deployment(c.cfy_id)
 
         b.refresh_from_db()
-        c_call.assert_called_once_with(b.cfy_id, b.cfy_id)
+        c_call.assert_called_once_with(b.cfy_id, b.cfy_id,
+                                       inputs={"1": "v", "3": "v"})
         l_call.assert_called_once_with(b.cfy_id)
         mock_wait.assert_called_once()
         mock_cancel.assert_called_once()

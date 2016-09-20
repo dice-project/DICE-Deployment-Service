@@ -98,7 +98,6 @@ def upload_blueprint(task, container_id):
 
     logger.info("Creating archive for '{}'.".format(id))
     blueprint = Blueprint.get(id)
-    blueprint.update_inputs(Input.get_inputs_declaration())
     archive = blueprint.pack()
 
     try:
@@ -116,14 +115,23 @@ def upload_blueprint(task, container_id):
 @shared_task(bind=True)
 def create_deployment(task, container_id):
     id = Container.get(container_id).blueprint.cfy_id
-
     _update_state(id, Blueprint.State.preparing_deployment)
-    client = utils.get_cfy_client()
-    success = False
+
+    logger.info("Gathering inputs for '{}'.".format(id))
+    blueprint = Blueprint.get(id)
+    success, inputs = blueprint.prepare_inputs()
+    if not success:
+        _update_state(id, Blueprint.State.preparing_deployment, False)
+        _cancel_chain_execution(task, container_id)
+        msg = "Missing inputs: {}.".format(", ".join(inputs))
+        blueprint.log_error(msg)
+        logger.info(msg)
+        return
 
     logger.info("Creating deployment '{}'.".format(id))
+    client = utils.get_cfy_client()
     try:
-        client.deployments.create(id, id)
+        client.deployments.create(id, id, inputs=inputs)
     except exceptions.CloudifyClientError:
         _update_state(id, Blueprint.State.preparing_deployment, False)
         _cancel_chain_execution(task, container_id)

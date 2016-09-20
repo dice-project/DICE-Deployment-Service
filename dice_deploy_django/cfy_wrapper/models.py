@@ -9,6 +9,8 @@ from django.db import models
 from jsonfield import JSONField
 from concurrency.fields import IntegerVersionField
 
+from dsl_parser import parser
+
 from . import utils
 
 import uuid
@@ -131,25 +133,24 @@ class Blueprint(Base):
         utils.create_archive(self.content_tar, self.content_folder)
         return self.content_tar
 
-    def update_inputs(self, inputs):
-        """
-        This function loads blueprint yaml, replaces inputs section and saves
-        blueprint back.
-        """
-        with open(self.content_blueprint) as file:
-            data = yaml.load(file)
-        if len(inputs) == 0 and "inputs" in data:
-            del data["inputs"]
-        else:
-            data.update({"inputs": inputs})
-        with open(self.content_blueprint, "w") as file:
-            yaml.safe_dump(data, file)
-
     def log_error(self, msg):
         """
         Log error for this blueprint
         """
         self.errors.create(message=msg)
+
+    def prepare_inputs(self):
+        """
+        Obtain blueprint inputs and report error on missing database inputs
+        """
+        data = parser.parse_from_path(self.content_blueprint)
+        keys = set(data.get("inputs", {}).keys())
+        inputs = {i.key: i.value for i in Input.objects.filter(key__in=keys)}
+        input_keys = set(inputs.keys())
+        diff = keys - input_keys
+        if len(diff) > 0:
+            return False, diff
+        return True, inputs
 
 
 class ContainerQuerySet(models.QuerySet):
