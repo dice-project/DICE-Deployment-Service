@@ -30,9 +30,6 @@ cfy_manager_password: password
 
 # DICE Deployment Service parameters
 #
-# The port to assing the web application (and the RESTful service) to. At this
-# time, the reserved ports (e.g., 80) are not available.
-webserver_port: 8000
 # The blueprint creates a superuser. This is the username it will use.
 superuser_username: admin
 # This is the password for the superuser.

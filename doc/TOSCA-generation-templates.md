@@ -64,10 +64,16 @@ Variables:
 ### Node templates
 
 ```yaml
+  ${ZOOKEEPER}_firewall:
+    type: dice.firewall_rules.zookeeper.Server
+
   ${ZOOKEEPER}_vm:
     type: dice.hosts.Medium
     instances:
       deploy: ${ZOOKEEPER_INSTANCE_COUNT}
+    relationships:
+      - type: dice.relationships.ProtectedBy
+        target: ${ZOOKEEPER}_firewall
 
   ${ZOOKEEPER}_quorum:
     type: dice.components.zookeeper.Quorum
@@ -90,11 +96,15 @@ Optional part (tentative version) if the user wants to expose Zookeeper to the
 public internet (not a likely scenario) **- planned update**:
 
 ```yaml
-  ${ZOOKEEPER}_firewall:
-    type: dice.firewall_rules.zookeeper.Common
-
   ${ZOOKEEPER}_virtual_ip:
-    type: dice.virtual_ip
+    type: dice.VirtualIP
+```
+
+In this case, we also need to add this relationship to the `${ZOOKEEPER}_vm`:
+
+```yaml
+      - type: dice.relationships.IPAvailableFrom
+        target: ${ZOOKEEPER}_virtual_ip
 ```
 
 ### Outputs
@@ -143,17 +153,17 @@ Variables:
 ### Node templates
 
 ```yaml
-  ${STORM}_firewall:
-    type: dice.firewall_rules.storm.NimbusAndGui
+  ${STORM}_nimbus_firewall:
+    type: dice.firewall_rules.storm.Nimbus
 
   ${STORM}_virtual_ip:
-    type: dice.virtual_ip
+    type: dice.VirtualIP
 
   ${STORM}_nimbus_vm:
     type: dice.hosts.Medium
     relationships:
       - type: dice.relationships.ProtectedBy
-        target: ${STORM}_firewall
+        target: ${STORM}_nimbus_firewall
       - type: dice.relationships.IpAvailableFrom
         target: ${STORM}_virtual_ip
 
@@ -167,18 +177,24 @@ Variables:
       - type: dice.relationships.storm.ConnectedToZookeeperQuorum
         target: zookeeper_quorum
 
-  ${STORM}_vm:
+  ${STORM}_worker_firewall:
+    type: dice.firewall_rules.storm.Worker
+
+  ${STORM}_worker_vm:
     type: dice.hosts.Medium
     instances:
       deploy: ${STORM_INSTANCE_COUNT}
+    relationships:
+      - type: dice.relationships.ProtectedBy
+        target: ${STORM}_worker_firewall
 
-  ${STORM}:
+  ${STORM}_worker:
     type: dice.components.storm.Worker
     properties:
       configuration: ${STORM_CONFIGURATION}
     relationships:
       - type: dice.relationships.ContainedIn
-        target: ${STORM}_vm
+        target: ${STORM}_worker_vm
       - type: dice.relationships.storm.ConnectedToZookeeperQuorum
         target: ${ZOOKEEPER}_quorum
       - type: dice.relationships.storm.ConnectedToNimbus
@@ -208,7 +224,7 @@ submit with the blueprint:
 ```yaml
   ${STORM}_nimbus_address:
     description: The address to be used by the storm client of "${STORM}"
-    value: { get_attribute: [${STORM}_nimbus_virtual_ip, virtual_ip] }
+    value: { get_attribute: [${STORM}_virtual_ip, virtual_ip] }
   ${STORM}_nimbus_gui:
     description: URL of the Storm nimbus gui of "${STORM}"
     value: { concat: [ 'http://', { get_attribute: [${STORM}_virtual_ip, virtual_ip] }, ':8080' ] }
@@ -235,14 +251,14 @@ Variables:
 ### Node templates
 
 ```yaml
-  ${CASSANDRA}_firewall:
-    type: dice.firewall_rules.cassandra.Common
+  ${CASSANDRA}_seed_firewall:
+    type: dice.firewall_rules.cassandra.Seed
 
   ${CASSANDRA}_seed_vm:
     type: dice.hosts.Medium
     relationships:
       - type: dice.relationships.ProtectedBy
-        target: ${CASSANDRA}_firewall
+        target: ${CASSANDRA}_seed_firewall
 
   ${CASSANDRA}_seed:
     type: dice.components.cassandra.Seed
@@ -252,13 +268,16 @@ Variables:
       - type: dice.relationships.ContainedIn
         target: ${CASSANDRA}_seed_vm
 
+  ${CASSANDRA}_worker_firewall:
+    type: dice.firewall_rules.cassandra.Worker
+
   ${CASSANDRA}_worker_vm:
     type: dice.hosts.Medium
     instances:
       deploy: ${CASSANDRA_INSTANCE_COUNT}
     relationships:
       - type: dice.relationships.ProtectedBy
-        target: ${CASSANDRA}_firewall
+        target: ${CASSANDRA}_worker_firewall
 
   ${CASSANDRA}_worker:
     type: dice.components.cassandra.Worker
