@@ -4,12 +4,12 @@
 # Service VM. It is possible to look up this ID using the nova client, e.g.:
 # $ nova --os-username $USERNAME --os-tenant-name $TENANT \
 #    --os-auth-url 'http://$API_ADDRESS:5000/v2.0' image-list
-image: uuid
+medium_image_id: ca290f2d-5163-483b-9dd5-fafe21517c0a
 # The flavour of the VM to instantiate the deployer service in. Again, use
 # the nova client to look the IDs up:
 # $ nova --os-username $USERNAME --os-tenant-name $TENANT \
 #    --os-auth-url 'http://$API_ADDRESS:5000/v2.0' flavor-list
-flavor: uuid
+medium_flavor_id: d3046a41-245a-4042-862e-59568e81f8fa
 
 # VM settings
 #
@@ -44,3 +44,10 @@ superuser_email: admin@example.com
 # You can add one additional ssh key to the server. If this is commented out,
 # no additional key is added.
 #ssh_key: ssh-rsa AAAAB3NzaC1yc2Eksnkljsdnfksncasalwerujwlicuniudiww4nk5j98foajcdsinvie587thhnvksjacbHJhbkjBNKJNBSKJBDFKJBKHJBjbkdjfbvkjdsnaliuuz4r87jLKHKIFHUkdnflčykndslckvdjnstrhugnkjdsnvXhm7RptKmRG5OtrZTBLmpIuef0chMcH6dRnbr/ZAbe7nZlqn0Jnn6wL3TKtSC0i4ceAbxv989mKH+s83Uvt1ENkQu7PGDkzBQHAHM/GPOZXWZT18KImCHttKjuv95MGTyPRxV8Dznfklz9JOOfnr84m/UXfcoH1RbX2aCD0YgOJUGjydVsUBttWQ/jYsyXZ9h4N3R+Q==
+
+# Dummy values that are only present to satisfy library requirements - we do
+# not use them, so they can have default dummy values.
+small_image_id:  dummy
+small_flavor_id: dummy
+large_image_id:  dummy
+large_flavor_id: dummy

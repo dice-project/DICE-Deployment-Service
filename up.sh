@@ -4,7 +4,7 @@ set -e
 
 function get_platforms ()
 {
-  echo $(find install -iname '*.yaml' -exec basename {} .yaml \; \
+  echo $(find install -maxdepth 1 -iname '*.yaml' -exec basename {} .yaml \; \
            | grep -v example)
 }
 
@@ -56,33 +56,31 @@ function check_args ()
 
 function main ()
 {
-  local blueprint="${1}.yaml"
-
+  local name="${1}.yaml"
+  local inputs="$TOOLDIR/inputs-${1}.yaml"
   # :- is not optional here, because function parameters are tricky
-  DEPLOY_NAME=${2:-dice_deploy}
+  local deploy_name=${2:-dice_deploy}
 
   # Package application
-  tar -cvzf install/dice_deploy.tar.gz \
-    --exclude='*.swp' \
-    --exclude='*.pyc' \
-    --exclude='*.log' \
-    --exclude='*.pid' \
-    --exclude='dice_deploy/db.sqlite3' \
-    --exclude='dice_deploy/uploads' \
-    dice_deploy_django
+  git archive -o install/dds.tar.gz --prefix dds/ HEAD dice_deploy_django
 
   # Create blueprint archive
-  tar -cvzf dd.tar.gz --exclude='*.swp' install
+  local blueprint=dds-blueprint.tar.gz
+  tar -cvzf $blueprint install
+  rm install/dds.tar.gz
 
   # Deploy
   echo "Publishing blueprint"
-  cfy blueprints publish-archive -b $DEPLOY_NAME -l dd.tar.gz -n $blueprint
+  cfy blueprints publish-archive -b $deploy_name -l $blueprint -n $name
   echo "Creating deploy"
-  cfy deployments create -d $DEPLOY_NAME -b $DEPLOY_NAME -i "$TOOLDIR/inputs-$1.yaml"
+  cfy deployments create -d $deploy_name -b $deploy_name -i $inputs \
+    -i "sources=dds.tar.gz"
   echo "Starting execution"
-  cfy executions start -d $DEPLOY_NAME -w install -l
+  cfy executions start -d $deploy_name -w install -l
   echo "Outputs:"
-  cfy deployments outputs -d $DEPLOY_NAME
+  cfy deployments outputs -d $deploy_name
+
+  rm -f $blueprint
 }
 
 check_args $1

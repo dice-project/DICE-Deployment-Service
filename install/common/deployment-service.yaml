@@ -1,0 +1,143 @@
+inputs:
+
+  # Mandatory inputs - platform independent
+
+  cfy_manager:
+    description: Addesss of the Cloudify Manager instance we wrap
+
+  cfy_manager_username:
+    description: Username that should be used when connecting to manager
+
+  cfy_manager_password:
+    description: Password that should be used when connecting to manager
+
+  superuser_username:
+    description: This username will be set for the deployment service admin
+
+  superuser_password:
+    description: This password will be set for the deployment service admin
+
+  superuser_email:
+    description: This e-mail will be assigned to the deployment service admin
+
+  # Inputs that will most likely only need to be set to non-default values by
+  # service developers and/or continuous integration scripts.
+
+  sources:
+    description: >
+      Application sources for deployment service. Can be relative path (in
+      which case sources should be bundled with blueprint - this is what
+      default bootstrap script does) or remote URL in which case file will be
+      downloaded for you (in 99% of cases this will be link to git tarball on
+      Github).
+    default: https://github.com/dice-project/DICE-Deployment-Service/archive/develop.tar.gz
+
+  enable_debug:
+    description: >
+      Enable extra utilities on the installed server such as flower and
+      RabbitMQ web UI.
+    default: false
+    type: boolean
+
+  ssh_key:
+    description: See dice.components.DeploymentService.properties.source
+      Additional SSH public key that should be added to authorized keys.
+    default: ""
+
+
+node_types:
+
+  dice.components.DeploymentService:
+    derived_from: dice.chef.SoftwareComponent
+    properties:
+      manager:            { default: { get_input: cfy_manager          } }
+      manager_user:       { default: { get_input: cfy_manager_username } }
+      manager_pass:       { default: { get_input: cfy_manager_password } }
+      superuser_username: { default: { get_input: superuser_username   } }
+      superuser_password: { default: { get_input: superuser_password   } }
+      superuser_email:    { default: { get_input: superuser_email      } }
+      sources:            { default: { get_input: sources              } }
+      debug_mode:         { default: { get_input: enable_debug         } }
+      ssh_key:            { default: { get_input: ssh_key              } }
+
+      configure_runlist:
+        default:
+          - recipe[apt::default]
+          - recipe[dice-common::host]
+          - recipe[dice-deployment-service::default]
+          - recipe[dice-common::consul-common]
+          - recipe[dice-common::consul-server]
+
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: dice.dice_plugin.tasks.base.download_resource
+          inputs:
+            source:
+              default: { get_property: [SELF, sources] }
+            destination_key:
+              description: >
+                DO NOT CHANGE THIS DEFAULT VALUE WITHOUT CHANGING CHEF
+                RECIPE FOR DICE DEPLOYMENT SERVICE. You have been warned.
+                When resource is downloaded to some temporary location, path
+                to the downloaded file will be stored inside
+                node.runtime_properties[destination_key] for Chef.
+              default: dds_tarball
+
+
+  dice.firewall_rules.DeploymentService:
+    derived_from: dice.firewall_rules.Base
+    properties:
+      rules:
+        default:
+          - remote_ip_prefix: 0.0.0.0/0
+            port: 22
+          - remote_ip_prefix: 0.0.0.0/0
+            port: 53
+          - remote_ip_prefix: 0.0.0.0/0
+            port: 53
+            protocol: udp
+          - remote_ip_prefix: 0.0.0.0/0
+            port: 80
+          - remote_ip_prefix: 0.0.0.0/0
+            port: 5555
+          - remote_ip_prefix: 0.0.0.0/0
+            port_range_min: 8300
+            port_range_max: 8302
+          - remote_ip_prefix: 0.0.0.0/0
+            port_range_min: 8300
+            port_range_max: 8302
+            protocol: udp
+          - remote_ip_prefix: 0.0.0.0/0
+            port: 15672
+
+
+node_templates:
+
+  ip:
+    type: dice.VirtualIP
+
+  fw:
+    type: dice.firewall_rules.DeploymentService
+
+  vm:
+    type: dice.hosts.Medium
+    relationships:
+      - type: dice.relationships.ProtectedBy
+        target: fw
+      - type: dice.relationships.IPAvailableFrom
+        target: ip
+
+  dds:
+    type: dice.components.DeploymentService
+    relationships:
+      - type: dice.relationships.ContainedIn
+        target: vm
+
+
+outputs:
+
+  http_endpoint:
+    description: DICE Deployment Service endpoint
+    value:
+      concat: [ "http://", { get_attribute: [ip, floating_ip_address] } ]

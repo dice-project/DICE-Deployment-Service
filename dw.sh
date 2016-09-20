@@ -2,7 +2,9 @@
 
 set -e
 
-for EXEC_ID in $(cfy executions list -d dice_deploy | grep started | awk '{print $2}') 
+DEPLOY_NAME=${1:-dice_deploy}
+
+for EXEC_ID in $(cfy executions list -d $DEPLOY_NAME | grep started | awk '{print $2}')
 do
 	cfy executions cancel --execution-id $EXEC_ID
 
@@ -14,7 +16,6 @@ do
 	done
 done
 
-DEPLOY_NAME=${1-dice_deploy}
 cfy executions start -d $DEPLOY_NAME -w uninstall
 cfy deployments delete -d $DEPLOY_NAME
 cfy blueprints delete -b $DEPLOY_NAME

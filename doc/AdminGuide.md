@@ -26,23 +26,11 @@ deployment service.
 
 ### Getting the DICE Deployment service
 
-First download the DICE deployment tools using git or a package download. With
-git, run the following steps:
+First download the DICE deployment tools using git by executing:
 
 ```bash
 $ mkdir -p ~/dice ; cd ~/dice
-$ git clone https://github.com/dice-project/DICE-Deployment-Service.git
-$ cd DICE-Deployment-Service
-```
-
-Or, to obtain the bundle, use the following steps:
-
-```bash
-$ mkdir -p ~/dice ; cd ~/dice
-$ wget https://github.com/dice-project/DICE-Deployment-Service/archive/master.tar.gz
-$ tar xzfv master.tar.gz
-# This step is only to unify the result with the one from the git download
-$ mv DICE-Deployment-Service-master DICE-Deployment-Service
+$ git clone --depth 1 https://github.com/dice-project/DICE-Deployment-Service.git
 $ cd DICE-Deployment-Service
 ```
 
