@@ -87,21 +87,23 @@ Variables in the table above are required regardless of the platform being
 used. Each supported platform has some additional required variables that need
 to be set. Consult tables below for more information.
 
-| OpenStack var | Example    | Description         |
-|---------------|------------|---------------------|
-| TEST_IMAGE    | ca123...0a | OpenStack image ID  |
-| TEST_FLAVOR   | d3046...fa | OpenStack flavor ID |
+| OpenStack var         | Example    | Description         |
+|-----------------------|------------|---------------------|
+| TEST_MEDIUM_IMAGE_ID  | ca123...0a | OpenStack image ID  |
+| TEST_MEDIUM_FLAVOR_ID | d3046...fa | OpenStack flavor ID |
 
-| FCO var               | Example                         | Description     |
-|-----------------------|---------------------------------|-----------------|
-| TEST_FCO_URL          | https://cp.project.flexiant.net | API endpoint    |
-| TEST_FCO_USERNAME     | fb3c9...12                      | FCO username ID |
-| TEST_FCO_PASSWORD     | MyS3cr37Pa55                    | FCO password    |
-| TEST_FCO_CUSTOMER     | ae568...cc                      | FCO customer ID |
-| TEST_FCO_IMAGE_UUID   | 12345...bb                      | image uuid      |
-| TEST_FCO_VDC_UUID     | abcde...98                      | VDC uuid        |
-| TEST_FCO_NETWORK_UUID | 1a2b3...9f                      | network uuid    |
-| TEST_FCO_AGENT_KEY    | ab12c...f9                      | agent key uuid  |
+| FCO var                 | Example                         | Description     |
+|-------------------------|---------------------------------|-----------------|
+| TEST_SERVICE_URL        | https://cp.project.flexiant.net | API endpoint    |
+| TEST_USERNAME           | fb3c9...12                      | FCO username ID |
+| TEST_PASSWORD           | MyS3cr37Pa55                    | FCO password    |
+| TEST_CUSTOMER           | ae568...cc                      | FCO customer ID |
+| TEST_MEDIUM_IMAGE_ID    | 12345...bb                      | image uuid      |
+| TEST_MEDIUM_SERVER_TYPE | 2 GB / 1 CPU                    | server type     |
+| TEST_MEDIUM_DISK        | 30Gb Storage                    | disk type       |
+| TEST_VDC                | abcde...98                      | VDC uuid        |
+| TEST_NETWORK            | 1a2b3...9f                      | network uuid    |
+| TEST_AGENT_KEY          | ab12c...f9                      | agent key uuid  |
 
 Then create a Cloudify job, e.g., `Deployment-Service-02-integration-tests`. 
 Click on **Advanced ...** and check **Use custom workspace**. In the Directory,
@@ -151,8 +153,8 @@ Now simply run `python -m unittest discover`.
 This is also quite simple to do. Simply export all variables that are
 described in section about setting up integration tests. For convenience, two
 shell scripts that can be edited and then sourced are provided:
-`set-env-vars.sh` will set required variables and `unset-env-vars.sh` will
-clean them up.
+`set-env-vars-PLATFORM.sh` will set required variables and `unset-env-vars.sh`
+will clean them up.
 
 After variables are properly set up, run `./run-integration-tests.sh platform`
 script.  The script should start bootstraping the deployment service and

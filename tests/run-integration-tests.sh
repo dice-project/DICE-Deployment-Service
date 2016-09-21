@@ -15,15 +15,23 @@ ROOT="$(dirname $(cd $(dirname $0) && pwd))"
 
 SUPPORTED_PLATFORMS="openstack fco"
 
-declare -A REQUIRED_VARS
+declare -A REQUIRED_VARS DUMMY_VARS
 REQUIRED_VARS[all]="
   agent_user cfy_manager cfy_manager_username cfy_manager_password
   superuser_username superuser_password superuser_email
 "
-REQUIRED_VARS[openstack]="image flavor"
+REQUIRED_VARS[openstack]="medium_image_id medium_flavor_id"
 REQUIRED_VARS[fco]="
-  fco_url fco_username fco_password fco_customer
-  fco_image_uuid fco_vdc_uuid fco_network_uuid fco_agent_key
+  service_url username password customer medium_image_id medium_server_type
+  medium_disk vdc network agent_key
+"
+DUMMY_VARS[openstack]="
+  small_image_id small_flavor_id
+  large_image_id large_flavor_id
+"
+DUMMY_VARS[fco]="
+  small_image_id small_server_type small_disk
+  large_image_id large_server_type large_disk
 "
 
 function usage ()
@@ -127,6 +135,12 @@ function generate_inputs ()
     env_var="TEST_${var^^}"
     echo "${var}: ${!env_var}"
   done > "$ROOT/inputs-$1.yaml"
+
+  # Add dummy vars to satisfy DICE deployment plugin
+  for var in ${DUMMY_VARS[$1]}
+  do
+    echo "${var}: dummy"
+  done >> "$ROOT/inputs-$1.yaml"
 }
 
 function main ()
