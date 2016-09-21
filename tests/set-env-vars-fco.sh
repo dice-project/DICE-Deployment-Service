@@ -11,3 +11,5 @@ export TEST_MEDIUM_DISK="30Gb disk"
 export TEST_VDC=9846ba5f-ee32-6783-ab456fed78c23e66d
 export TEST_NETWORK=9846ba5f-ee32-6783-ab456fed78c23e66d
 export TEST_AGENT_KEY=9846ba5f-ee32-6783-ab456fed78c23e66d
+
+export TEST_WAIT_TIME=30

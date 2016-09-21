@@ -55,7 +55,7 @@ The integration tests require a wider context to be able to run. They need:
 
 * A platform to run the deployment into. Supported platforms: `openstack`,
   `fco`.
-* A Cloudify Manager version 3.4 (for OpenStack) or 3.3.1 or newer (for FCO).
+* A Cloudify Manager version 3.4.
 
 First, use the shell on the Jenkins to set up the virtual environment for the
 Cloudify CLI, and provide the inputs.
@@ -69,7 +69,7 @@ $ pip install cloudify==3.4.0
 ```
 
 Then provide the context information as a set of environment properties. Use
-either the Jenkins' Environment variables in the Global properties section of
+the Jenkins' Environment variables in the Global properties section of
 `/jenkins/configure`. Note that all of the variables start with prefix `TEST_`
 that should make it clear what process they control.
 
@@ -104,6 +104,12 @@ to be set. Consult tables below for more information.
 | TEST_VDC                | abcde...98                      | VDC uuid        |
 | TEST_NETWORK            | 1a2b3...9f                      | network uuid    |
 | TEST_AGENT_KEY          | ab12c...f9                      | agent key uuid  |
+
+There is one more variable that can be used to control test execution. Set
+`TEST_WAIT_TIME` variable to time in minutes. This is used to terminate test
+that run for too long. For example, setting this to 10 means that each test in
+test suite can run for no more that 10 minutes. Default value used by test
+harness is set to 30 minutes, which should be plenty for most of the cases.
 
 Then create a Cloudify job, e.g., `Deployment-Service-02-integration-tests`. 
 Click on **Advanced ...** and check **Use custom workspace**. In the Directory,

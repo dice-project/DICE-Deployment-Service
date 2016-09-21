@@ -22,7 +22,7 @@ class BlueprintTest(BaseTest):
         self.add_blueprint_to_cleanup(resp.json()["id"])
 
         # Wait for blueprint to get from queue
-        for _ in range(10):
+        while self.fail_on_timeout():
             time.sleep(3)
             resp = self.get(blueprint_url, True)
             if resp.status_code != 200:
@@ -41,7 +41,7 @@ class BlueprintTest(BaseTest):
 
         self.assertEqual(202, resp.status_code)
 
-        for _ in range(10):
+        while self.fail_on_timeout():
             time.sleep(3)
             resp = self.get(blueprint_url, True)
             if resp.status_code == 400:
@@ -70,7 +70,7 @@ class BlueprintTest(BaseTest):
         self.add_blueprint_to_cleanup(resp.json()["id"])
 
         # Wait for blueprint to get from queue
-        for _ in range(10):
+        while self.fail_on_timeout():
             time.sleep(3)
             resp = self.get(blueprint_url, True)
             if resp.status_code != 200:
