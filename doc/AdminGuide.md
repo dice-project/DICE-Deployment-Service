@@ -4,12 +4,13 @@ Table of Contents:
 
 1. [Prerequisites](Prerequisites.md)
 2. [Bootstrapping Cloudify Manager](#cloudify-manager-installation)
-3. [Deploying the DICE deployment service](#dice-deployment-service-installation)
-4. [DICE deployment service configuration](#dice-deployment-service-configuration)
-  1. [OpenStack inputs](#OpenStack-inputs)
-  2. [FCO inputs](#FCO-inputs)
-5. [Container management](#Container-management)
-6. [Testing installation](#Testing-installation)
+3. [Installing Cloudify command line tool](#cloudify-command-line-tool-installation)
+4. [Deploying the DICE deployment service](#dice-deployment-service-installation)
+5. [DICE deployment service configuration](#dice-deployment-service-configuration)
+  5.1. [OpenStack inputs](#OpenStack-inputs)
+  5.2. [FCO inputs](#FCO-inputs)
+6. [Container management](#Container-management)
+7. [Testing installation](#Testing-installation)
 
 ## Cloudify Manager installation
 
@@ -18,6 +19,15 @@ Manager running in the network. Here are our notes and instructions on
 bootstrapping the Cloudify Manager:
 
 * [OpenStack](Cloudify-3.4.0-OpenStack.md)
+
+## Cloudify command line tool installation
+
+The recommended way of installing the DICE Deployment service is by using
+Cloudify. This requires that the workstation we are installing from has
+the Cloudify's command line tool installed. We can use the same tool used in the
+Cloudify Manager installation.
+Please see [Preparing environment](Cloudify-3.4.0-OpenStack.md#preparing-environment))
+for installation details.
 
 ## DICE Deployment service installation
 
@@ -51,9 +61,7 @@ Currently, we support the following platforms with TOSCA blueprints:
 
 We have tested the blueprints on Ubuntu 14.04 cloud install images, using a
 flavour equivalent to 512 MB of RAM, 1 VCPU and 10 GB of storage.
-To deploy the service, first make sure you have installed the Cloudify CLI
-(see [Preparing environment](Cloudify-3.3.1-OpenStack.md#preparing-environment))
-locally, and activate the appropriate virtual environment:
+To deploy the service, first activate the appropriate [virtual environment](Cloudify-3.4.0-OpenStack.md#preparing-environment):
 
 ```bash
 $ cd ~/dice
