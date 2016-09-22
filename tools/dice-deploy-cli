@@ -374,7 +374,8 @@ class Outputs(Command):
         if response.status_code != 200:
             fail("Cannot retrieve container info")
         blueprint = response.json()["blueprint"]
-        print({"outputs": blueprint["outputs"]} if blueprint else {})
+        outputs = {"outputs": blueprint["outputs"]} if blueprint else {}
+        print(json.dumps(outputs))
         logger.info("Information successfully obtained")
 
 
