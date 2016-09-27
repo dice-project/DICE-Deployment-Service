@@ -9,6 +9,10 @@ Integration. Please refer to the
 [Getting the DICE deployment service](AdminGuide.md#getting-the-dice-deployment-service)
 for instructions on how to obtain the tool
 
+> **Tip:** `dice-deploy-cli` comes with its own bash completion script.
+> Simply source it into your current shell and by executing `. bashcomp` and
+> enjoy context aware completions.
+
 The tool first expects the DICE deployment service URL to be set. This is
 possible by using the action `use`:
 

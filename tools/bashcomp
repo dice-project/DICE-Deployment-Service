@@ -1,0 +1,71 @@
+function _find_command ()
+{
+  if [[ $COMP_CWORD -eq 1 ]]
+  then
+    echo "__main"
+  elif [[ "${COMP_WORDS[1]}" == "--config" && $COMP_CWORD -gt 3 ]]
+  then
+    echo "${COMP_WORDS[3]}"
+  elif [[ "${COMP_WORDS[1]}" == "--config" && $COMP_CWORD -gt 2 ]]
+  then
+    echo "__main-no-conf"
+  elif [[ "${COMP_WORDS[1]}" == "--config" ]]
+  then
+    echo "--config"
+  else
+    echo "${COMP_WORDS[1]}"
+  fi
+}
+
+function _list ()
+{
+  $1 list 2> /dev/null | cut -d: -f1
+}
+
+function _dice_deploy_cli ()
+{
+  local cur prev cmd
+
+  COMPREPLY=()
+  cur=${COMP_WORDS[COMP_CWORD]}
+  prev=${COMP_WORDS[COMP_CWORD - 1]}
+
+  cmd=$(_find_command)
+
+  case "$cmd" in
+    __main)
+      local opts="authenticate container-info create delete deploy list
+                  outputs set-inputs status teardown use wait-deploy
+                  --config"
+      COMPREPLY=($(compgen -W "$opts" -- "$cur"))
+      ;;
+    __main-no-conf)
+      local opts="authenticate container-info create delete deploy list
+                  outputs set-inputs status teardown use wait-deploy"
+      COMPREPLY=($(compgen -W "$opts" -- "$cur"))
+      ;;
+    --config)
+      COMPREPLY=($(compgen -f -- "$cur"))
+      ;;
+    authenticate|create|list|use)
+      # Let user press enter and get sensible help message
+      ;;
+    container-info|delete|outputs|status|teardown|wait-deploy)
+      [[ "$prev" == "$cmd" ]] && \
+        COMPREPLY=($(compgen -W "$(_list ${COMP_WORDS[0]})" -- "$cur"))
+      ;;
+    deploy)
+      [[ "$prev" == "$cmd" ]] \
+        && COMPREPLY=($(compgen -W "$(_list ${COMP_WORDS[0]})" -- "$cur")) \
+        && return 0
+      [[ $COMP_CWORD -ge 3 && ${COMP_WORDS[COMP_CWORD - 2]} == "$cmd" ]] \
+        && COMPREPLY=($(compgen -f -X '!*.@(yaml|tar.gz|tgz)' -- "$cur"))
+      ;;
+    set-inputs)
+      [[ "$prev" == "$cmd" ]] && \
+        COMPREPLY=($(compgen -f -- "$cur"))
+      ;;
+  esac
+  return 0
+}
+complete -F _dice_deploy_cli dice-deploy-cli
