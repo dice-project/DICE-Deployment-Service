@@ -1,61 +1,25 @@
-tosca_definitions_version: cloudify_dsl_1_2
+tosca_definitions_version: cloudify_dsl_1_3
 
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/3.3.1/types.yaml
-  - https://raw.githubusercontent.com/dice-project/DICE-FCO-Plugin-Cloudify/master/plugin.yaml
-  - http://dice-project.github.io/DICE-Deployment-Cloudify/spec/fco/0.1.1/plugin.yaml
-  - https://raw.githubusercontent.com/dice-project/cloudify-chef-plugin/redirect/plugin.yaml
-
-inputs:
-  agent_user:
-    default: ubuntu
-
-  # There is some renaming of the inputs in the pipeline in order to make it
-  # more consistent (all ids instead of names)
-  small_image_id:
-    default: 87978c6d-5ceb-39b2-8e8b-935503ad0307
-  small_server_type:
-    default: 2 GB / 1 CPU
-  small_disk:
-    default: 30Gb Storage
-
-  medium_image_id:
-    default: 87978c6d-5ceb-39b2-8e8b-935503ad0307
-  medium_server_type:
-    default: 2 GB / 1 CPU
-  medium_disk:
-    default: 30Gb Storage
-
-  large_image_id:
-    default: 87978c6d-5ceb-39b2-8e8b-935503ad0307
-  large_server_type:
-    default: 2 GB / 1 CPU
-  large_disk:
-    default: 30Gb Storage
-
-  # The need for various user credentials will be removed as soon as possible,
-  # but current version of Flexiant plugin is not mature enough to be able to
-  # set credentials at bootstrap time.
-  username:
-    default: <username>
-  password:
-    default: <password>
-  customer:
-    default: <customer>
-  service_url:
-    default: <FCO base url>
-  agent_key:
-    default: <agent key uuid>
-  vdc:
-    default: <VDC uuid>
-  network:
-    default: <network uuid>
+  - http://dice-project.github.io/DICE-Deployment-Cloudify/spec/fco/develop/plugin.yaml
 
 
 node_templates:
+
+  virtual_ip:
+    type: dice.VirtualIP
+
+  firewall:
+    type: dice.firewall_rules.mock.WebServer
+
   vm:
     type: dice.hosts.Small
+    relationships:
+      - type: dice.relationships.ProtectedBy
+        target: firewall
+      - type: dice.relationships.IPAvailableFrom
+        target: virtual_ip
 
   server:
     type: dice.components.mock.WebServer
@@ -68,11 +32,12 @@ node_templates:
 
 
 outputs:
+
   http_endpoint:
     description: Web server external endpoint
     value:
       concat:
         - 'http://'
-        - get_attribute: [vm, ip]
+        - get_attribute: [virtual_ip, floating_ip_address]
         - ':'
         - get_property: [server, port]

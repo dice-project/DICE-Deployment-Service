@@ -2,32 +2,13 @@ tosca_definitions_version: cloudify_dsl_1_3
 
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/3.4/types.yaml
-  - http://dice-project.github.io/cloudify-openstack-plugin/1.4/plugin.yaml
-  - http://dice-project.github.io/DICE-Deployment-Cloudify/spec/openstack/0.1.1/plugin.yaml
-  - https://raw.githubusercontent.com/dice-project/cloudify-chef-plugin/redirect/plugin.yaml
-
-
-inputs:
-  agent_user:
-    default: ubuntu
-  small_image_id:
-    default: 36dbc4e8-81dd-49f5-9e43-f44a179a64ea
-  small_flavor_id:
-    default: 070005dc-9bd5-4c0c-b2c6-88f81a7b7239
-  medium_image_id:
-    default: 36dbc4e8-81dd-49f5-9e43-f44a179a64ea
-  medium_flavor_id:
-    default: 070005dc-9bd5-4c0c-b2c6-88f81a7b7239
-  large_image_id:
-    default: 36dbc4e8-81dd-49f5-9e43-f44a179a64ea
-  large_flavor_id:
-    default: 070005dc-9bd5-4c0c-b2c6-88f81a7b7239
+  - http://dice-project.github.io/DICE-Deployment-Cloudify/spec/openstack/develop/plugin.yaml
 
 
 node_templates:
+
   virtual_ip:
-    type: cloudify.openstack.nodes.FloatingIP
+    type: dice.VirtualIP
 
   firewall:
     type: dice.firewall_rules.mock.WebServer
@@ -37,7 +18,7 @@ node_templates:
     relationships:
       - type: dice.relationships.ProtectedBy
         target: firewall
-      - type: cloudify.openstack.server_connected_to_floating_ip
+      - type: dice.relationships.IPAvailableFrom
         target: virtual_ip
 
   server:
@@ -51,6 +32,7 @@ node_templates:
 
 
 outputs:
+
   http_endpoint:
     description: Web server external endpoint
     value:
