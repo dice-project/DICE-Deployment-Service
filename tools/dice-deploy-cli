@@ -197,6 +197,25 @@ class Authenticate(Command):
         logger.info("Authorization succeeded")
 
 
+class List(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser(
+            "list", help="List available containers"
+        )
+        return parser
+
+    def execute(self):
+        logger.info("Getting container list")
+        response = self.get("/containers")
+        if response.status_code != 200:
+            fail("Cannot retrieve containers")
+        for container in response.json():
+            print("{}: {}".format(container["id"], container["description"]))
+        logger.info("Container list successfully obtained")
+
+
 class ContainerInfo(Command):
 
     @staticmethod
