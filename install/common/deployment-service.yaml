@@ -63,10 +63,10 @@ node_types:
       configure_runlist:
         default:
           - recipe[apt::default]
-          - recipe[dice-common::host]
-          - recipe[dice-deployment-service::default]
-          - recipe[dice-common::consul-common]
-          - recipe[dice-common::consul-server]
+          - recipe[dice_common::host]
+          - recipe[dice_deployment_service::default]
+          - recipe[dice_common::consul_common]
+          - recipe[dice_common::consul_server]
 
     interfaces:
       cloudify.interfaces.lifecycle:
