@@ -51,3 +51,4 @@ small_image_id:  dummy
 small_flavor_id: dummy
 large_image_id:  dummy
 large_flavor_id: dummy
+dns_server: dummy

@@ -1,5 +1,3 @@
-# VM settings
-#
 # The Linux user name available in the provisioned VM
 agent_user: ubuntu
 
@@ -27,28 +25,12 @@ superuser_email: admin@example.com
 # Flexiant Cloud Orchestrator (FCO) related parameters
 #
 # The URL of the FCO API
-fco_url: https://cp.diceproject.flexiant.net
-# Set the ID of the image to be used as the basis for the DICE Deployment
-# Service VM.
-fco_image_uuid:   uuid
-# Set the ID of the VCD where the DICE Deployment Service VM will be deployed.
-# This is the UUID that can be found in the VCDs section of the FCO web GUI
-# console, where you can click on the VCD designated to receive the blueprints,
-# then switch to the Information tab. The UUIDs are listed in the Related
-# resources & UUIDs panel.
-fco_vdc_uuid:     uuid
-# Set the ID of the FCO network that the VM will connect to.
-# This is the UUID that can be found in the Networks section of the FCO web GUI
-# console, where you can click on the network designated to connect the VMs,
-# then switch to the Information tab. The UUIDs are listed in the Related
-# resources & UUIDs panel for the item Network.
-fco_network_uuid: uuid
-# Set the ID of the SSH key to be used by the agent to make the VM accessible.
-# This is the UUID that can be found in the SSH keys section of the FCO web GUI
-# console, where you can click on the SSH key designated for Cloudify to be able
-# to connect to the VMs, then switch to the Information tab. The UUIDs are
-# listed in the Related resources & UUIDs panel for the item Network.
-fco_agent_key:    uuid
+service_url: https://cp.diceproject.flexiant.net
+
+# FCO VM settings.
+medium_image_id: 03e7505d-1616-339f-951e-d6e815b940da
+medium_disk: 100 GB Storage Disk
+medium_server_type: 2 GB / 1 CPU
 # User's FCO credentials: the username (e-mail address) or the API key user ID.
 # The best practice is to create an API key user in the FCO, which is then
 # delegated to the automation. The API key user must be a member of the Admin
@@ -57,16 +39,34 @@ fco_agent_key:    uuid
 # at the left side of the interface, clicking on your API Key User entry and
 # referring to the API username field. The user id is the first part of the
 # entry before the "/" delimiter.
-fco_username: username
+username: 7318f7c2-c004-33a1-8fb9-6d103147dedd
 # User's FCO credentials: the password
-fco_password: password
+password: 8CyLOhcLFsPnOZaY$v%U
 # FCO customer ID.
 # For an API key user, this ID is in the part after the "/" delimiter of the
 # API username field.
 # For a regular user, obtain this ID by visiting th FCO console (the web GUI).
 # In the Users tab, click on one of the groups. Then open the Information panel
 # and find the Customer information in Related resources & UUIDs.
-fco_customer: uuid
+customer: e50bfd1b-253a-3290-85ff-95e218398b7e
+# Set the ID of the SSH key to be used by the agent to make the VM accessible.
+# This is the UUID that can be found in the SSH keys section of the FCO web GUI
+# console, where you can click on the SSH key designated for Cloudify to be able
+# to connect to the VMs, then switch to the Information tab. The UUIDs are
+# listed in the Related resources & UUIDs panel for the item Network.
+agent_key: 21e90e22-31c6-3d64-8590-af03dea25392
+# Set the ID of the VCD where the DICE Deployment Service VM will be deployed.
+# This is the UUID that can be found in the VCDs section of the FCO web GUI
+# console, where you can click on the VCD designated to receive the blueprints,
+# then switch to the Information tab. The UUIDs are listed in the Related
+# resources & UUIDs panel.
+vdc: 42bb54ac-4090-3caa-b730-e916b27daeff
+# Set the ID of the FCO network that the VM will connect to.
+# This is the UUID that can be found in the Networks section of the FCO web GUI
+# console, where you can click on the network designated to connect the VMs,
+# then switch to the Information tab. The UUIDs are listed in the Related
+# resources & UUIDs panel for the item Network.
+network: 179a6319-3a74-3942-a59c-742d5eab43fe
 
 # If you wish to enable debug installation, set this to 'true'. If you leave
 # this commented, debug mode is disabled
@@ -75,3 +75,13 @@ fco_customer: uuid
 # You can add one additional ssh key to the server. If this is commented out,
 # no additional key is added.
 #ssh_key: ssh-rsa AAAAB3NzaC1yc2Eksnkljsdnfksncasalwerujwlicuniudiww4nk5j98foajcdsinvie587thhnvksjacbHJhbkjBNKJNBSKJBDFKJBKHJBjbkdjfbvkjdsnaliuuz4r87jLKHKIFHUkdnflčykndslckvdjnstrhugnkjdsnvXhm7RptKmRG5OtrZTBLmpIuef0chMcH6dRnbr/ZAbe7nZlqn0Jnn6wL3TKtSC0i4ceAbxv989mKH+s83Uvt1ENkQu7PGDkzBQHAHM/GPOZXWZT18KImCHttKjuv95MGTyPRxV8Dznfklz9JOOfnr84m/UXfcoH1RbX2aCD0YgOJUGjydVsUBttWQ/jYsyXZ9h4N3R+Q==
+
+# Dummy values that are only present to satisfy library requirements - we do
+# not use them, so they can have default dummy values.
+large_disk: dummy
+large_image_id: dummy
+large_server_type: dummy
+small_disk: dummy
+small_image_id: dummy
+small_server_type: dummy
+dns_server: dummy
