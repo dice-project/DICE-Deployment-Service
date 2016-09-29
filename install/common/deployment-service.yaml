@@ -30,7 +30,7 @@ inputs:
       default bootstrap script does) or remote URL in which case file will be
       downloaded for you (in 99% of cases this will be link to git tarball on
       Github).
-    default: https://github.com/dice-project/DICE-Deployment-Service/archive/develop.tar.gz
+    default: https://github.com/dice-project/DICE-Deployment-Service/archive/0.3.2.zip
 
   enable_debug:
     description: >
