@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.2
+
+* Enabled a smarted blueprint input handling, properly combining any inputs
+  supplied with the blueprint with the ones handled by the deployment service
+* Updated Chef cookbook and recipe names to conform with standard Chef
+  way of naming things
+* Added blueprint inspection tool, currently reporting the list of inputs
+  expected by the selected blueprint
+* Enabled bash completion for CLI tool
+* Migrated deployment service bootstrap to Chef
+
 ## 0.3.1
 
 * Replaced gunicorn with uWSGI. The default ports for the deployment tools are
