@@ -118,12 +118,15 @@ class Blueprint(Base):
         Each blueprint needs blueprint.yaml in folder. If this file does not
         exist, we are grumpy.
         """
+        if not os.path.isfile(self.content_blueprint):
+            return False, "File 'blueprint.yaml' is missing"
+
         try:
             with open(self.content_blueprint) as f:
                 yaml.safe_load(f)
-            return True
+            return True, "All ok for now"
         except:
-            return False
+            return False, "Blueprint file is not valid yaml"
 
     def pack(self):
         """

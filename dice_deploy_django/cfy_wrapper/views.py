@@ -126,9 +126,11 @@ class ContainerBlueprintView(APIView):
 
         blueprint = Blueprint.objects.create()
         blueprint.store_content(upload)
-        if not blueprint.is_valid():
+
+        success, msg = blueprint.is_valid()
+        if not success:
             blueprint.delete()
-            return Response({"detail": "Upload is invalid"},
+            return Response({"detail": msg},
                             status=status.HTTP_400_BAD_REQUEST)
 
         success, msg = tasks.sync_container(container, blueprint)

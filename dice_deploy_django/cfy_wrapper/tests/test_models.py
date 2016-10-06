@@ -28,7 +28,8 @@ class BlueprintTest(BaseTest):
         self.assertEqual(b.cfy_id, str(b.id))
         self.assertEqual(b.content_folder, content_folder)
         self.assertEqual(b.content_tar, content_folder + ".tar.gz")
-        self.assertFalse(b.is_valid())
+        success, _ = b.is_valid()
+        self.assertFalse(success)
         self.wd.compare([str(b.id) + "/"])
         # Deletion should remove folder (and any created archives)
         b.delete()
@@ -45,24 +46,29 @@ class BlueprintTest(BaseTest):
             self.assertEqual(b.cfy_id, str(b.id))
             self.assertEqual(b.content_folder, content_folder)
             self.assertEqual(b.content_tar, content_folder + ".tar.gz")
-            self.assertFalse(b.is_valid())
+            success, _ = b.is_valid()
+            self.assertFalse(success)
 
         self.wd.compare(sorted(folders))
 
     def test_valid_blueprint_yaml(self):
         b = Blueprint.objects.create()
         self.wd.write((str(b.id), "blueprint.yaml"), b"test: pair")
-        self.assertTrue(b.is_valid())
+        success, _ = b.is_valid()
+        self.assertTrue(success)
 
     def test_invalid_blueprint_yaml(self):
         b = Blueprint.objects.create()
         self.wd.write((str(b.id), "blueprint.yaml"), b"a: b: c")
-        self.assertFalse(b.is_valid())
+        success, msg = b.is_valid()
+        self.assertFalse(success)
+        self.assertEqual("Blueprint file is not valid yaml", msg)
 
     def test_missing_blueprint_yaml(self):
         b = Blueprint.objects.create()
-        self.wd.write((str(b.id), "sample.yaml"), b"a: b: c")
-        self.assertFalse(b.is_valid())
+        success, msg = b.is_valid()
+        self.assertFalse(success)
+        self.assertEqual("File 'blueprint.yaml' is missing", msg)
 
     def test_pack(self):
         b = Blueprint.objects.create()
@@ -114,7 +120,8 @@ class BlueprintTest(BaseTest):
         self.wd.compare(["blueprint.yaml"], path=str(b.id))
         self.assertEqual(content,
                          self.wd.read((str(b.id), "blueprint.yaml")))
-        self.assertTrue(b.is_valid())
+        success, _ = b.is_valid()
+        self.assertTrue(success)
 
     def test_store_content_tar(self):
         b = Blueprint.objects.create()
@@ -137,7 +144,8 @@ class BlueprintTest(BaseTest):
             "y/toplevel/b/c/",
             "y/toplevel/b/c/file2.txt",
         ], path=str(b.id))
-        self.assertFalse(b.is_valid())
+        valid, _ = b.is_valid()
+        self.assertFalse(valid)
 
     def test_in_error(self):
         for state in list(Blueprint.State):
