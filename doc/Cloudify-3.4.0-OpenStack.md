@@ -65,8 +65,25 @@ installation. The input preparation script asks about prefix that can be used
 to avoid name collisions. Default prefix is set ot `cfy-`, but you can chnage
 it to just about anything.
 
-When the script terminates, `os-inputs.yaml' file will contain data that can
-be used to bootstrap manager. Inspect the file and we can move on.
+When the script terminates, `os-inputs.yaml` file will contain data that can
+be used to bootstrap manager.
+
+In order to fortify installation, we will add simple credentials to Cloudify
+manager. This is achieved by adding the following lines to `os-inputs.yaml`
+file:
+
+    security_enabled: true
+    admin_username: admin
+    admin_password: ADMIN_PASS
+    rabbitmq_username: cloudify
+    rabbitmq_password: RABBIT_PASS
+
+Replace `ADMIN_PASS` and `RABBIT_PASS` placeholders with secure passwords.
+**WARNING:** Something breaks when RabbitMQ password contains non-ASCII
+characters. We are not sure yet what exactly seems to be the problem, but for
+now, avoid using non-alphanumerical characters for broker password.
+
+Now we can proceed to actually executing bootstrap procedure.
 
 
 ## Executing bootstrap
@@ -75,6 +92,8 @@ First, we need to create initial folder structure for bootstrap process.
 Running `cfy init` will take care of that. After this is done, we can
 finally bootstrap the manager by executing
 
+    $ export CLOUDIFY_USERNAME=admin
+    $ export CLOUDIFY_PASSWORD=ADMIN_PASS
     $ cfy bootstrap -p openstack-manager-blueprint.yaml -i os-inputs.yaml
     $ cfy status
 
