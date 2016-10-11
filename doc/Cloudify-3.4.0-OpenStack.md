@@ -37,7 +37,7 @@ Next, we need to install dependencies that are required by manager blueprint.
 We do this by executing
 
     $ cfy init
-    $ cfy local install-plugins openstack-manager-blueprint.yaml
+    $ cfy local install-plugins -p openstack-manager-blueprint.yaml
 
 Now we need to get our OpenStack credentials. Navigate to your OpenStack
 dashboard and click "Access & security", "API Access" and then download
