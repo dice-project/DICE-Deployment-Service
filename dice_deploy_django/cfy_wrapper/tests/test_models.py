@@ -6,7 +6,6 @@ from concurrency.exceptions import RecordModifiedError
 import mock
 
 import tarfile
-import yaml
 import os
 
 from cfy_wrapper.models import (
@@ -84,8 +83,13 @@ class BlueprintTest(BaseTest):
 
     @mock.patch("cfy_wrapper.models.parser.parse_from_path")
     def test_prepare_inputs_present(self, mock_parse):
-        mock_parse.return_value = {"inputs": {"1": "_1", "3": "_3"}}
-        for i in range(5):
+        mock_parse.return_value = {
+            "inputs": {
+                "1": {"desc": "desc1", "default": "def-1"},
+                "5": {"desc": "desc5"},
+            }
+        }
+        for i in range(7):
             Input.objects.create(key=str(i), value="val-{}".format(i))
         b = Blueprint.objects.create()
 
@@ -93,14 +97,35 @@ class BlueprintTest(BaseTest):
 
         mock_parse.assert_called_once_with(b.content_blueprint)
         self.assertTrue(success)
-        self.assertEqual({"1": "val-1", "3": "val-3"}, inputs)
+        self.assertEqual({"1": "val-1", "5": "val-5"}, inputs)
+
+    @mock.patch("cfy_wrapper.models.parser.parse_from_path")
+    def test_prepare_inputs_present_default(self, mock_parse):
+        mock_parse.return_value = {
+            "inputs": {
+                "1": {"desc": "desc1", "default": "def-1"},
+                "5": {"desc": "desc5"},
+            }
+        }
+        for i in range(3, 7):
+            Input.objects.create(key=str(i), value="val-{}".format(i))
+        b = Blueprint.objects.create()
+
+        success, inputs = b.prepare_inputs()
+
+        mock_parse.assert_called_once_with(b.content_blueprint)
+        self.assertTrue(success)
+        self.assertEqual({"5": "val-5"}, inputs)
 
     @mock.patch("cfy_wrapper.models.parser.parse_from_path")
     def test_prepare_inputs_missing(self, mock_parse):
         mock_parse.return_value = {
-            "inputs": {"1": "_1", "7": "_7"}
+            "inputs": {
+                "1": {"desc": "desc1", "default": "def-1"},
+                "5": {"desc": "desc5"},
+            }
         }
-        for i in range(5):
+        for i in range(3):
             Input.objects.create(key=str(i), value="val-{}".format(i))
         b = Blueprint.objects.create()
 
@@ -108,7 +133,25 @@ class BlueprintTest(BaseTest):
 
         mock_parse.assert_called_once_with(b.content_blueprint)
         self.assertFalse(success)
-        self.assertEqual({"7"}, inputs)
+        self.assertEqual({"5"}, inputs)
+
+    @mock.patch("cfy_wrapper.models.parser.parse_from_path")
+    def test_prepare_inputs_missing_default(self, mock_parse):
+        mock_parse.return_value = {
+            "inputs": {
+                "1": {"desc": "desc1", "default": "def-1"},
+                "5": {"desc": "desc5"},
+            }
+        }
+        for i in range(3):
+            Input.objects.create(key=str(i), value="val-{}".format(i))
+        b = Blueprint.objects.create()
+
+        success, inputs = b.prepare_inputs()
+
+        mock_parse.assert_called_once_with(b.content_blueprint)
+        self.assertFalse(success)
+        self.assertEqual({"5"}, inputs)
 
     def test_store_content_yaml(self):
         b = Blueprint.objects.create()

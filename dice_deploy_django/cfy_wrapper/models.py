@@ -145,15 +145,35 @@ class Blueprint(Base):
     def prepare_inputs(self):
         """
         Obtain blueprint inputs and report error on missing database inputs
+
+        Blueprint can contain two different kinds of inputs: optional and
+        mandatory. Blueprint inputs that contain "default" field are optional,
+        all other inputs are mandatory.
+
+        In order to properly respect user's overrides of default values, we
+        try to load all inputs that are listed in blueprint from database. But
+        when checking for proper set of inputs, we only make sure mandatory
+        inputs are covered, since optional inputs have default value and
+        deploy doesn't need them set explicitly.
         """
-        data = parser.parse_from_path(self.content_blueprint)
-        keys = set(data.get("inputs", {}).keys())
-        inputs = {i.key: i.value for i in Input.objects.filter(key__in=keys)}
-        input_keys = set(inputs.keys())
-        diff = keys - input_keys
+
+        blueprint = self.content_blueprint
+        blueprint_inputs = parser.parse_from_path(blueprint).get("inputs", {})
+        blueprint_keys = blueprint_inputs.keys()
+        required_blueprint_keys = {
+            k for k, v in blueprint_inputs.items() if "default" not in v
+        }
+
+        input_filter = dict(key__in=blueprint_keys)
+        service_inputs = {
+            i.key: i.value for i in Input.objects.filter(**input_filter)
+        }
+        service_keys = set(service_inputs.keys())
+
+        diff = required_blueprint_keys - service_keys
         if len(diff) > 0:
             return False, diff
-        return True, inputs
+        return True, service_inputs
 
 
 class ContainerQuerySet(models.QuerySet):

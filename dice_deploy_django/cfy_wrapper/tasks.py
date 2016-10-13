@@ -4,7 +4,7 @@ from celery import shared_task, chain
 from celery.utils.log import get_task_logger
 
 from . import utils
-from .models import Blueprint, Container, Input
+from .models import Blueprint, Container
 
 from cloudify_rest_client import exceptions, executions
 from concurrency.exceptions import RecordModifiedError
