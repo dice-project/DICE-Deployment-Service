@@ -18,16 +18,21 @@ The DICE deployment service relies on an instance of a Cloudify
 Manager running in the network. Here are our notes and instructions on
 bootstrapping the Cloudify Manager:
 
-* [OpenStack](Cloudify-3.4.0-OpenStack.md)
+  * [OpenStack](Cloudify-3.4.0-OpenStack.md)
+  * [FCO](Cloudify-3.4.0-FCO.md)
 
 ## Cloudify command line tool installation
 
 The recommended way of installing the DICE Deployment service is by using
-Cloudify. This requires that the workstation we are installing from has
-the Cloudify's command line tool installed. We can use the same tool used in the
-Cloudify Manager installation.
-Please see [Preparing environment](Cloudify-3.4.0-OpenStack.md#preparing-environment))
-for installation details.
+Cloudify. This requires that the workstation we are installing from has the
+Cloudify's command line tool installed. We can use the same tool used in the
+Cloudify Manager installation. Please refer to *preparing environment* section
+of Cloudify Mananger bootstrap document for installation details
+([OpenStack][openstack-env], [FCO][fco-env]).
+
+[openstack-env]: Cloudify-3.4.0-OpenStack.md#preparing-environment
+[fco-env]: Cloudify-3.4.0-FCO.md#preparing-environment
+
 
 ## DICE Deployment service installation
 
@@ -61,7 +66,7 @@ Currently, we support the following platforms with TOSCA blueprints:
 
 We have tested the blueprints on Ubuntu 14.04 cloud install images, using a
 flavour equivalent to 512 MB of RAM, 1 VCPU and 10 GB of storage.
-To deploy the service, first activate the appropriate [virtual environment](Cloudify-3.4.0-OpenStack.md#preparing-environment):
+To deploy the service, first activate the appropriate virtual environment:
 
 ```bash
 $ cd ~/dice
