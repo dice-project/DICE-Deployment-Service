@@ -79,9 +79,11 @@ file:
     rabbitmq_password: RABBIT_PASS
 
 Replace `ADMIN_PASS` and `RABBIT_PASS` placeholders with secure passwords.
-**WARNING:** Something breaks when RabbitMQ password contains non-ASCII
-characters. We are not sure yet what exactly seems to be the problem, but for
-now, avoid using non-alphanumerical characters for broker password.
+**WARNING:** Current version of Cloudify agent that gets installed on manager
+has a bug that prevents connecting to RabbitMQ if `rabbitmq_username`or
+`rabbitmq_password` contains characters that need to be escaped when used in
+URLs. Bug has been fixed, but current version does not have it applied yet. In
+the mean time, use longer, ASCII only username and password.
 
 Now we can proceed to actually executing bootstrap procedure.
 

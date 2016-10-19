@@ -94,6 +94,8 @@ Service's backend - and use `up.sh` to deploy the blueprint:
 # activate the virtual environment (skip the step if already active from before)
 $ . ~/dice/venv/bin/activate
 # configure the Cloudify CLI to use your Cloudify Manager, e.g.
+$ export CLOUDIFY_USERNAME=admin
+$ export CLOUDIFY_PASSWORD=ADMIN_PASS
 $ cfy use -t 10.10.20.115
 # start the deployment
 $ ./up.sh openstack
@@ -112,7 +114,7 @@ Getting outputs for deployment: dice_deploy [manager=10.10.20.115]
 ```
 
 Now the RESTful interface is running and the Web interface is available. You can
-visit the assigned address (in the above case visit `http://10.10.20.35:8000`)
+visit the assigned address (in the above case visit `http://10.10.20.35`)
 with your browser. You will be greeted with a prompt for providing credentials:
 
 ![DICE deployment service GUI login prompt](images/DICEDeploymentServiceGUILogin.png)
@@ -121,7 +123,7 @@ To log in, use the credentials set earlier in the inputs
 file, i.e., the values of the `superuser_username` and `superuser_password`).
 
 If additional instances of the service are needed, then we need to name each
-deployment differently. By default, calling `./up.sh PLATFORM` will create a 
+deployment differently. By default, calling `./up.sh PLATFORM` will create a
 blueprint and deployment named `dice_deploy`. If we need an instance that is
 named differently, we can provide the name as the second parameter of the
 `up.sh` tool, e.g.:
@@ -169,7 +171,7 @@ DICE deployment service access point, and also properly authenticated:
 
 ```bash
 $ cd ~/dice
-$ dice-deploy-cli use http://10.10.20.35:8000
+$ dice-deploy-cli use http://10.10.20.35
 $ dice-deploy-cli authenticate user pwd434
 ```
 
@@ -265,11 +267,11 @@ inputs:
   to the Information tab. The UUIDs are listed in the Related resources & UUIDs
   panel for the item Network.
 
- The following sequence is an example of command line calls to load the
- inputs. Before calling them, replace the values in the example with the
- appropriate ones for your environment:
+The following sequence is an example of command line calls to load the inputs.
+Before calling them, replace the values in the example with the appropriate
+ones for your environment:
 
- ```json
+```json
 [
     {"key": "agent_user",         "value": "ubuntu",                               "description": "Agent user"},
     {"key": "small_image_id",     "value": "87978c6d-5ceb-39b2-8e8b-935503ad0307", "description": "Small image id"},
