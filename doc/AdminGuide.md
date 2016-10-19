@@ -190,7 +190,7 @@ The OpenStack inputs consist of the following information:
   at least 4 GB of RAM.
 
 The UUIDs for images and flavours can be obtained using the `nova` client. See
-[this document](Cloudify-3.3.1-OpenStack.md#preparing-inputs) to get
+[this document](Cloudify-3.4.0-OpenStack.md#preparing-inputs) to get
 examples of the client usage.
 
 To prepare the inputs, open a text file named `openstack-inputs.yaml` with
@@ -349,7 +349,7 @@ If all of the tests finished, deployment service is set up correctly and ready
 for real work.
 
 
-[cfy-spec-inputs]: http://docs.getcloudify.org/3.3.1/blueprints/spec-inputs/
+[cfy-spec-inputs]: http://docs.getcloudify.org/3.4.0/blueprints/spec-inputs/
 [Prerequisites-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Prerequisites
 [Installation-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Installation
 [Getting-Started-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Getting-Started
