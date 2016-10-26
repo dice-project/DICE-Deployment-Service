@@ -82,6 +82,17 @@ class Inputs(Command):
             assert "Invalid format"
 
 
+class Dump(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser("dump", help="Dump processed blueprint")
+        return parser
+
+    def execute(self, args):
+        print(json.dumps(self.blueprint, indent=2))
+
+
 def create_parser():
     def is_command(item):
         return (inspect.isclass(item) and item != Command and
