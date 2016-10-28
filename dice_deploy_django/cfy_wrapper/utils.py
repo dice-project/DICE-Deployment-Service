@@ -3,7 +3,12 @@ from django.conf import settings
 
 import tarfile
 import base64
+import stat
 import os
+
+FILE_PERMISSIONS = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
+FOLDER_PERMISSIONS = (FILE_PERMISSIONS |
+                      stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
 def extract_archive(archive, destination):
@@ -41,9 +46,30 @@ def extract_archive(archive, destination):
             # If we came here, tarball is ready to be extracted
             for member in members:
                 tar.extract(member, destination)
+            change_permissions(destination, FOLDER_PERMISSIONS,
+                               FILE_PERMISSIONS)
             return True, "All OK"
     except:
         return False, "Invalid tarball"
+
+
+def change_permissions(root, folder_permissions, file_permissions):
+    """
+    Recursively change root's permissions. This also changes the permissions
+    of folder that has been passed in.
+
+    :param root: full path to folder
+    :param file_permissions: permissions that will be set on files
+    :param folder_permissions: permissions that will be set on folders
+    """
+    assert os.path.isdir(root)
+
+    for prefix, folders, files in os.walk(root, topdown=False):
+        for file in files:
+            os.chmod(os.path.join(prefix, file), file_permissions)
+        for folder in folders:
+            os.chmod(os.path.join(prefix, folder), folder_permissions)
+    os.chmod(root, folder_permissions)
 
 
 def create_archive(archive, folder):
