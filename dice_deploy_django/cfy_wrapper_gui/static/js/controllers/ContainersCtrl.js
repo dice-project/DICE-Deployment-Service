@@ -31,7 +31,7 @@ app.controller('ContainersCtrl', function($scope, RestServices, PopupServices, F
     $scope.uploader.filters.push({
         name: 'contentTypeFilter',
         fn: function(item /*{File|FileLikeObject}*/, options) {
-            var sizeLimitMB = 100.0;
+            var sizeLimitMB = 2000.0;
             var sizeMB = item.size/1024/1024;
             var isSizeOK = sizeMB < sizeLimitMB;
 
