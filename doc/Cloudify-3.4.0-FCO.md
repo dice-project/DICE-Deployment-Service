@@ -20,7 +20,20 @@ Now create new folder, create new python virtual environment and install
     $ . venv/bin/activate
     $ pip install cloudify==3.4.0
 
-We can move to the bootstrap procedure now.
+We can move to the SSH key creation
+
+
+## Creating SSH key pair
+
+Before we can create new server that will host Cloudify Manager, we need to
+prepare SSH key pair that manager will use to connect to other machines.
+Execute `ssh-keygen` and follow the instructions. When asked about file, enter
+**cfy-manager**. Make sure you create SSH key with no password or thing will
+not work!
+
+Now that we have a fresh key, we need to register public key into FCO.
+Navigate to FCO's management interface and the click **SSH keys** ->
+**create**. Now simply paste public key into proper field and you are done.
 
 
 ## Preparing server
@@ -34,6 +47,10 @@ is the only supported OS at the moment).
 Also make sure server has enough memory. 4 GB RAM and 4 CPUs is a bare
 minimum, but it is much better to go above 6 GB. If this is not possible, use
 4 GB and make sure a suitable swap file is also enabled (see below).
+
+During server creation (in bootstrap screens), make sure you add newly
+registered key to this server. This is really important and without this key
+on the server, bootstrap procedure will fail.
 
 After server is created, start it and make sure you can ssh onto it.
 
@@ -61,13 +78,9 @@ matches `cfy` version number and check it out. For example:
     $ git checkout -b v3.4.0 tags/3.4
     Switched to a new branch 'v3.4.0'
 
-Next, we need to prepare inputs file. But before we start editing inputs file,
-we must also create key pair for manager. Simply execute `ssh-keygen` and
-follow instructions. When asked about file, enter **cfy-manager**.  When asked
-about password, leave it empty.
-
-Now open `simple-manager-blueprint-inputs.yaml` file and fill in the details.
-When done, *Provider specific Inputs* section should look something like this:
+We need to prepare inputs file now. Open `simple-manager-blueprint-inputs.yaml`
+file and fill in the details.  When done, *Provider specific inputs* section
+should look something like this:
 
     public_ip: '109.231.122.110'
     private_ip: '109.231.122.110'
@@ -106,7 +119,7 @@ Now we need to initialize cfy and setup credentials. We can achive this by runni
 
     $ cfy init
     $ export CLOUDIFY_USERNAME=admin
-    $ export CLOUDIFY_PASSWORD=v3r1t0ughpa55w0rd
+    $ export CLOUDIFY_PASSWORD=ADMIN_PASS
 
 Now we can start the bootstrap process by executing
 
