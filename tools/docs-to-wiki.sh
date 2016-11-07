@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DESTINATION_DIR=$1
+DESTINATION_DIR=$(realpath $1)
 
 # Mappings from repo's documents to the repo's wiki
 DOC_MAPPING="README.md:Home.md \

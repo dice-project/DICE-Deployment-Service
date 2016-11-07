@@ -7,8 +7,8 @@ Table of Contents:
 3. [Installing Cloudify command line tool](#cloudify-command-line-tool-installation)
 4. [Deploying the DICE deployment service](#dice-deployment-service-installation)
 5. [DICE deployment service configuration](#dice-deployment-service-configuration)
-  5.1. [OpenStack inputs](#OpenStack-inputs)
-  5.2. [FCO inputs](#FCO-inputs)
+  1. [OpenStack inputs](#OpenStack-inputs)
+  2. [FCO inputs](#FCO-inputs)
 6. [Container management](#Container-management)
 7. [Testing installation](#Testing-installation)
 
@@ -28,11 +28,8 @@ Cloudify. This requires that the workstation we are installing from has the
 Cloudify's command line tool installed. We can use the same tool used in the
 Cloudify Manager installation. Please refer to *preparing environment* section
 of Cloudify Mananger bootstrap document for installation details
-([OpenStack][openstack-env], [FCO][fco-env]).
-
-[openstack-env]: Cloudify-3.4.0-OpenStack.md#preparing-environment
-[fco-env]: Cloudify-3.4.0-FCO.md#preparing-environment
-
+([OpenStack](Cloudify-3.4.0-OpenStack.md#preparing-environment),
+[FCO](Cloudify-3.4.0-FCO.md#preparing-environment)).
 
 ## DICE Deployment service installation
 
