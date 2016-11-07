@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.3.3
+
+* Added better validation of sent files and better errorr messages of
+  the validation problems
+* Raised the upload file size limit to accommodate for larger blueprint
+  bundles
+* Fixed a problem where the deployment service returned an error for
+  inputs that are not required by the blueprint or when a default was
+  available
+* Documented bootstrapping a more secure version of Cloudify Manager
+* Added documentation for bootstrap services in the FCO
+* Added prototype CLI utils for running DICER and for deploying
+  from deployment document in xmi via DICER to deployer
+* Added a blueprint helper option to dump processed blueprint to a 
+  unified json
+* Fixed 403 errors when sending bundles of blueprint with a workaround
+  to the created folder rights problem in Cloudify Manager
+
+
 ## 0.3.2
 
 * Enabled a smarted blueprint input handling, properly combining any inputs
