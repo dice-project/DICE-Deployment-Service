@@ -1,7 +1,7 @@
 swagger: "2.0"
 
 info:
-  title: DICE Ddeployment Service
+  title: DICE Deployment Service
   description: |
     All available API endpoints for DICE Deployment Service. Note that this
     document is dynamic and shows only what user is authorized to view. If
