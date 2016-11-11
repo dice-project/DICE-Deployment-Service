@@ -21,6 +21,7 @@ bootstrapping the Cloudify Manager:
   * [OpenStack](Cloudify-3.4.0-OpenStack.md)
   * [FCO](Cloudify-3.4.0-FCO.md)
 
+
 ## Cloudify command line tool installation
 
 The recommended way of installing the DICE Deployment service is by using
@@ -30,6 +31,7 @@ Cloudify Manager installation. Please refer to *preparing environment* section
 of Cloudify Mananger bootstrap document for installation details
 ([OpenStack](Cloudify-3.4.0-OpenStack.md#preparing-environment),
 [FCO](Cloudify-3.4.0-FCO.md#preparing-environment)).
+
 
 ## DICE Deployment service installation
 
@@ -136,7 +138,7 @@ $ ./up.sh openstack staging_deployment
 
 Next, proceed to [adding virtual containers](#container-management).
 
-#### Removing the service
+### Removing the service
 
 Tearing down the deployment service is then as easy as running the `dw.sh` script:
 
@@ -147,23 +149,24 @@ $ ./dw.sh
 By default, this script will remove the deployment and blueprint named
 `dice_deploy`. It is possible to supply a different name as a parameter, e.g.:
 
-
 ```bash
 $ ./dw.sh staging_deployment
 ```
+
+
 ## DICE deployment service configuration
 
 The TOSCA blueprints can define a list of parameters called
-[inputs][cfy-spec-inputs]. In DICE
-technology librariy, we use the inputs to provide elements related to the
-environment or the platform in which the application is being deployed.
-Considering that this configuration is relatively static for each instance
-of the DICE deployment service, the administrator has to load it only once, but
-before the first application can be deployed. The inputs needed therefore depend
-on the target platform (OpenStack, FCO, etc.). It is of course possible to
-provide additional inputs depending on the needs of the application blueprints.
-In the following subsections we provide the minimum inputs list that is common
-to all the DICE technology library supported blueprints.
+[inputs][cfy-spec-inputs]. In DICE technology library, we use the inputs to
+provide elements related to the environment or the platform in which the
+application is being deployed. Considering that this configuration is
+relatively static for each instance of the DICE deployment service, the
+administrator has to load it only once, but before the first application can
+be deployed. The inputs needed therefore depend on the target platform
+(OpenStack, FCO, etc.). It is of course possible to provide additional inputs
+depending on the needs of the application blueprints. In the following
+subsections we provide the minimum inputs list that is common to all the DICE
+technology library supported blueprints.
 
 Loading the inputs can be performed by using the
 [input actions](UserGuide.md#input-actions) of the
@@ -197,25 +200,25 @@ The UUIDs for images and flavours can be obtained using the `nova` client. See
 [this document](Cloudify-3.4.0-OpenStack.md#preparing-inputs) to get
 examples of the client usage.
 
-To prepare the inputs, open a text file named `openstack-inputs.yaml` with
+To prepare the inputs, open a text file named `openstack-inputs.json` with
 contents like in the following example:
 
 ```json
 [
-    {"key": "agent_user",       "value": "ubuntu",                               "description": "Agent user"},
-    {"key": "small_image_id",   "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea", "description": "Small image id"},
-    {"key": "small_flavor_id",  "value": "070005dc-9bd5-4c0c-b2c6-88f81a7b7239", "description": "Small flavour id"},
-    {"key": "medium_image_id",  "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea", "description": "Medium image id"},
-    {"key": "medium_flavor_id", "value": "45170672-5608-473e-af9c-9097510472d6", "description": "Medium flavour id"},
-    {"key": "large_image_id",   "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea", "description": "Large image id"},
-    {"key": "large_flavor_id",  "value": "1bd34fe1-57b3-4937-bf60-5edd35382b78", "description": "Large flavour id"}
+  {"key": "agent_user",       "value": "ubuntu"                              },
+  {"key": "small_image_id",   "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea"},
+  {"key": "small_flavor_id",  "value": "070005dc-9bd5-4c0c-b2c6-88f81a7b7239"},
+  {"key": "medium_image_id",  "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea"},
+  {"key": "medium_flavor_id", "value": "45170672-5608-473e-af9c-9097510472d6"},
+  {"key": "large_image_id",   "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea"},
+  {"key": "large_flavor_id",  "value": "1bd34fe1-57b3-4937-bf60-5edd35382b78"}
 ]
 ```
 
 Then submit the inputs to the deployment service:
 
 ```bash
-$ dice-deploy-cli set-inputs openstack-inputs.yaml
+$ dice-deploy-cli set-inputs openstack-inputs.json
 ```
 
 ### FCO inputs
@@ -275,25 +278,26 @@ ones for your environment:
 
 ```json
 [
-    {"key": "agent_user",         "value": "ubuntu",                               "description": "Agent user"},
-    {"key": "small_image_id",     "value": "87978c6d-5ceb-39b2-8e8b-935503ad0307", "description": "Small image id"},
-    {"key": "small_server_type",  "value": "2 GB / 1 CPU",                         "description": "Small server type"},
-    {"key": "small_disk",         "value": "30Gb Storage",                         "description": "Small disk"},
-    {"key": "medium_image_id",    "value": "87978c6d-5ceb-39b2-8e8b-935503ad0307", "description": "Medium image id"},
-    {"key": "medium_server_type", "value": "2 GB / 1 CPU",                         "description": "Medium server type"},
-    {"key": "medium_disk",        "value": "30Gb Storage",                         "description": "Medium disk"},
-    {"key": "large_image_id",     "value": "87978c6d-5ceb-39b2-8e8b-935503ad0307", "description": "Large image id"},
-    {"key": "large_server_type",  "value": "2 GB / 1 CPU",                         "description": "Large server type"},
-    {"key": "large_disk",         "value": "30Gb Storage",                         "description": "Large disk"},
-    {"key": "username",           "value": "089e2a3a-5ae9-34e4-b03c-c694268acf1c", "description": "FCO username"},
-    {"key": "password",           "value": "p@ssword",                             "description": "FCO password"},
-    {"key": "customer",           "value": "e50bfd1b-253a-3290-85ff-95e218398b7e", "description": "FCO customer"},
-    {"key": "service_url",        "value": "https://cp.diceproject.flexiant.net",  "description": "Service URL"},
-    {"key": "agent_key",          "value": "288f0541-9921-37a8-a07b-bb47eb27dc10", "description": "Agent key"},
-    {"key": "vdc",                "value": "9799fe42-02ef-3929-88d4-c993a02cbe1d", "description": "FCO VDC"},
-    {"key": "network",            "value": "5264edab-8d29-329d-b4f9-5f8ca17cff78", "description": "FCO network"}
+  {"key": "agent_user",         "value": "ubuntu",                             },
+  {"key": "small_image_id",     "value": "87978c6d-5ceb-39b2-8e8b-935503ad0307"},
+  {"key": "small_server_type",  "value": "2 GB / 1 CPU"                        },
+  {"key": "small_disk",         "value": "30Gb Storage"                        },
+  {"key": "medium_image_id",    "value": "87978c6d-5ceb-39b2-8e8b-935503ad0307"},
+  {"key": "medium_server_type", "value": "2 GB / 1 CPU"                        },
+  {"key": "medium_disk",        "value": "30Gb Storage"                        },
+  {"key": "large_image_id",     "value": "87978c6d-5ceb-39b2-8e8b-935503ad0307"},
+  {"key": "large_server_type",  "value": "2 GB / 1 CPU"                        },
+  {"key": "large_disk",         "value": "30Gb Storage"                        },
+  {"key": "username",           "value": "089e2a3a-5ae9-34e4-b03c-c694268acf1c"},
+  {"key": "password",           "value": "p@ssword"                            },
+  {"key": "customer",           "value": "e50bfd1b-253a-3290-85ff-95e218398b7e"},
+  {"key": "service_url",        "value": "https://cp.diceproject.flexiant.net",},
+  {"key": "agent_key",          "value": "288f0541-9921-37a8-a07b-bb47eb27dc10"},
+  {"key": "vdc",                "value": "9799fe42-02ef-3929-88d4-c993a02cbe1d"},
+  {"key": "network",            "value": "5264edab-8d29-329d-b4f9-5f8ca17cff78"}
 ]
 ```
+
 
 ## Container management
 
@@ -353,9 +357,51 @@ If all of the tests finished, deployment service is set up correctly and ready
 for real work.
 
 
+## Monitoring support
+
+DICE TOSCA Library has integrated support for application monitoring. In order
+to use monitoring, we must have access to Dmon server that applications will
+report to. Setting up Dmon server is out of scope for this document. Consult
+[monitoring tool documentation][dmon-docs] for more information about Dmon.
+
+Pieces of configuration data that we need from Dmon are:
+
+  * `dmon_address`: Main dmon address (eg. 10.50.51.4:5001).
+  * `logstash_graphite_address`: Graphite address (eg. 10.50.51.4:5002).
+  * `logstash_udp_address`: Logstash udp address (eg. 10.50.51.4:25826).
+
+This data now needs to be uploaded to DICE Deployment Service as additional
+inputs. For example, OpenStack inputs would look something like this after
+addition of monitoring:
+
+```json
+[
+  {"key": "agent_user",       "value": "ubuntu"                              },
+  {"key": "small_image_id",   "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea"},
+  {"key": "small_flavor_id",  "value": "070005dc-9bd5-4c0c-b2c6-88f81a7b7239"},
+  {"key": "medium_image_id",  "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea"},
+  {"key": "medium_flavor_id", "value": "45170672-5608-473e-af9c-9097510472d6"},
+  {"key": "large_image_id",   "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea"},
+  {"key": "large_flavor_id",  "value": "1bd34fe1-57b3-4937-bf60-5edd35382b78"},
+
+  {"key": "dmon_address",              "value": "10.50.51.4:5001"            },
+  {"key": "logstash_graphite_address", "value": "10.50.51.4:5002"            },
+  {"key": "logstash_udp_address",      "value": "10.50.51.4:25826"           }
+]
+```
+
+Note that this only saves the configuration of the monitoring service for any
+blueprints that require monitored nodes. To actually monitor application
+being deployed, we must enable this explicitly in blueprint. Consult
+[example blueprint with monitoring enabled][blue-monitored] for more
+information.
+
+
 [cfy-spec-inputs]: http://docs.getcloudify.org/3.4.0/blueprints/spec-inputs/
 [Prerequisites-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Prerequisites
 [Installation-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Installation
 [Getting-Started-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Getting-Started
 [Links-and-References-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Links-and-References
 [Changelog-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Changelog
+[dmon-docs]: https://github.com/dice-project/DICE-Knowledge-Repository/wiki/DICE-Knowledge-Repository#monitoring
+[blue-monitored]: https://github.com/dice-project/DICE-Deployment-Examples/blob/master/storm/storm-openstack-monitored.yaml
