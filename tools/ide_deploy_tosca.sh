@@ -23,6 +23,8 @@ function usage() {
         PASSWORD -       password name part of the credentials to the
                          deployment service
         CONTAINER -      UUID of the container to deploy into
+        BIN_PATH -       output path to where the blueprint package will
+                         be created; default value: bin
 
     project.dice-delivery - name of the file containing the values of the
                          parameters listed above. An example configuration
@@ -38,6 +40,22 @@ function usage() {
 EOF
 }
 
+function package() {
+    local BLUEPRINT_PATH="$1"
+    local RESOURCES_PATH="$2"
+    local BIN_PATH="$3"
+
+    mkdir -p "$BIN_PATH"
+
+    local T=$(mktemp -d)
+    chmod 755 $T
+
+    cp "$BLUEPRINT_PATH" "$T/blueprint.yaml"
+    cp -r "$RESOURCES_PATH" $T
+    tar -cvzf "$BIN_PATH/blueprint.tar.gz" -C $(dirname $T) $(basename $T)
+    rm -rf $T
+}
+
 function deploy() {
     local BLUEPRINT_PATH="$1"
     local RESOURCES_PATH="$2"
@@ -45,27 +63,34 @@ function deploy() {
     local USERNAME="$4"
     local PASSWORD="$5"
     local CONTAINER="$6"
+    local BIN_PATH="${7-bin}"
 
-    # TODO package
+    package "$BLUEPRINT_PATH" "$RESOURCES_PATH" "$BIN_PATH"
+
+    set -e
+
     dice-deploy-cli use "$DEPLOYER_URL"
     dice-deploy-cli authenticate "$USERNAME" "$PASSWORD"
-    dice-deploy-cli deploy $CONTAINER "$BLUEPRINT_PATH"
-
+    dice-deploy-cli deploy $CONTAINER "$BIN_PATH/blueprint.tar.gz"
     dice-deploy-cli wait-deploy $CONTAINER
 
     dice-deploy-cli outputs $CONTAINER
 }
 
 function deploy_from_project() {
-    local PROJECT_PATH=$(realpath "$1")
+    # Declarations
+    PROJECT_PATH=$(realpath "$1")
+    PROJECT_FOLDER=$(dirname $PROJECT_PATH)
     if [ ! -f "$PROJECT_PATH" ]
     then
         echo "$1 not found"
         exit 2
     fi
+    BIN_PATH="$PROJECT_FOLDER/bin"
 
     echo "to be deployed ... data in $PROJECT_PATH"
 
+    # Collect parameters from the project file
     local varnames="BLUEPRINT_PATH RESOURCES_PATH DEPLOYER_URL USERNAME PASSWORD CONTAINER"
     local -A params
 
@@ -80,12 +105,13 @@ function deploy_from_project() {
         fi
     done
 
-    deploy "${params[BLUEPRINT_PATH]}" \
-         "${params[RESOURCES_PATH]}" \
+    deploy "$PROJECT_FOLDER/${params[BLUEPRINT_PATH]}" \
+         "$PROJECT_FOLDER/${params[RESOURCES_PATH]}" \
          "${params[DEPLOYER_URL]}" \
          "${params[USERNAME]}" \
          "${params[PASSWORD]}" \
-         "${params[CONTAINER]}"
+         "${params[CONTAINER]}" \
+         "$PROJECT_FOLDER/bin"
 }
 
 function handle_single_parameter() {
@@ -104,6 +130,9 @@ case "$#" in
         handle_single_parameter "$1"
         ;;
     "6")
+        deploy "$@"
+        ;;
+    "7")
         deploy "$@"
         ;;
     *)
