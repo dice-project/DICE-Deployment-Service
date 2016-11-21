@@ -278,6 +278,9 @@ class Deploy(Command):
     def add_subparser(subparsers):
         parser = subparsers.add_parser("deploy",
                                        help="Deploy blueprint in container")
+        parser.add_argument("--register-app", dest="register",
+                            action="store_const", const=True, default=False,
+                            help="Register application with DMon")
         parser.add_argument("uuid", help="Container UUID")
         parser.add_argument("package",
                             help="Blueprint (tar.gz package ot YAML file)",
@@ -288,7 +291,8 @@ class Deploy(Command):
         uuid = self.args.uuid
         logger.info("Starting blueprint deployment")
         response = self.post("/containers/{}/blueprint".format(uuid),
-                             files=dict(file=self.args.package))
+                             files=dict(file=self.args.package),
+                             params=dict(register_app=self.args.register))
         if response.status_code != 202:
             fail("Cannot start deploy")
         logger.info("Successfully started new deploy")
