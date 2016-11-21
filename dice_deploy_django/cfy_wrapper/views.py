@@ -11,6 +11,8 @@ from rest_framework import status
 
 from django.db import IntegrityError, transaction
 
+import requests
+
 from . import tasks
 from . import utils
 from .models import Blueprint, Container, Input
@@ -102,6 +104,27 @@ class ContainerIdView(APIView):
 
 class ContainerBlueprintView(APIView):
 
+    @staticmethod
+    def _register_app(blueprint):
+        print "REGISTER APP"
+        try:
+            dmon_address = Input.objects.get(key="dmon_address")
+        except Input.DoesNotExist:
+            blueprint.log_error("Missing input: 'dmon_address'. "
+                                "Cannot register application with dmon.")
+            return
+
+        # WARNING: We are aware that API endpoint contains misspelled
+        # application, but this is something that upstream needs to fix before
+        # we can do anything.
+        url = "http://{}/dmon/v1/overlord/applicaiton/{}".format(
+            dmon_address.value, blueprint.cfy_id
+        )
+        response = requests.put(url)
+        if response.status_code != status.HTTP_200_OK:
+            msg = "Application registration failed: '{}'"
+            blueprint.log_error(msg.format(response.text))
+
     def get(self, request, id):
         """
         Show information about blueprint that is uploaded to container
@@ -133,13 +156,18 @@ class ContainerBlueprintView(APIView):
             return Response({"detail": msg},
                             status=status.HTTP_400_BAD_REQUEST)
 
+
         success, msg = tasks.sync_container(container, blueprint)
 
-        if success:
-            return Response(BlueprintSerializer(blueprint).data,
-                            status=status.HTTP_202_ACCEPTED)
-        blueprint.delete()
-        return Response({"detail": msg}, status=status.HTTP_409_CONFLICT)
+        if not success:
+            blueprint.delete()
+            return Response({"detail": msg}, status=status.HTTP_409_CONFLICT)
+
+        if request.query_params.get("register_app", "").lower() == "true":
+            self._register_app(blueprint)
+
+        return Response(BlueprintSerializer(blueprint).data,
+                        status=status.HTTP_202_ACCEPTED)
 
     def delete(self, request, id):
         """
