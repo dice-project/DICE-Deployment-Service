@@ -338,6 +338,20 @@ class SetInputs(Command):
             fail("Invalid data file passed as parameter")
         logger.info("Successfully updated inputs")
 
+class GetInputs(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser("get-inputs",
+                                       help="Set service inputs")
+        return parser
+
+    def execute(self):
+        logger.info("Getting service inputs")
+        response = self.get("/inputs")
+        print(json.dumps(response.json(), indent=2))
+        logger.info("Successfully obtained inputs")
+
 
 class WaitForDeploy(Command):
 
