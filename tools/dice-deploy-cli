@@ -281,7 +281,7 @@ class Deploy(Command):
         parser.add_argument("uuid", help="Container UUID")
         parser.add_argument("package",
                             help="Blueprint (tar.gz package ot YAML file)",
-                            type=argparse.FileType())
+                            type=argparse.FileType("rb"))
         return parser
 
     def execute(self):
