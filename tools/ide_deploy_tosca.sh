@@ -56,6 +56,19 @@ function package() {
     rm -rf $T
 }
 
+function check_blueprint_contents() {
+    if [[ ! -f $1 ]]
+    then
+        echo "Blueprint file '$1' does not exist."
+        exit 1
+    fi
+    if [[ ! -d $2 ]]
+    then
+        echo "Resource folder '$2' does not exist."
+        exit 1
+    fi
+}
+
 function deploy() {
     local BLUEPRINT_PATH="$1"
     local RESOURCES_PATH="$2"
@@ -65,6 +78,7 @@ function deploy() {
     local CONTAINER="$6"
     local BIN_PATH="${7-bin}"
 
+    check_blueprint_contents "$BLUEPRINT_PATH" "$RESOURCES_PATH"
     package "$BLUEPRINT_PATH" "$RESOURCES_PATH" "$BIN_PATH"
 
     set -e
