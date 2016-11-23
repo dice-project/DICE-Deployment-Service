@@ -547,6 +547,48 @@ class DeleteBlueprintTest(BaseCeleryTest):
         self.assertEqual(b.state, -Blueprint.State.deleting_from_cloudify)
 
 
+@mock.patch.object(tasks, "requests")
+class RegisterAppTest(BaseCeleryTest):
+
+    def test_all_ok(self, mock_requests):
+        b = Blueprint.objects.create()
+        c = Container.objects.create(blueprint=b)
+        Input.objects.create(key="dmon_address", value="12.34.56.78:5001")
+        mock_requests.put.return_value.status_code = 200
+
+        tasks.register_app(c.cfy_id)
+
+        b.refresh_from_db()
+        self.assertEqual(0, b.errors.all().count())
+        mock_requests.put.assert_called_once()
+
+    def test_no_input(self, mock_requests):
+        b = Blueprint.objects.create()
+        c = Container.objects.create(blueprint=b)
+
+        tasks.register_app(c.cfy_id)
+
+        b.refresh_from_db()
+        self.assertEqual(1, b.errors.all().count())
+        e = b.errors.all()[0]
+        self.assertTrue("Missing input" in e.message)
+        mock_requests.put.assert_not_called()
+
+    def test_bad_response(self, mock_requests):
+        b = Blueprint.objects.create()
+        c = Container.objects.create(blueprint=b)
+        Input.objects.create(key="dmon_address", value="12.34.56.78:5001")
+        mock_requests.put.return_value.status_code = 400
+
+        tasks.register_app(c.cfy_id)
+
+        b.refresh_from_db()
+        self.assertEqual(1, b.errors.all().count())
+        e = b.errors.all()[0]
+        self.assertTrue("Application registration failed" in e.message)
+        mock_requests.put.assert_called_once()
+
+
 class ProcessContainerQueue(BaseCeleryTest):
 
     def test_deploy(self):

@@ -361,7 +361,8 @@ class ContainerBlueprintTest(BaseViewTest):
         self.client.post(url)
         mock_method.assert_called_once()
 
-    def test_post_no_file(self):
+    @mock.patch("cfy_wrapper.tasks.sync_container", return_value=(True, "OK"))
+    def test_post_no_file(self, mock_sync):
         c = Container.objects.create()
         kw = dict(id=str(c.id))
         req = self.post(reverse("container_blueprint", kwargs=kw),
@@ -373,8 +374,10 @@ class ContainerBlueprintTest(BaseViewTest):
         self.assertIn("detail", resp.data)
         self.assertIsNone(c.blueprint)
         self.assertEqual(0, Blueprint.objects.all().count())
+        mock_sync.assert_not_called()
 
-    def test_post_invalid_file(self):
+    @mock.patch("cfy_wrapper.tasks.sync_container", return_value=(True, "OK"))
+    def test_post_invalid_file(self, mock_sync):
         c = Container.objects.create()
         b = io.StringIO(u"} not { valid } yaml {{")
         kw = dict(id=str(c.id))
@@ -388,6 +391,7 @@ class ContainerBlueprintTest(BaseViewTest):
         c.refresh_from_db()
         self.assertIsNone(c.blueprint)
         self.assertEqual(0, Blueprint.objects.all().count())
+        mock_sync.assert_not_called()
 
     @mock.patch("cfy_wrapper.tasks.sync_container", return_value=(True, "OK"))
     def test_post_valid_empty_success(self, mock_sync):
@@ -402,6 +406,39 @@ class ContainerBlueprintTest(BaseViewTest):
         self.assertEqual(status.HTTP_202_ACCEPTED, resp.status_code)
         mock_sync.assert_called_once()
         self.assertEqual(mock_sync.mock_calls[0][1][0], c)
+        self.assertEqual(mock_sync.mock_calls[0][1][2], False)
+
+    @mock.patch("cfy_wrapper.tasks.sync_container", return_value=(True, "OK"))
+    def test_post_valid_empty_success_register(self, mock_sync):
+        c = Container.objects.create()
+        b = io.StringIO(u"valid: yaml")
+        kw = dict(id=str(c.id))
+        req = self.post(reverse("container_blueprint", kwargs=kw) +
+                        "?register_app=True",
+                        data={"file": b}, auth=True, format="multipart")
+
+        resp = ContainerBlueprintView.as_view()(req, **kw)
+
+        self.assertEqual(status.HTTP_202_ACCEPTED, resp.status_code)
+        mock_sync.assert_called_once()
+        self.assertEqual(mock_sync.mock_calls[0][1][0], c)
+        self.assertEqual(mock_sync.mock_calls[0][1][2], True)
+
+    @mock.patch("cfy_wrapper.tasks.sync_container", return_value=(True, "OK"))
+    def test_post_valid_empty_success_no_register(self, mock_sync):
+        c = Container.objects.create()
+        b = io.StringIO(u"valid: yaml")
+        kw = dict(id=str(c.id))
+        req = self.post(reverse("container_blueprint", kwargs=kw) +
+                        "?register_app=false",
+                        data={"file": b}, auth=True, format="multipart")
+
+        resp = ContainerBlueprintView.as_view()(req, **kw)
+
+        self.assertEqual(status.HTTP_202_ACCEPTED, resp.status_code)
+        mock_sync.assert_called_once()
+        self.assertEqual(mock_sync.mock_calls[0][1][0], c)
+        self.assertEqual(mock_sync.mock_calls[0][1][2], False)
 
     @mock.patch("cfy_wrapper.tasks.sync_container", return_value=(False, "NO"))
     def test_post_valid_empty_fail(self, mock_sync):
@@ -416,6 +453,7 @@ class ContainerBlueprintTest(BaseViewTest):
         self.assertEqual(status.HTTP_409_CONFLICT, resp.status_code)
         mock_sync.assert_called_once()
         self.assertEqual(mock_sync.mock_calls[0][1][0], c)
+        self.assertEqual(mock_sync.mock_calls[0][1][2], False)
 
     def test_post_no_container(self):
         kw = dict(id="abc")
@@ -481,6 +519,7 @@ class ContainerBlueprintTest(BaseViewTest):
         mock_sync.assert_called_once()
         self.assertEqual(mock_sync.mock_calls[0][1][0], c)
         self.assertIsNone(mock_sync.mock_calls[0][1][1])
+        self.assertEqual(mock_sync.mock_calls[0][1][2], False)
 
     @mock.patch("cfy_wrapper.tasks.sync_container", return_value=(False, "NO"))
     def test_delete_sync_fail(self, mock_sync):

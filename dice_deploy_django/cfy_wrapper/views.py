@@ -11,8 +11,6 @@ from rest_framework import status
 
 from django.db import IntegrityError, transaction
 
-import requests
-
 from . import tasks
 from . import utils
 from .models import Blueprint, Container, Input
@@ -104,24 +102,6 @@ class ContainerIdView(APIView):
 
 class ContainerBlueprintView(APIView):
 
-    @staticmethod
-    def _register_app(blueprint):
-        logger.debug("Registering application {app}.", app=blueprint.cfy_id)
-        try:
-            dmon_address = Input.objects.get(key="dmon_address")
-        except Input.DoesNotExist:
-            blueprint.log_error("Missing input: 'dmon_address'. "
-                                "Cannot register application with dmon.")
-            return
-
-        url = "http://{}/dmon/v1/overlord/application/{}".format(
-            dmon_address.value, blueprint.cfy_id
-        )
-        response = requests.put(url)
-        if response.status_code != status.HTTP_200_OK:
-            msg = "Application registration failed: '{}'"
-            blueprint.log_error(msg.format(response.text))
-
     def get(self, request, id):
         """
         Show information about blueprint that is uploaded to container
@@ -153,14 +133,13 @@ class ContainerBlueprintView(APIView):
             return Response({"detail": msg},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        success, msg = tasks.sync_container(container, blueprint)
+        register_param = request.query_params.get("register_app", "")
+        register_app = register_param.lower() == "true"
+        success, msg = tasks.sync_container(container, blueprint, register_app)
 
         if not success:
             blueprint.delete()
             return Response({"detail": msg}, status=status.HTTP_409_CONFLICT)
-
-        if request.query_params.get("register_app", "").lower() == "true":
-            self._register_app(blueprint)
 
         return Response(BlueprintSerializer(blueprint).data,
                         status=status.HTTP_202_ACCEPTED)
@@ -173,7 +152,7 @@ class ContainerBlueprintView(APIView):
         if container.blueprint is None:
             return Response({"detail": "No blueprint present"},
                             status=status.HTTP_400_BAD_REQUEST)
-        success, msg = tasks.sync_container(container, None)
+        success, msg = tasks.sync_container(container, None, False)
 
         if success:
             return Response(BlueprintSerializer(container.blueprint).data,

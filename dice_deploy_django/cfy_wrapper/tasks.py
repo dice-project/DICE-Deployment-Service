@@ -4,7 +4,7 @@ from celery import shared_task, chain
 from celery.utils.log import get_task_logger
 
 from . import utils
-from .models import Blueprint, Container
+from .models import Blueprint, Container, Input
 
 from cloudify_rest_client import exceptions, executions
 from concurrency.exceptions import RecordModifiedError
@@ -12,6 +12,8 @@ from concurrency.exceptions import RecordModifiedError
 from django.conf import settings
 
 import time
+
+import requests
 
 
 """
@@ -296,17 +298,42 @@ def release_container(container_id):
     container.save()
 
 
-def _get_deploy_pipe(container):
+@shared_task
+def register_app(container_id):
+    logger.info("Registering application.")
+    blueprint = Container.get(container_id).blueprint
+
+    try:
+        dmon_address = Input.objects.get(key="dmon_address")
+    except Input.DoesNotExist:
+        blueprint.log_error("Missing input: 'dmon_address'. "
+                            "Cannot register application with dmon.")
+        return
+
+    url = "http://{}/dmon/v1/overlord/application/{}".format(
+        dmon_address.value, Container.get(container_id).blueprint.cfy_id
+    )
+    response = requests.put(url)
+    if response.status_code != 200:
+        msg = "Application registration failed: '{}'"
+        blueprint.log_error(msg.format(response.text))
+
+
+def _get_deploy_pipe(container, register_app):
     if container.queue is None:
         return []
 
     id = container.cfy_id
-    return [
+    pipe = [
         upload_blueprint.si(id),
         create_deployment.si(id),
         install_blueprint.si(id),
         fetch_blueprint_outputs.si(id),
     ]
+    if register_app:
+        pipe.insert(1, register_app.si(id))
+
+    return pipe
 
 
 def _get_undeploy_pipe(container):
@@ -343,7 +370,7 @@ def _get_undeploy_pipe(container):
 
 
 # This should be the only entry point into celery
-def sync_container(container, blueprint):
+def sync_container(container, blueprint, register_app):
     """
     Function that should be used to get container into requested state.
 
@@ -403,7 +430,7 @@ def sync_container(container, blueprint):
     pipe = []
     pipe.extend(_get_undeploy_pipe(container))
     pipe.append(process_container_queue.si(container.cfy_id))
-    pipe.extend(_get_deploy_pipe(container))
+    pipe.extend(_get_deploy_pipe(container, register_app))
     pipe.append(release_container.si(container.cfy_id))
 
     chain(*pipe).apply_async()
