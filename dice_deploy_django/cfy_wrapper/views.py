@@ -114,10 +114,7 @@ class ContainerBlueprintView(APIView):
                                 "Cannot register application with dmon.")
             return
 
-        # WARNING: We are aware that API endpoint contains misspelled
-        # application, but this is something that upstream needs to fix before
-        # we can do anything.
-        url = "http://{}/dmon/v1/overlord/applicaiton/{}".format(
+        url = "http://{}/dmon/v1/overlord/application/{}".format(
             dmon_address.value, blueprint.cfy_id
         )
         response = requests.put(url)
