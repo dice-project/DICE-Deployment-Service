@@ -40,10 +40,15 @@ function reset()
 
 function run_tests()
 {
+  set -e
+  echo "Running pep8 compliance check ..."
+  flake8
+
   echo "Running unit tests ..."
   rm -rf cfy_wrapper/migrations
   python manage.py makemigrations cfy_wrapper
   python manage.py test $1
+  set +e
 }
 
 case $1 in

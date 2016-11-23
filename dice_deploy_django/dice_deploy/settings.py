@@ -154,6 +154,6 @@ SWAGGER_SETTINGS = {
 
 # Local overrides
 try:
-    from dice_deploy.local_settings import *
+    from dice_deploy.local_settings import *  # noqa: F401,F403
 except ImportError:
     pass
