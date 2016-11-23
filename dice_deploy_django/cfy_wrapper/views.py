@@ -106,7 +106,7 @@ class ContainerBlueprintView(APIView):
 
     @staticmethod
     def _register_app(blueprint):
-        print "REGISTER APP"
+        logger.debug("Registering application {app}.", app=blueprint.cfy_id)
         try:
             dmon_address = Input.objects.get(key="dmon_address")
         except Input.DoesNotExist:
@@ -155,7 +155,6 @@ class ContainerBlueprintView(APIView):
             blueprint.delete()
             return Response({"detail": msg},
                             status=status.HTTP_400_BAD_REQUEST)
-
 
         success, msg = tasks.sync_container(container, blueprint)
 
