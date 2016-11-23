@@ -439,6 +439,28 @@ class Status(Command):
         logger.info("Information successfully obtained")
 
 
+class Instances(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser(
+            "list-instances", help="List VM instances in container",
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+        parser.add_argument("uuid", help="Container UUID")
+
+        return parser
+
+    def execute(self):
+        uuid = self.args.uuid
+        logger.info("Obtaining VM instances for container {}".format(uuid))
+        response = self.get("/containers/{}/nodes".format(uuid))
+        if response.status_code != 200:
+            fail("Cannot retrieve VM instances for container")
+        print(json.dumps(response.json(), indent=2))
+        logger.info("Information successfully obtained")
+
+
 # Entry point
 def create_parser():
     def is_command(item):
