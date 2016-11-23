@@ -148,14 +148,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 # angular configuration
 ANGULAR_ENDPOINT = '/'
 
-# indicate if you want to have static files served
-# by gunicorn (not good for production)
-GUNICORN_STATICS = True
-
-# indicate if you want to have static files served
-# by gunicorn (not good for production)
-GUNICORN_STATICS = True
-
 SWAGGER_SETTINGS = {
     "USE_SESSION_AUTH": False,
 }
