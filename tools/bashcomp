@@ -93,7 +93,10 @@ function _dice_deploy_cli ()
       [[ $COMP_CWORD -ge 3 && ${COMP_WORDS[COMP_CWORD - 2]} == "$cmd" ]] \
         && COMPREPLY=(
              $(compgen -o plusdirs -f -X '!*.@(yaml|tar.gz|tgz)' -- "$cur")
-           )
+           ) \
+        && return 0
+      [[ $COMP_CWORD -ge 4 && ${COMP_WORDS[COMP_CWORD - 3]} == "$cmd" ]] \
+        && COMPREPLY=( $(compgen -W "--register-app" -- "$cur"))
       ;;
     set-inputs)
       [[ "$prev" == "$cmd" ]] && \
