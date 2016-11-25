@@ -38,9 +38,10 @@ function _find_command ()
   fi
 }
 
-function _list ()
+function _complete_container ()
 {
-  $1 list 2> /dev/null | cut -d: -f1
+  local containers=$(${COMP_WORDS[0]} list 2> /dev/null | cut -d: -f1)
+  COMPREPLY=( $(compgen -W "$containers" -- "${COMP_WORDS[COMP_CWORD]}") )
 }
 
 function _dice_deploy_cli ()
@@ -63,17 +64,32 @@ function _dice_deploy_cli ()
     --config)
       COMPREPLY=($(compgen -o plusdirs -f -- "$cur"))
       ;;
-    authenticate|create|list|use)
-      # Let user press enter and get sensible help message
+
+    # Next few commands have no sensible completion, so we complete nothing
+    # and "force" user to press enter and get sensible help message.
+    authenticate) ;;
+    create) ;;
+    use) ;;
+
+    # Commands that require no inputs.
+    get-inputs) ;;
+    list) ;;
+
+    # Next commands autocomplete with container uuid only (no extra parameters
+    # are allowed).
+    container-info) ;&
+    delete) ;&
+    list-instances) ;&
+    outputs) ;&
+    status) ;&
+    teardown) ;&
+    wait-deploy)
+      [[ "$prev" == "$cmd" ]] && _complete_container
       ;;
-    container-info|delete|outputs|status|teardown|wait-deploy)
-      [[ "$prev" == "$cmd" ]] && \
-        COMPREPLY=($(compgen -W "$(_list ${COMP_WORDS[0]})" -- "$cur"))
-      ;;
+
+    # Commands that require custom completion handling.
     deploy)
-      [[ "$prev" == "$cmd" ]] \
-        && COMPREPLY=($(compgen -W "$(_list ${COMP_WORDS[0]})" -- "$cur")) \
-        && return 0
+      [[ "$prev" == "$cmd" ]] && _complete_container && return 0
       [[ $COMP_CWORD -ge 3 && ${COMP_WORDS[COMP_CWORD - 2]} == "$cmd" ]] \
         && COMPREPLY=(
              $(compgen -o plusdirs -f -X '!*.@(yaml|tar.gz|tgz)' -- "$cur")
