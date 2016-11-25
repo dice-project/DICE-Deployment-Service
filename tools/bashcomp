@@ -1,3 +1,24 @@
+function _get_commands ()
+{
+  # We packed this into function in order to avoid polluting global namespace
+  # (this script is not executed, it is sourced into active shell session!).
+  echo "
+    authenticate
+    container-info
+    create delete
+    deploy
+    get-inputs
+    list-instances
+    list
+    outputs
+    set-inputs
+    status
+    teardown
+    use
+    wait-deploy
+  "
+}
+
 function _find_command ()
 {
   if [[ $COMP_CWORD -eq 1 ]]
@@ -34,15 +55,10 @@ function _dice_deploy_cli ()
 
   case "$cmd" in
     __main)
-      local opts="authenticate container-info create delete deploy list
-                  outputs set-inputs status teardown use wait-deploy
-                  --config"
-      COMPREPLY=($(compgen -W "$opts" -- "$cur"))
+      COMPREPLY=($(compgen -W "$(_get_commands) --config" -- "$cur"))
       ;;
     __main-no-conf)
-      local opts="authenticate container-info create delete deploy list
-                  outputs set-inputs status teardown use wait-deploy"
-      COMPREPLY=($(compgen -W "$opts" -- "$cur"))
+      COMPREPLY=($(compgen -W "$(_get_commands)" -- "$cur"))
       ;;
     --config)
       COMPREPLY=($(compgen -f -- "$cur"))
