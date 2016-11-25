@@ -61,7 +61,7 @@ function _dice_deploy_cli ()
       COMPREPLY=($(compgen -W "$(_get_commands)" -- "$cur"))
       ;;
     --config)
-      COMPREPLY=($(compgen -f -- "$cur"))
+      COMPREPLY=($(compgen -o plusdirs -f -- "$cur"))
       ;;
     authenticate|create|list|use)
       # Let user press enter and get sensible help message
@@ -75,13 +75,17 @@ function _dice_deploy_cli ()
         && COMPREPLY=($(compgen -W "$(_list ${COMP_WORDS[0]})" -- "$cur")) \
         && return 0
       [[ $COMP_CWORD -ge 3 && ${COMP_WORDS[COMP_CWORD - 2]} == "$cmd" ]] \
-        && COMPREPLY=($(compgen -f -X '!*.@(yaml|tar.gz|tgz)' -- "$cur"))
+        && COMPREPLY=(
+             $(compgen -o plusdirs -f -X '!*.@(yaml|tar.gz|tgz)' -- "$cur")
+           )
       ;;
     set-inputs)
       [[ "$prev" == "$cmd" ]] && \
-        COMPREPLY=($(compgen -f -- "$cur"))
+        COMPREPLY=($(compgen -o plusdirs -f -- "$cur"))
       ;;
   esac
   return 0
 }
-complete -F _dice_deploy_cli dice-deploy-cli
+complete -o filenames -F _dice_deploy_cli dice-deploy-cli
+# Next line override shell's default completion
+complete -o filenames -F _dice_deploy_cli ./dice-deploy-cli
