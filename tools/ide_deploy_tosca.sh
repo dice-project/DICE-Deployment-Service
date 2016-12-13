@@ -88,7 +88,7 @@ function deploy() {
     dice-deploy-cli deploy $CONTAINER "$BIN_PATH/blueprint.tar.gz"
     dice-deploy-cli wait-deploy $CONTAINER
 
-    dice-deploy-cli outputs $CONTAINER
+    dice-deploy-cli outputs $CONTAINER | python -mjson.tool
 }
 
 function deploy_from_project() {
