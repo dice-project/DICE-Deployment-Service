@@ -124,7 +124,7 @@ with your browser. You will be greeted with a prompt for providing credentials:
 ![DICE deployment service GUI login prompt](images/DICEDeploymentServiceGUILogin.png)
 
 To log in, use the credentials set earlier in the inputs
-file, i.e., the values of the `superuser_username` and `superuser_password`).
+file, i.e., the values of the `superuser_username` and `superuser_password`.
 
 If additional instances of the service are needed, then we need to name each
 deployment differently. By default, calling `./up.sh PLATFORM` will create a
@@ -184,13 +184,14 @@ $ dice-deploy-cli authenticate user pwd434
 
 The OpenStack inputs consist of the following information:
 
-* `agent_user`: defines the name of the Linux user pre-installed and available
-  at the VMs provisionned from the cloud image. This user has to be a sudoer,
-  configured to run sudo without a password prompt. On Ubunutu 14.04 server,
-  that is usually `ubuntu`.
-* `{ small | medium | large }_image_id`: the UUID of the VM image to be used
-  for provisionning a small, a medium or a large VM instance. All three can
-  have the same value.
+* `{ ubuntu | centos }_agent_user`: defines the name of the Linux
+  user pre-installed and available at the VMs provisionned from the cloud image.
+  This user has to be a sudoer, configured to run sudo without a password
+  prompt. The `ubuntu_agent_user` is used on Ubunutu 14.04 servers,
+  and there it is usually `ubuntu`. The `centos_agent_user` will be used on
+  CentOS 7 servers, where the value is usually `centos`.
+* `{ ubuntu | centos }_image_id`: the UUID of the VM image to be used
+  for provisionning an Ubunutu 14.04 or CentOS 7 VM instance, respectively.
 * `{ small | medium | large }_flavor_id`: the UUID of the image flavour to
   be used when provisionning the VMs. A small instance normally has 512 MB
   of RAM, the medium instance has 1 GB or 2 GB of RAM, a large instance has
@@ -205,13 +206,13 @@ contents like in the following example:
 
 ```json
 [
-  {"key": "agent_user",       "value": "ubuntu"                              },
-  {"key": "small_image_id",   "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea"},
-  {"key": "small_flavor_id",  "value": "070005dc-9bd5-4c0c-b2c6-88f81a7b7239"},
-  {"key": "medium_image_id",  "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea"},
-  {"key": "medium_flavor_id", "value": "45170672-5608-473e-af9c-9097510472d6"},
-  {"key": "large_image_id",   "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea"},
-  {"key": "large_flavor_id",  "value": "1bd34fe1-57b3-4937-bf60-5edd35382b78"}
+  {"key": "ubuntu_agent_user", "value": "ubuntu"                              },
+  {"key": "centos_agent_user", "value": "centos"                              },
+  {"key": "ubuntu_image_id",   "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea"},
+  {"key": "centos_image_id",   "value": "9ea4856a-32b2-4553-b408-cfa4cb1bb40b"},
+  {"key": "small_flavor_id",   "value": "070005dc-9bd5-4c0c-b2c6-88f81a7b7239"},
+  {"key": "medium_flavor_id",  "value": "45170672-5608-473e-af9c-9097510472d6"},
+  {"key": "large_flavor_id",   "value": "1bd34fe1-57b3-4937-bf60-5edd35382b78"}
 ]
 ```
 
@@ -226,13 +227,14 @@ $ dice-deploy-cli set-inputs openstack-inputs.json
 For the DICE deployment service installed in the FCO, provide the following
 inputs:
 
-* `agent_user`: defines the name of the Linux user pre-installed and available
-  at the VMs provisionned from the cloud image. This user has to be a sudoer,
-  configured to run sudo without a password prompt. On Ubunutu 14.04 server,
-  that is usually `ubuntu`.
-* `{ small | medium | large }_image_id`: the UUID of the VM image to be used
-  for provisionning a small, a medium or a large VM instance. All three can
-  have the same value.
+* `{ ubuntu | centos }_agent_user`: defines the name of the Linux
+  user pre-installed and available at the VMs provisionned from the cloud image.
+  This user has to be a sudoer, configured to run sudo without a password
+  prompt. The `ubuntu_agent_user` is used on Ubunutu 14.04 servers,
+  and there it is usually `ubuntu`. The `centos_agent_user` will be used on
+  CentOS 7 servers, where the value is usually `centos`.
+* `{ ubuntu | centos }_image_id`: the UUID of the VM image to be used
+  for provisionning an Ubunutu 14.04 or CentOS 7 VM instance, respectively.
 * `{ small | medium | large }_server_type`: the UUID of the image flavour to
   be used when provisionning the VMs. A small instance normally has 512 MB
   of RAM, the medium instance has 1 GB or 2 GB of RAM, a large instance has
@@ -278,14 +280,14 @@ ones for your environment:
 
 ```json
 [
-  {"key": "agent_user",         "value": "ubuntu",                             },
-  {"key": "small_image_id",     "value": "87978c6d-5ceb-39b2-8e8b-935503ad0307"},
+  {"key": "ubuntu_agent_user",  "value": "ubuntu"                              },
+  {"key": "centos_agent_user",  "value": "centos"                              },
+  {"key": "ubuntu_image_id",    "value": "87978c6d-5ceb-39b2-8e8b-935503ad0307"},
+  {"key": "centos_image_id",    "value": "9ea4856a-32b2-4553-b408-cfa4cb1bb40b"},
   {"key": "small_server_type",  "value": "2 GB / 1 CPU"                        },
   {"key": "small_disk",         "value": "30Gb Storage"                        },
-  {"key": "medium_image_id",    "value": "87978c6d-5ceb-39b2-8e8b-935503ad0307"},
   {"key": "medium_server_type", "value": "2 GB / 1 CPU"                        },
   {"key": "medium_disk",        "value": "30Gb Storage"                        },
-  {"key": "large_image_id",     "value": "87978c6d-5ceb-39b2-8e8b-935503ad0307"},
   {"key": "large_server_type",  "value": "2 GB / 1 CPU"                        },
   {"key": "large_disk",         "value": "30Gb Storage"                        },
   {"key": "username",           "value": "089e2a3a-5ae9-34e4-b03c-c694268acf1c"},
