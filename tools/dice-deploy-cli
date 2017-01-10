@@ -388,7 +388,7 @@ class WaitForDeploy(Command):
                 fail("Cannot retrieve container info")
             data = response.json()
 
-        if data.get("blueprint", {}).get("in_error", False):
+        if data["blueprint"] and data["blueprint"]["in_error"]:
             fail("Deployment terminated in error")
         logger.info("Deployment is done")
 
