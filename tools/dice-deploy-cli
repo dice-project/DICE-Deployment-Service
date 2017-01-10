@@ -212,7 +212,8 @@ class List(Command):
         if response.status_code != 200:
             fail("Cannot retrieve containers")
         for container in response.json():
-            print("{}: {}".format(container["id"], container["description"]))
+            print("{}: {}".format(container["id"],
+                                  container["description"].encode("utf-8")))
         logger.info("Container list successfully obtained")
 
 
