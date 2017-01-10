@@ -35,11 +35,11 @@ urlpatterns = [
         ContainersView.as_view(), name="containers"),
     url(r"^containers/(?P<id>[0-9a-f-]+)/?$",
         ContainerIdView.as_view(), name="container_id"),
-    url(r"^containers/(?P<id>[0-9a-f-]+)/blueprint?$",
+    url(r"^containers/(?P<id>[0-9a-f-]+)/blueprint/?$",
         ContainerBlueprintView.as_view(), name="container_blueprint"),
-    url(r"^containers/(?P<id>[0-9a-f-]+)/nodes?$",
+    url(r"^containers/(?P<id>[0-9a-f-]+)/nodes/?$",
         ContainerNodesView.as_view(), name="container_nodes"),
-    url(r"^containers/(?P<id>[0-9a-f-]+)/errors?$",
+    url(r"^containers/(?P<id>[0-9a-f-]+)/errors/?$",
         ContainerErrorsView.as_view(), name="container_errors"),
 
     # Inputs
