@@ -7,10 +7,10 @@ Table of Contents:
 3. [Installing Cloudify command line tool](#cloudify-command-line-tool-installation)
 4. [Deploying the DICE deployment service](#dice-deployment-service-installation)
 5. [DICE deployment service configuration](#dice-deployment-service-configuration)
-  1. [OpenStack inputs](#OpenStack-inputs)
-  2. [FCO inputs](#FCO-inputs)
-6. [Container management](#Container-management)
-7. [Testing installation](#Testing-installation)
+  1. [OpenStack inputs](#openstack-inputs)
+  2. [FCO inputs](#fco-inputs)
+6. [Container management](#container-management)
+7. [Testing installation](#testing-installation)
 
 ## Cloudify Manager installation
 
