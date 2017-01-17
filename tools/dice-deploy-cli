@@ -116,8 +116,7 @@ class Command(object):
 
     def check_auth(self):
         logger.info("Checking DICE Deployment Service authentication data")
-        resp = self.get("/heartbeat")
-        logger.debug(resp.content)
+        resp = self.get("/containers")
         if resp.status_code == 401:
             fail("Authorization token is invalid")
 
