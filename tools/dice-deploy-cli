@@ -87,8 +87,9 @@ class Command(object):
     def add_subparser(subparsers):
         raise NotImplementedError("Command is an abstract class")
 
-    def __init__(self, args):
-        self.config = Config.load_from_file(args.config)
+    def __init__(self, args, fail_on_missing_config=True):
+        self.config = Config.load_from_file(args.config,
+                                            fail_on_missing_config)
         self.args = args
 
     def execute(self):
@@ -154,6 +155,9 @@ class Use(Command):
                                        help="Set DICE Deployment Service URL")
         parser.add_argument("url", help="Service address")
         return parser
+
+    def __init__(self, args):
+        super(Use, self).__init__(args, fail_on_missing_config=False)
 
     def check_endpoint(self):
         pass  # Check can only be done from execute method
