@@ -93,6 +93,34 @@ class Dump(Command):
         print(json.dumps(self.blueprint, indent=2))
 
 
+class DependencyGraph(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser(
+            "graph", help="Prepare node dependency graph (dot format)"
+        )
+        parser.add_argument("-o", "--output", help="Output file",
+                            type=argparse.FileType("w"), default="-")
+        return parser
+
+    @staticmethod
+    def output_node(node, output):
+        for rel in node["relationships"]:
+            output.write("  {} -> {};\n".format(node["id"], rel["target_id"]))
+
+
+    def execute(self, args):
+        args.output.write("digraph {\n")
+        args.output.write("  node [shape=box];\n\n")
+
+        for node in self.blueprint["nodes"]:
+            self.output_node(node, args.output)
+
+        args.output.write("\n}\n")
+        args.output.flush()
+
+
 def create_parser():
     def is_command(item):
         return (inspect.isclass(item) and item != Command and
