@@ -71,8 +71,9 @@ function sanity_check ()
 
   which $CFY_CLI &> /dev/null \
     || usage "Missing $CFY_CLI command. Do you have cloudify client installed?"
-  $CFY_CLI status &> /dev/null \
-    || usage "Misconfigured cloudify. Run '$CFY_CLI status' for more info."
+  # We need grep because cloudify's cli is returning 0 on failure.
+  $CFY_CLI status | grep -i failed \
+    && usage "Misconfigured cloudify. Run '$CFY_CLI status' for more info."
 
   which $DDS_CLI &> /dev/null \
     || usage "Missing $DDS_CLI command. Do you have DICE client installed?"
