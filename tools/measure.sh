@@ -80,6 +80,9 @@ function sanity_check ()
   $DDS_CLI list &> /dev/null \
     || usage "Misconfigured DICE client. Run $DDS_CLI for help."
 
+  which jq &> /dev/null \
+    || usage "Missing 'jq' command. Please install it from distro repos."
+
   local status=$($DDS_CLI status $container_id 2> /dev/null)
   [[ $? -eq 0 ]] || usage "Missing container with id '$container_id'."
   [[ "$status" == "empty" ]] || usage "Selected container is not empty."
