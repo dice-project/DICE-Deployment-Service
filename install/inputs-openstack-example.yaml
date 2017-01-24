@@ -37,6 +37,10 @@ superuser_password: changeme
 # This is the e-mail address to be used by the created superuser.
 superuser_email: admin@example.com
 
+# Number of celery workers. If this is commented out, default value of 5 will
+# be used.
+#no_celery_workers: 5
+
 # If you wish to enable debug installation, set this to 'true'. If you leave
 # this commented, debug mode is disabled
 #enable_debug: true

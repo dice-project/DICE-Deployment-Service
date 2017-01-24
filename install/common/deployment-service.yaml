@@ -44,6 +44,11 @@ inputs:
       Additional SSH public key that should be added to authorized keys.
     default: ""
 
+  no_celery_workers:
+    description: >
+      Number of celery workers that will serve cloudify manager.
+    default: 5
+
 
 node_types:
 
@@ -59,6 +64,7 @@ node_types:
       sources:            { default: { get_input: sources              } }
       debug_mode:         { default: { get_input: enable_debug         } }
       ssh_key:            { default: { get_input: ssh_key              } }
+      no_celery_workers:  { default: { get_input: no_celery_workers    } }
 
       configure_runlist:
         default:

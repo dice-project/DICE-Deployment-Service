@@ -68,6 +68,10 @@ vdc: 42bb54ac-4090-3caa-b730-e916b27daeff
 # resources & UUIDs panel for the item Network.
 network: 179a6319-3a74-3942-a59c-742d5eab43fe
 
+# Number of celery workers. If this is commented out, default value of 5 will
+# be used.
+#no_celery_workers: 5
+
 # If you wish to enable debug installation, set this to 'true'. If you leave
 # this commented, debug mode is disabled
 #enable_debug: true
