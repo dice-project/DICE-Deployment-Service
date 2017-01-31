@@ -107,3 +107,36 @@ with the following contents:
 
 This should make a **DICE-Deployment** option appear in the Tools -> Build 
 system. Selecting it and then runnung Tools -> Build will run the script.
+
+### Eclipse
+
+Eclipse enables configuration of external tools, which can be executed from the
+user's workspace. Built-in variables contain values describing the user's
+current project, file being edited or other information on the tool
+execution's context. These can be passed to the external tool to make it
+process files being edited in the Eclipse.
+
+We assume that the user will be editing their DIA in a Java (or any other
+language or environment) project. In the root directory of the project, they
+need to place the `project.dice-delivery` file as detailed
+[above](#project-file).
+
+We add the DICE deployment service's tool to the list of external tools as
+follows:
+
+* Open Run -> External Tools Configuration
+* On the left side of the dialog select **Program** and click on **New launch
+  configuration** icon at the top
+* Name the launch configuration, e.g. "DICE deploy TOSCA blueprint"
+* Make sure the Main tab is active
+* Enter the path to your installation of the script in the Location field. E.g.,
+  `/usr/bin/ide_deploy_tosca.sh`
+* In the Arguments field, provide the path to the `project.dice-delivery` file.
+  This will be relative to the current project, located in the path stored in the
+  `${project_loc}` variable, thus we input the following:
+  `"${project_loc}/project.dice-delivery"`
+* Click **Apply** to save the tool configuration
+
+Now the user can select "DICE deploy TOSCA blueprint" from the Run external
+tool drop down on the main toolbar. This will execute the tool in the background
+with the output of the tool appearing in the Output Console of Eclipse.

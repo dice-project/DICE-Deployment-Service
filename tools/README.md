@@ -21,4 +21,4 @@ used in the deployment process. This includes the following tools:
 * `ide_deploy_tosca.sh` packages the blueprint and the resource files, submits
   the blueprint bundle to the deployment service, waits for the deployment to
   finish, and displays the outputs. This script can be used as an IDE build
-  target.
+  target. Further instructions are available [here](./README-ide_deploy_tosca.md)
