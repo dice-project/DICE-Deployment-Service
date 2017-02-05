@@ -121,6 +121,48 @@ class DependencyGraph(Command):
         args.output.flush()
 
 
+class TypeHierarcy(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser(
+            "types", help="Output type hierarchy graph (dot format)"
+        )
+        parser.add_argument("-o", "--output", help="Output file",
+                            type=argparse.FileType("w"), default="-")
+        return parser
+
+    @staticmethod
+    def write_head(output):
+        output.write("digraph {\n"
+                     "  node [shape=box];\n"
+                     "  edge [arrowhead=empty];\n\n")
+
+    @staticmethod
+    def write_tail(output):
+        output.write("\n}\n")
+
+    @staticmethod
+    def create_type_graph(nodes):
+        graph = {}
+        for node in nodes:
+            type_hierarchy = node["type_hierarchy"][::-1]
+            for typ, parent in zip(type_hierarchy, type_hierarchy[1:]):
+                graph[typ] = parent
+        return graph
+
+    @staticmethod
+    def write_body(graph, output):
+        for typ, parent in graph.items():
+            output.write('  "{}" -> "{}";\n'.format(typ, parent))
+
+    def execute(self, args):
+        self.write_head(args.output)
+        graph = self.create_type_graph(self.blueprint["nodes"])
+        self.write_body(graph, args.output)
+        self.write_tail(args.output)
+
+
 def create_parser():
     def is_command(item):
         return (inspect.isclass(item) and item != Command and
