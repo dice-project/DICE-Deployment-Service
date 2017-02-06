@@ -93,6 +93,37 @@ class Dump(Command):
         print(json.dumps(self.blueprint, indent=2))
 
 
+class Graph(object):
+
+    @staticmethod
+    def add_subparser(subparsers, name, help):
+        parser = subparsers.add_parser(name, help=help)
+        parser.add_argument("-o", "--output", help="Output file",
+                            type=argparse.FileType("w"), default="-")
+        return parser
+
+    @staticmethod
+    def write_head(output):
+        output.write("digraph {\n"
+                     "  node [shape=box];\n"
+                     "  edge [arrowhead=empty];\n\n")
+
+    @staticmethod
+    def write_tail(output):
+        output.write("\n}\n")
+
+    @staticmethod
+    def write_body(graph, output):
+        for source, target in graph:
+            output.write('  "{}" -> "{}";\n'.format(source, target))
+
+    @staticmethod
+    def write_graph(graph, output):
+        Graph.write_head(output)
+        Graph.write_body(graph, output)
+        Graph.write_tail(output)
+
+
 class DependencyGraph(Command):
 
     @staticmethod
