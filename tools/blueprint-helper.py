@@ -163,6 +163,28 @@ class TypeGraph(Command):
         Graph.write_graph(graph, args.output)
 
 
+class RelationshipGraph(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        return Graph.add_subparser(
+            subparsers, "relationships",
+            "Output relationship hierarchy graph (dot format)"
+        )
+
+    def create_graph(self):
+        graph = {}
+        for node in self.blueprint["nodes"]:
+            for rel in node["relationships"]:
+                rel_hierarchy = rel["type_hierarchy"][::-1]
+                for typ, parent in zip(rel_hierarchy, rel_hierarchy[1:]):
+                    graph[typ] = parent
+        return graph.items()
+
+    def execute(self, args):
+        graph = self.create_graph()
+        Graph.write_graph(graph, args.output)
+
 
 def create_parser():
     def is_command(item):
