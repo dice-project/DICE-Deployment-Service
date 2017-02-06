@@ -124,74 +124,44 @@ class Graph(object):
         Graph.write_tail(output)
 
 
-class DependencyGraph(Command):
+class NodeGraph(Command):
 
     @staticmethod
     def add_subparser(subparsers):
-        parser = subparsers.add_parser(
-            "graph", help="Prepare node dependency graph (dot format)"
+        return Graph.add_subparser(
+            subparsers, "graph", "Prepare node dependency graph (dot format)"
         )
-        parser.add_argument("-o", "--output", help="Output file",
-                            type=argparse.FileType("w"), default="-")
-        return parser
 
-    @staticmethod
-    def output_node(node, output):
-        for rel in node["relationships"]:
-            output.write("  {} -> {};\n".format(node["id"], rel["target_id"]))
-
+    def create_graph(self):
+        return [(node["id"], rel["target_id"])
+                for node in self.blueprint["nodes"]
+                for rel in node["relationships"]]
 
     def execute(self, args):
-        args.output.write("digraph {\n")
-        args.output.write("  node [shape=box];\n\n")
-
-        for node in self.blueprint["nodes"]:
-            self.output_node(node, args.output)
-
-        args.output.write("\n}\n")
-        args.output.flush()
+        graph = self.create_graph()
+        Graph.write_graph(graph, args.output)
 
 
-class TypeHierarcy(Command):
+class TypeGraph(Command):
 
     @staticmethod
     def add_subparser(subparsers):
-        parser = subparsers.add_parser(
-            "types", help="Output type hierarchy graph (dot format)"
+        return Graph.add_subparser(
+            subparsers, "types", "Output type hierarchy graph (dot format)"
         )
-        parser.add_argument("-o", "--output", help="Output file",
-                            type=argparse.FileType("w"), default="-")
-        return parser
 
-    @staticmethod
-    def write_head(output):
-        output.write("digraph {\n"
-                     "  node [shape=box];\n"
-                     "  edge [arrowhead=empty];\n\n")
-
-    @staticmethod
-    def write_tail(output):
-        output.write("\n}\n")
-
-    @staticmethod
-    def create_type_graph(nodes):
+    def create_graph(self):
         graph = {}
-        for node in nodes:
+        for node in self.blueprint["nodes"]:
             type_hierarchy = node["type_hierarchy"][::-1]
             for typ, parent in zip(type_hierarchy, type_hierarchy[1:]):
                 graph[typ] = parent
-        return graph
-
-    @staticmethod
-    def write_body(graph, output):
-        for typ, parent in graph.items():
-            output.write('  "{}" -> "{}";\n'.format(typ, parent))
+        return graph.items()
 
     def execute(self, args):
-        self.write_head(args.output)
-        graph = self.create_type_graph(self.blueprint["nodes"])
-        self.write_body(graph, args.output)
-        self.write_tail(args.output)
+        graph = self.create_graph()
+        Graph.write_graph(graph, args.output)
+
 
 
 def create_parser():
