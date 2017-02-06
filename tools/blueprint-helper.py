@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 
+import itertools
 import argparse
 import textwrap
 import inspect
@@ -100,13 +101,21 @@ class Graph(object):
         parser = subparsers.add_parser(name, help=help)
         parser.add_argument("-o", "--output", help="Output file",
                             type=argparse.FileType("w"), default="-")
+        parser.add_argument("-c", "--color", action="store_true",
+                            default=False,
+                            help="Colorize output (DICE types are cyan)")
+        parser.add_argument("-l", "--layout",
+                            help="Output layout (graphviz's rankdir)",
+                            default="TB",
+                            choices=("TB", "LR", "BT", "RL"))
         return parser
 
     @staticmethod
-    def write_head(output):
-        output.write("digraph {\n"
-                     "  node [shape=box];\n"
-                     "  edge [arrowhead=empty];\n\n")
+    def write_head(layout, output):
+        output.write("digraph {{\n"
+                     "  node [shape=box style=filled fillcolor=white];\n"
+                     "  edge [arrowhead=empty];\n"
+                     "  rankdir={};\n\n".format(layout))
 
     @staticmethod
     def write_tail(output):
@@ -118,8 +127,17 @@ class Graph(object):
             output.write('  "{}" -> "{}";\n'.format(source, target))
 
     @staticmethod
-    def write_graph(graph, output):
-        Graph.write_head(output)
+    def write_nodes(graph, output):
+        for node in set(itertools.chain(*graph)):
+            color = "cyan2" if node.split(".", 1)[0] == "dice" else "white"
+            output.write('  "{}" [fillcolor={}];\n'.format(node, color))
+        output.write("\n")
+
+    @staticmethod
+    def write_graph(graph, output, color, layout):
+        Graph.write_head(layout, output)
+        if color:
+            Graph.write_nodes(graph, output)
         Graph.write_body(graph, output)
         Graph.write_tail(output)
 
@@ -139,7 +157,7 @@ class NodeGraph(Command):
 
     def execute(self, args):
         graph = self.create_graph()
-        Graph.write_graph(graph, args.output)
+        Graph.write_graph(graph, args.output, args.color, args.layout)
 
 
 class TypeGraph(Command):
@@ -160,7 +178,7 @@ class TypeGraph(Command):
 
     def execute(self, args):
         graph = self.create_graph()
-        Graph.write_graph(graph, args.output)
+        Graph.write_graph(graph, args.output, args.color, args.layout)
 
 
 class RelationshipGraph(Command):
@@ -183,7 +201,7 @@ class RelationshipGraph(Command):
 
     def execute(self, args):
         graph = self.create_graph()
-        Graph.write_graph(graph, args.output)
+        Graph.write_graph(graph, args.output, args.color, args.layout)
 
 
 def create_parser():
