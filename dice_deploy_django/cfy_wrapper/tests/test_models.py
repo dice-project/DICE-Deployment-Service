@@ -291,6 +291,12 @@ class InputTest(BaseTest):
         with self.assertRaises(IntegrityError):
             Input.objects.create(key="key", description="desc")
 
+    def test_empty_string_value(self):
+        Input.objects.create(key="key", value="", description="desc")
+        i = Input.objects.get(key="key")
+        self.assertEqual("", i.value)
+        self.assertEqual("desc", i.description)
+
     def test_no_description_is_empty_string(self):
         Input.objects.create(key="key", value="value")
         i = Input.objects.get(key="key")

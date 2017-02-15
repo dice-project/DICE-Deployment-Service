@@ -220,13 +220,13 @@ class Container(Base):
 
 class Input(models.Model):
     key = models.CharField(max_length=256, primary_key=True)
-    value = models.TextField()
+    value = models.TextField(null=True)
     description = models.TextField(blank=True)
 
     def save(self, *args, **kwargs):
         if self.key is None or self.key == "":
             raise IntegrityError("Key cannot be empty")
-        if self.value is None or self.value == "":
+        if self.value is None:
             raise IntegrityError("Value cannot be empty")
         super(Input, self).save(*args, **kwargs)
 
