@@ -189,10 +189,14 @@ definitions:
         type: string
       ip:
         type: string
+      components:
+        type: array
+        items: string
     required:
       - id
       - node_id
       - ip
+      - components
 
   NodeList:
     type: array

@@ -18,7 +18,7 @@ from .serializers import (
     BlueprintSerializer,
     ContainerSerializer,
     InputSerializer,
-    NodeSerializer,
+    VMSerializer,
     ErrorSerializer,
 )
 from .api_docs import OpenAPIRenderer, get_api_reference
@@ -169,19 +169,31 @@ class ContainerBlueprintView(APIView):
 
 class ContainerNodesView(APIView):
 
+    @staticmethod
+    def _gen_node(data):
+        return dict(id=data.id, node_id=data.node_id, components=[],
+                    ip=data.runtime_properties["ip"])
+
     def get(self, request, id):
         """
-        Get ip addresses of machines, running in selected container
+        List VMs that are running inside selected container. Each node also
+        contains set of components that are installed onto it.
         """
         container = Container.get(id)
-        instances = []
-        if container.blueprint is not None:
-            client = utils.get_cfy_client()
-            instances = client.node_instances.list(
-                deployment_id=container.blueprint.cfy_id,
-            )
-            instances = [i for i in instances if "ip" in i.runtime_properties]
-        s = NodeSerializer(instances, many=True)
+        if container.blueprint is None:
+            return Response([])
+
+        client = utils.get_cfy_client()
+        nodes = client.nodes.list(container.blueprint.cfy_id)
+        instances = client.node_instances.list(container.blueprint.cfy_id)
+
+        node_types = {n.id: n.type for n in nodes}
+        vms = {i.id: self._gen_node(i) for i in instances if i.id == i.host_id}
+        for i in instances:
+            if i.host_id is not None:
+                vms[i.host_id]["components"].append(node_types[i.node_id])
+
+        s = VMSerializer(vms.values(), many=True)
         return Response(s.data)
 
 

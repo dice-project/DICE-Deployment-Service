@@ -60,8 +60,9 @@ class InputSerializer(serializers.ModelSerializer):
         list_serializer_class = InputListSerializer
 
 
-class NodeSerializer(serializers.Serializer):
+class VMSerializer(serializers.Serializer):
 
     id = serializers.CharField()
     node_id = serializers.CharField()
-    ip = serializers.CharField(source="runtime_properties.ip")
+    ip = serializers.CharField()
+    components = serializers.ListField()

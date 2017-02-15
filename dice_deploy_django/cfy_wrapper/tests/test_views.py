@@ -686,24 +686,31 @@ class ContainerNodesTest(BaseViewTest):
         c = Container.objects.create(blueprint=b)
         kw = dict(id=c.cfy_id)
         req = self.get(reverse("container_nodes", kwargs=kw), auth=True)
+
+        node_call = mock_cfy.return_value.nodes.list
+        node_call.return_value = [
+            mock.Mock(id="nid1", type="node.Type1"),
+            mock.Mock(id="nid2", type="node.Type2")
+        ]
+
         list_call = mock_cfy.return_value.node_instances.list
         list_call.return_value = [
-            mock.Mock(id="id1", node_id="nid1",
+            mock.Mock(id="id1", node_id="nid1", host_id="id1",
                       runtime_properties=dict(ip="127.0.0.1")),
-            mock.Mock(id="id2", node_id="nid2",
-                      runtime_properties=dict(pi="127.0.0.2")),
-            mock.Mock(id="id3", node_id="nid3",
+            mock.Mock(id="id2", node_id="nid2", host_id="id1",
                       runtime_properties=dict(ip="127.0.0.3")),
-        ]
-        reference = [
-            {"id": "id1", "node_id": "nid1", "ip": "127.0.0.1"},
-            {"id": "id3", "node_id": "nid3", "ip": "127.0.0.3"},
+            mock.Mock(id="id3", node_id="nid2", host_id=None),
         ]
 
         resp = ContainerNodesView.as_view()(req, c.cfy_id)
 
         self.assertEqual(status.HTTP_200_OK, resp.status_code)
-        self.assertEqual(reference, resp.data)
+        self.assertEqual(1, len(resp.data))
+        self.assertEqual({"node.Type1", "node.Type2"},
+                         set(resp.data[0]["components"]))
+        del resp.data[0]["components"]
+        self.assertEqual({"id": "id1", "node_id": "nid1", "ip": "127.0.0.1"},
+                         resp.data[0])
 
 
 class BlueprintIdTest(BaseViewTest):
