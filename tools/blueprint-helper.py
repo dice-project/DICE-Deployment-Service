@@ -56,14 +56,12 @@ class Inputs(Command):
     @staticmethod
     def print_table(inputs):
         for k, v in sorted(inputs.items(), key=lambda x: x[0]):
-            default = v.get("default", "")
-            req = default == ""
             desc = textwrap.fill(v.get("description", ""),
                                  initial_indent="| ", subsequent_indent="| ")
-            if req:
+            if "default" not in v:
                 print("+ {} [required]".format(k))
             else:
-                print("+ {} [default: {}]".format(k, default))
+                print("+ {} [default: {}]".format(k, v["default"]))
             if desc != "":
                 print(desc)
             print()
