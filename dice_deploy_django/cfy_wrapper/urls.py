@@ -4,7 +4,6 @@ from .views import (
     APIDocView,
 
     HeartBeatView,
-    CeleryDebugView,
 
     ContainersView,
     ContainerIdView,
@@ -27,8 +26,6 @@ urlpatterns = [
     # Heartbeat
     url(r"^heartbeat/?$",
         HeartBeatView.as_view(), name="heartbeat"),
-    url(r"^celery/?$",
-        CeleryDebugView.as_view(), name="celery"),
 
     # Containers
     url(r"^containers/?$",

@@ -32,13 +32,6 @@ prevents concurrent executions of multiple tasks in single container.
 logger = get_task_logger("tasks")
 
 
-@shared_task(bind=True)
-def debug_task(task):
-    logger.info("##### Received DEBUG task #####")
-    logger.info("IS_TEST_SETTINGS: %s" % settings.IS_TEST_SETTINGS)
-    return "##### Received DEBUG task #####"
-
-
 def _update_state(blueprint_id, state, success=True):
     blueprint = Blueprint.get(blueprint_id)
     blueprint.state = state if success else -state

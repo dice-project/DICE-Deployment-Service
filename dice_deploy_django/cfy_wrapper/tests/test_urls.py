@@ -18,9 +18,6 @@ class UrlTest(BaseTest):
     def test_heartbeat(self):
         self._test_path("/heartbeat", "heartbeat")
 
-    def test_celery(self):
-        self._test_path("/celery", "celery")
-
     def test_containers(self):
         self._test_path("/containers", "containers")
 

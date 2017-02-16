@@ -253,19 +253,6 @@ paths:
            schema:
              $ref: "#/definitions/Message"
 
-  /celery:
-    get:
-      summary: Test Celery service liveness
-      description: Test if Celery service is working properly.
-      operationId: celeryTest
-      tags:
-        - debug
-      responses:
-         "200":
-           description: Successful request
-           schema:
-             $ref: "#/definitions/Message"
-
   /auth/get-token:
     post:
       summary: Authentication endpoint

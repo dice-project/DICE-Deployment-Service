@@ -47,16 +47,6 @@ class HeartBeatView(APIView):
         return Response({"msg": "DICE Deployment Service Heart Beat"})
 
 
-class CeleryDebugView(APIView):
-    """
-    View that should be used to test Celery
-    """
-
-    def get(self, request):
-        tasks.debug_task.apply_async()
-        return Response({"msg": "Celery debug"})
-
-
 class ContainersView(APIView):
 
     def get(self, request):
