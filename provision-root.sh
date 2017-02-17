@@ -2,6 +2,8 @@
 
 apt-get update
 apt-get install -y rabbitmq-server python-virtualenv python-dev
+rabbitmq-plugins enable rabbitmq_management
+service rabbitmq-server restart
 
 # install npm and bower
 apt-get install -y npm git
