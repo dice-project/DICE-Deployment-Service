@@ -30,7 +30,6 @@ INSTALLED_APPS = (
     "rest_framework_swagger",
     "cfy_wrapper.apps.CfyWrapper",
     "cfy_wrapper_gui",
-    "djcelery",
     "rest_framework.authtoken",
     "django.contrib.admin"
 )
@@ -82,14 +81,11 @@ USE_L10N = True
 USE_TZ = True
 
 # Celery config
-BROKER_URL = 'amqp://guest:guest@localhost:5672//'
-CELERY_ALWAYS_EAGER = False
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_ENABLE_UTC = True
-CELERY_DEFAULT_QUEUE = 'dice_deploy'
-CELERY_DEFAULT_ROUTING_KEY = 'dice_deploy'
-CELERY_ROUTES = {'dice_deploy': 'dice_deploy'}
+CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
+CELERY_TASK_ALWAYS_EAGER = False
+CELERY_TASK_DEFAULT_QUEUE = 'dice_deploy'
+CELERY_TASK_DEFAULT_ROUTING_KEY = 'dice_deploy'
+CELERY_TASK_ROUTES = {'dice_deploy': 'dice_deploy'}
 
 # Cloudify settings
 CFY_MANAGER_URL = "172.16.95.115"

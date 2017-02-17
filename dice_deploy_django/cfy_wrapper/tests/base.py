@@ -42,7 +42,7 @@ class BaseTest(APITestCase):
 
         # Django settings patches
         mock.patch.object(settings, "MEDIA_ROOT", self.wd.path).start()
-        mock.patch.object(settings, "CELERY_ALWAYS_EAGER", True).start()
+        mock.patch.object(settings, "CELERY_TASK_ALWAYS_EAGER", True).start()
         self.addCleanup(mock.patch.stopall)
 
 
