@@ -2,6 +2,7 @@ from enum import IntEnum, unique
 
 from rest_framework.exceptions import NotFound
 
+from django.utils.encoding import python_2_unicode_compatible
 from django.conf import settings
 from django.db import IntegrityError
 from django.db import models
@@ -32,6 +33,7 @@ class Base(models.Model):
         abstract = True
 
 
+@python_2_unicode_compatible
 class Blueprint(Base):
     # Possible states
     @unique
@@ -175,6 +177,11 @@ class Blueprint(Base):
             return False, diff
         return True, service_inputs
 
+    def __str__(self):
+        return "id: {}, state: {}, in_error: {}".format(
+            self.id, self.state_name, self.in_error
+        )
+
 
 class ContainerQuerySet(models.QuerySet):
     """
@@ -185,6 +192,7 @@ class ContainerQuerySet(models.QuerySet):
             obj.delete()
 
 
+@python_2_unicode_compatible
 class Container(Base):
     objects = ContainerQuerySet.as_manager()
 
@@ -217,7 +225,14 @@ class Container(Base):
             raise IntegrityError(msg)
         super(Container, self).delete(*args, **kwargs)
 
+    def __str__(self):
+        return "id: {}, blueprint: {}, queue: {}, busy: {}".format(
+            self.id, getattr(self.blueprint, "id", "none"),
+            getattr(self.queue, "id", "none"), self.busy
+        )
 
+
+@python_2_unicode_compatible
 class Input(models.Model):
     key = models.CharField(max_length=256, primary_key=True)
     value = models.TextField(null=True)
@@ -241,7 +256,11 @@ class Input(models.Model):
             "default": el.value
         } for el in Input.objects.all()}
 
+    def __str__(self):
+        return "{}: {}".format(self.key, self.value)
 
+
+@python_2_unicode_compatible
 class Error(models.Model):
 
     id = models.UUIDField(
@@ -251,3 +270,8 @@ class Error(models.Model):
     blueprint = models.ForeignKey(Blueprint, on_delete=models.CASCADE,
                                   related_name="errors")
     created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return "id: {}, msg: {}, blueprint: {}".format(
+            self.id, self.message, self.blueprint.id
+        )
