@@ -173,13 +173,22 @@ class Blueprint(Base):
 
         diff = required_blueprint_keys - service_keys
         if len(diff) > 0:
-            return False, diff
-        return True, service_inputs
+            raise Blueprint.InputsError(diff)
+        return service_inputs
 
     def __str__(self):
         return "id: {}, state: {}, in_error: {}".format(
             self.id, self.state_name, self.in_error
         )
+
+    class InputsError(Exception):
+
+        def __init__(self, missing_inputs):
+            self.missing_inputs = missing_inputs
+
+        def __str__(self):
+            missing = ", ".join(self.missing_inputs)
+            return "Missing inputs: {}".format(missing)
 
 
 class ContainerQuerySet(models.QuerySet):

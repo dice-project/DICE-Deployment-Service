@@ -93,10 +93,9 @@ class BlueprintTest(BaseTest):
             Input.objects.create(key=str(i), value="val-{}".format(i))
         b = Blueprint.objects.create()
 
-        success, inputs = b.prepare_inputs()
+        inputs = b.prepare_inputs()
 
         mock_parse.assert_called_once_with(b.content_blueprint)
-        self.assertTrue(success)
         self.assertEqual({"1": "val-1", "5": "val-5"}, inputs)
 
     @mock.patch("cfy_wrapper.models.parser.parse_from_path")
@@ -111,10 +110,9 @@ class BlueprintTest(BaseTest):
             Input.objects.create(key=str(i), value="val-{}".format(i))
         b = Blueprint.objects.create()
 
-        success, inputs = b.prepare_inputs()
+        inputs = b.prepare_inputs()
 
         mock_parse.assert_called_once_with(b.content_blueprint)
-        self.assertTrue(success)
         self.assertEqual({"5": "val-5"}, inputs)
 
     @mock.patch("cfy_wrapper.models.parser.parse_from_path")
@@ -129,11 +127,11 @@ class BlueprintTest(BaseTest):
             Input.objects.create(key=str(i), value="val-{}".format(i))
         b = Blueprint.objects.create()
 
-        success, inputs = b.prepare_inputs()
+        with self.assertRaises(Blueprint.InputsError) as cm:
+            b.prepare_inputs()
 
         mock_parse.assert_called_once_with(b.content_blueprint)
-        self.assertFalse(success)
-        self.assertEqual({"5"}, inputs)
+        self.assertEqual({"5"}, cm.exception.missing_inputs)
 
     @mock.patch("cfy_wrapper.models.parser.parse_from_path")
     def test_prepare_inputs_missing_default(self, mock_parse):
@@ -147,11 +145,11 @@ class BlueprintTest(BaseTest):
             Input.objects.create(key=str(i), value="val-{}".format(i))
         b = Blueprint.objects.create()
 
-        success, inputs = b.prepare_inputs()
+        with self.assertRaises(Blueprint.InputsError) as cm:
+            b.prepare_inputs()
 
         mock_parse.assert_called_once_with(b.content_blueprint)
-        self.assertFalse(success)
-        self.assertEqual({"5"}, inputs)
+        self.assertEqual({"5"}, cm.exception.missing_inputs)
 
     def test_store_content_yaml(self):
         b = Blueprint.objects.create()

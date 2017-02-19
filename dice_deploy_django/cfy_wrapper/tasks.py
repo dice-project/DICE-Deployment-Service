@@ -143,11 +143,12 @@ def create_deployment(task, container_id):
 
     logger.info("Gathering inputs for '{}'.".format(id))
     blueprint = Blueprint.get(id)
-    success, inputs = blueprint.prepare_inputs()
-    if not success:
+    try:
+        inputs = blueprint.prepare_inputs()
+    except Blueprint.InputsError as e:
         _update_state(id, Blueprint.State.preparing_deployment, False)
         _cancel_chain_execution(task, container_id)
-        msg = "Missing inputs: {}.".format(", ".join(inputs))
+        msg = "Missing inputs: {}.".format(", ".join(e.missing_inputs))
         blueprint.log_error(msg)
         logger.info(msg)
         return
