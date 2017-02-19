@@ -56,7 +56,6 @@ class Blueprint(Base):
 
         # Installation
         uploading_to_cloudify = 2
-        uploaded_to_cloudify = 3
         preparing_deployment = 4
         prepared_deployment = 5
         installing = 6

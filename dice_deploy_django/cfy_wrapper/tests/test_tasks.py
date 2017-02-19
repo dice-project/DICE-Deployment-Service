@@ -140,40 +140,29 @@ class BaseCeleryTest(BaseTest):
         mock.patch.object(tasks, "logger").start()
 
 
-@mock.patch.object(tasks, "_cancel_chain_execution")
-@mock.patch("cfy_wrapper.utils.CloudifyClient")
+@mock.patch("cfy_wrapper.tasks.upload_blueprint.client")
 class UploadBlueprintTest(BaseCeleryTest):
 
-    def test_valid_blueprint_upload(self, mock_cfy, mock_cancel):
+    def test_valid_blueprint_upload(self, mock_cfy):
         b = Blueprint.objects.create()
         self.wd.write((str(b.id), "blueprint.yaml"), b"test: pair")
         c = Container.objects.create(blueprint=b)
-        call = mock_cfy.return_value.blueprints.publish_archive
+        call = mock_cfy.blueprints.publish_archive
 
         tasks.upload_blueprint(c.cfy_id)
 
         b.refresh_from_db()
         call.assert_called_once_with(b.content_tar, b.cfy_id)
-        mock_cancel.assert_not_called()
-        self.assertEqual(b.state, Blueprint.State.uploaded_to_cloudify)
 
-    def test_invalid_blueprint_upload(self, mock_cfy, mock_cancel):
+    def test_invalid_blueprint_upload(self, mock_cfy):
         b = Blueprint.objects.create()
         self.wd.write((str(b.id), "blueprint.yaml"), b"test: pair")
         c = Container.objects.create(blueprint=b)
-        call = mock_cfy.return_value.blueprints.publish_archive
+        call = mock_cfy.blueprints.publish_archive
         call.side_effect = CloudifyClientError("test")
 
-        tasks.upload_blueprint(c.cfy_id)
-
-        b.refresh_from_db()
-        call.assert_called_once_with(b.content_tar, b.cfy_id)
-        mock_cancel.assert_called_once()
-        self.assertEqual(c.cfy_id, mock_cancel.mock_calls[0][1][1])
-        self.assertEqual(b.state, -Blueprint.State.uploading_to_cloudify)
-        self.assertEqual(1, b.errors.all().count())
-        e = b.errors.all()[0]
-        self.assertEqual(e.message, "test")
+        with self.assertRaises(CloudifyClientError):
+            tasks.upload_blueprint(c.cfy_id)
 
 
 @mock.patch("cfy_wrapper.models.parser.parse_from_path")

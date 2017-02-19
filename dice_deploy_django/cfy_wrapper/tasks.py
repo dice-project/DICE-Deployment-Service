@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from celery import shared_task, chain
+from celery import Task, shared_task, chain
 from celery.utils.log import get_task_logger
 
 from . import utils
@@ -30,6 +30,38 @@ prevents concurrent executions of multiple tasks in single container.
 """
 
 logger = get_task_logger("tasks")
+
+
+class Job(Task):
+    """
+    Custom celery tasks that takes care of error handling. This should be used
+    as a base for all tasks.
+
+    IMPORTANT! Make sure that all tasks receive container_id as a last
+    argument. We need this information in order to properly release container
+    and log error messages.
+    """
+
+    autoretry_excs = (requests.Timeout, requests.ConnectionError)
+
+    max_retries = None
+    default_retry_delay = 10
+
+    def __init__(self):
+        self.client = utils.get_cfy_client()
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        container_id = args[-1]
+        logger.error("Operation in container {} failed.".format(container_id))
+
+        blueprint = Container.get(container_id).blueprint
+        blueprint.state = -abs(blueprint.state)
+        blueprint.save()
+
+        blueprint.log_error(str(exc))
+        logger.error(str(exc))
+
+        release_container(container_id)
 
 
 def _update_state(blueprint_id, state, success=True):
@@ -83,28 +115,25 @@ def _run_workflow(task, workflow_id, container_id, blueprint_id,
     return success
 
 
-@shared_task(bind=True)
-def upload_blueprint(task, container_id):
-    logger.info("Uploading archive from container '{}'.".format(container_id))
-    id = Container.get(container_id).blueprint.cfy_id
+def _get_blueprint_with_state(container_id, state):
+    blueprint = Container.get(container_id).blueprint
+    blueprint.state = state
+    blueprint.save()
+    return blueprint, blueprint.cfy_id
 
-    _update_state(id, Blueprint.State.uploading_to_cloudify)
-    client = utils.get_cfy_client()
+
+@shared_task(bind=True, base=Job, autoretry_for=Job.autoretry_excs,
+             retry_kwargs=dict(max_retries=5))
+def upload_blueprint(task, container_id):
+    blueprint, id = _get_blueprint_with_state(
+        container_id, Blueprint.State.uploading_to_cloudify
+    )
 
     logger.info("Creating archive for '{}'.".format(id))
-    blueprint = Blueprint.get(id)
     archive = blueprint.pack()
 
-    try:
-        logger.info("Uploading blueprint archive '{}'.".format(archive))
-        client.blueprints.publish_archive(archive, id)
-        _update_state(id, Blueprint.State.uploaded_to_cloudify)
-        logger.info("Blueprint '{}' upload succeeded.".format(id))
-    except exceptions.CloudifyClientError as e:
-        _update_state(id, Blueprint.State.uploading_to_cloudify, False)
-        logger.info("Blueprint '{}' upload failed.".format(id))
-        blueprint.log_error(e.message)
-        _cancel_chain_execution(task, container_id)
+    logger.info("Uploading blueprint archive '{}'.".format(archive))
+    task.client.blueprints.publish_archive(archive, id)
 
 
 @shared_task(bind=True)
