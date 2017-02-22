@@ -38,7 +38,7 @@ class UpdateStateTest(BaseTest):
 
 
 @override_settings(POOL_SLEEP_INTERVAL=0.01)
-class WaitForExecutionTest(BaseTest):
+class WaitForExecutionTestOld(BaseTest):
 
     def test_success(self):
         execution = mock.Mock(status="started")
@@ -166,87 +166,111 @@ class UploadBlueprintTest(BaseCeleryTest):
 
 
 @mock.patch("cfy_wrapper.models.parser.parse_from_path")
-@mock.patch.object(tasks, "_cancel_chain_execution")
-@mock.patch.object(tasks, "_wait_for_execution")
-@mock.patch("cfy_wrapper.utils.CloudifyClient")
+@mock.patch("cfy_wrapper.tasks.create_deployment.client")
 class CreateDeploymentTest(BaseCeleryTest):
 
-    def test_valid(self, mock_cfy, mock_wait, mock_cancel, mock_parse):
+    def test_valid(self, mock_cfy, mock_parse):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        c_call = mock_cfy.return_value.deployments.create
-        l_call = mock_cfy.return_value.executions.list
-        l_call.return_value = \
-            [mock.Mock(workflow_id="create_deployment_environment")]
-        mock_wait.return_value = True
+        c_call = mock_cfy.deployments.create
+        l_call = mock_cfy.executions.list
+        l_call.return_value = [mock.Mock(id="abc123")]
         mock_parse.return_value = {"inputs": {"1": "_1", "3": "_3"}}
         [Input.objects.create(key=str(i), value="v") for i in range(5)]
 
-        tasks.create_deployment(c.cfy_id)
+        result = tasks.create_deployment(c.cfy_id)
 
         b.refresh_from_db()
         c_call.assert_called_once_with(b.cfy_id, b.cfy_id,
                                        inputs={"1": "v", "3": "v"})
-        l_call.assert_called_once_with(b.cfy_id)
-        mock_wait.assert_called_once()
-        mock_cancel.assert_not_called()
+        l_call.assert_called_once_with(
+            b.cfy_id, workflow_id="create_deployment_environment"
+        )
         self.assertEqual(b.state, Blueprint.State.prepared_deployment)
+        self.assertEqual("abc123", result)
 
-    def test_invalid_input(self, mock_cfy, mock_wait, mock_cancel, mock_parse):
+    def test_invalid_input(self, mock_cfy, mock_parse):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        c_call = mock_cfy.return_value.deployments.create
+        c_call = mock_cfy.deployments.create
+        l_call = mock_cfy.executions.list
         mock_parse.return_value = {"inputs": {"1": "_1", "7": "_7"}}
         [Input.objects.create(key=str(i), value="v") for i in range(5)]
 
-        tasks.create_deployment(c.cfy_id)
+        with self.assertRaises(Blueprint.InputsError):
+            tasks.create_deployment(c.cfy_id)
 
-        b.refresh_from_db()
         c_call.assert_not_called()
-        mock_wait.assert_not_called()
-        mock_cancel.assert_called_once()
-        self.assertEqual(c.cfy_id, mock_cancel.mock_calls[0][1][1])
-        self.assertEqual(b.state, -Blueprint.State.preparing_deployment)
+        l_call.assert_not_called()
 
-    def test_invalid(self, mock_cfy, mock_wait, mock_cancel, mock_parse):
+    def test_invalid(self, mock_cfy, mock_parse):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        c_call = mock_cfy.return_value.deployments.create
+        c_call = mock_cfy.deployments.create
         c_call.side_effect = CloudifyClientError("test")
+        l_call = mock_cfy.executions.list
         mock_parse.return_value = {"inputs": {"1": "_1", "3": "_3"}}
         [Input.objects.create(key=str(i), value="v") for i in range(5)]
 
-        tasks.create_deployment(c.cfy_id)
+        with self.assertRaises(CloudifyClientError):
+            tasks.create_deployment(c.cfy_id)
 
-        b.refresh_from_db()
         c_call.assert_called_once_with(b.cfy_id, b.cfy_id,
                                        inputs={"1": "v", "3": "v"})
-        mock_wait.assert_not_called()
-        mock_cancel.assert_called_once()
-        self.assertEqual(c.cfy_id, mock_cancel.mock_calls[0][1][1])
-        self.assertEqual(b.state, -Blueprint.State.preparing_deployment)
+        l_call.assert_not_called()
 
-    def test_invalid_wait(self, mock_cfy, mock_wait, mock_cancel, mock_parse):
-        b = Blueprint.objects.create()
-        c = Container.objects.create(blueprint=b)
-        c_call = mock_cfy.return_value.deployments.create
-        l_call = mock_cfy.return_value.executions.list
-        l_call.return_value = \
-            [mock.Mock(workflow_id="create_deployment_environment")]
-        mock_wait.return_value = False
-        mock_parse.return_value = {"inputs": {"1": "_1", "3": "_3"}}
-        [Input.objects.create(key=str(i), value="v") for i in range(5)]
 
-        tasks.create_deployment(c.cfy_id)
+@override_settings(POOL_SLEEP_INTERVAL=0.01)
+@mock.patch("cfy_wrapper.tasks.wait_for_execution.client")
+class WaitForExecutionTest(BaseCeleryTest):
 
-        b.refresh_from_db()
-        c_call.assert_called_once_with(b.cfy_id, b.cfy_id,
-                                       inputs={"1": "v", "3": "v"})
-        l_call.assert_called_once_with(b.cfy_id)
-        mock_wait.assert_called_once()
-        mock_cancel.assert_called_once()
-        self.assertEqual(c.cfy_id, mock_cancel.mock_calls[0][1][1])
-        self.assertEqual(b.state, -Blueprint.State.prepared_deployment)
+    def test_success(self, mock_cfy):
+        l_call = mock_cfy.executions.get
+        l_call.side_effect = [
+            mock.Mock(status="started"), mock.Mock(status="terminated")
+        ]
+
+        tasks.wait_for_execution("e_id", False, "c_id")
+
+        l_call.assert_has_calls([mock.call("e_id")] * 2)
+
+    def test_success_immediate(self, mock_cfy):
+        l_call = mock_cfy.executions.get
+
+        tasks.wait_for_execution(None, False, "c_id")
+
+        l_call.assert_not_called()
+
+    def test_client_missing(self, mock_cfy):
+        l_call = mock_cfy.executions.get
+        l_call.side_effect = [
+            mock.Mock(status="started"),
+            CloudifyClientError("test", status_code=404)
+        ]
+
+        with self.assertRaises(CloudifyClientError):
+            tasks.wait_for_execution("e_id", False, "c_id")
+
+        l_call.assert_has_calls([mock.call("e_id")] * 2)
+
+    def test_client_missing_ok(self, mock_cfy):
+        l_call = mock_cfy.executions.get
+        l_call.side_effect = [CloudifyClientError("test", status_code=404)]
+
+        tasks.wait_for_execution("e_id", True, "c_id")
+
+        l_call.assert_has_calls([mock.call("e_id")])
+
+    def test_execution_failure(self, mock_cfy):
+        l_call = mock_cfy.executions.get
+        l_call.side_effect = [
+            mock.Mock(status="started"), mock.Mock(status="failed")
+        ]
+
+        with self.assertRaises(Exception):
+            tasks.wait_for_execution("e_id", False, "c_id")
+
+        l_call.assert_has_calls([mock.call("e_id")] * 2)
 
 
 @mock.patch.object(tasks, "_run_workflow")

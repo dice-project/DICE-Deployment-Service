@@ -136,50 +136,57 @@ def upload_blueprint(task, container_id):
     task.client.blueprints.publish_archive(archive, id)
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, base=Job, autoretry_for=Job.autoretry_excs,
+             retry_kwargs=dict(max_retries=5))
 def create_deployment(task, container_id):
-    id = Container.get(container_id).blueprint.cfy_id
-    _update_state(id, Blueprint.State.preparing_deployment)
+    blueprint, id = _get_blueprint_with_state(
+        container_id, Blueprint.State.preparing_deployment
+    )
 
     logger.info("Gathering inputs for '{}'.".format(id))
-    blueprint = Blueprint.get(id)
-    try:
-        inputs = blueprint.prepare_inputs()
-    except Blueprint.InputsError as e:
-        _update_state(id, Blueprint.State.preparing_deployment, False)
-        _cancel_chain_execution(task, container_id)
-        msg = "Missing inputs: {}.".format(", ".join(e.missing_inputs))
-        blueprint.log_error(msg)
-        logger.info(msg)
-        return
+    inputs = blueprint.prepare_inputs()
 
     logger.info("Creating deployment '{}'.".format(id))
-    client = utils.get_cfy_client()
-    try:
-        client.deployments.create(id, id, inputs=inputs)
-    except exceptions.CloudifyClientError:
-        _update_state(id, Blueprint.State.preparing_deployment, False)
-        _cancel_chain_execution(task, container_id)
-        logger.info("Deployment '{}' creation failed.".format(id))
+    task.client.deployments.create(id, id, inputs=inputs)
+    blueprint.state = Blueprint.State.prepared_deployment
+    blueprint.save()
+
+    executions = task.client.executions.list(
+        id, workflow_id="create_deployment_environment"
+    )
+    if len(executions) < 1:
+        raise Exception("Deployment creation execution did not start.")
+    elif len(executions) > 1:
+        raise Exception("More than one deployment creation execution started.")
+
+    return executions[0].id
+
+
+@shared_task(bind=True, base=Job, autoretry_for=Job.autoretry_excs,
+             retry_kwargs=dict(countdown=3))
+def wait_for_execution(task, execution_id, allow_missing, container_id):
+    # This can (and most likely will) happen on deployment deletion, since
+    # delete_deployment_environment is almost instantaneous on most platforms
+    # and will be long gone when we query for it.
+    if execution_id is None:
         return
 
-    logger.info("Waiting for deployment environment to initialize.")
-    try:
-        execution = next(e for e in client.executions.list(id)
-                         if e.workflow_id == "create_deployment_environment")
-    except exceptions.CloudifyClientError:
-        _update_state(id, Blueprint.State.prepared_deployment, False)
-        _cancel_chain_execution(task, container_id)
-        logger.info("Deployment '{}' creation failed.".format(id))
-        return
+    logger.info("Waiting for execution {}.".format(execution_id))
 
-    success = _wait_for_execution(client, execution)
-    _update_state(id, Blueprint.State.prepared_deployment, success)
-    if success:
-        logger.info("Deployment '{}' creation succeeded.".format(id))
-    else:
-        _cancel_chain_execution(task, container_id)
-        logger.info("Deployment '{}' creation failed.".format(id))
+    try:
+        execution = task.client.executions.get(execution_id)
+        while execution.status not in executions.Execution.END_STATES:
+            time.sleep(settings.POOL_SLEEP_INTERVAL)
+            execution = task.client.executions.get(execution_id)
+    except exceptions.CloudifyClientError as e:
+        if allow_missing and e.status_code == 404:
+            logger.info("Execution '{}' succeeded.".format(execution_id))
+            return
+        raise
+
+    if execution.status != executions.Execution.TERMINATED:
+        msg = "Execution '{}' terminated abnormally.".format(execution_id)
+        raise Exception(msg)
 
 
 @shared_task(bind=True)
@@ -350,6 +357,7 @@ def _get_deploy_pipe(container, register_app):
     pipe = [
         upload_blueprint.si(id),
         create_deployment.si(id),
+        wait_for_execution.s(False, id),
         install_blueprint.si(id),
         fetch_blueprint_outputs.si(id),
     ]
