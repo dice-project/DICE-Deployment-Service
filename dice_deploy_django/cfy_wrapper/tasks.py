@@ -236,56 +236,30 @@ def uninstall_blueprint(task, container_id):
     return task.client.executions.start(id, "uninstall").id
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, base=Job, autoretry_for=Job.autoretry_excs,
+             retry_kwargs=dict(max_retries=5))
 def delete_deployment(task, container_id):
-    """
-    This task is one giant can of worms, because there is about a schmillion
-    ways things can terminate when we delete deployment. Most of them will
-    never be encountered (since most platforms behave quite reasonably), but
-    in order to be on the safe side, we handle just about anything here.
+    blueprint, id = _get_blueprint_with_state(
+        container_id, Blueprint.State.deleting_deployment
+    )
 
-    Happy path: Call delete, when back from delete, deployment is gone.
-    Sad path: Call delete, when back from delete, deployment is not gone. Now
-              wait for this deployment to terminate and keep fingers crossed
-              that things really terminate.
-    """
-    id = Container.get(container_id).blueprint.cfy_id
+    logger.info("Scheduling deployment '{}' deletion.".format(id))
+    task.client.deployments.delete(id)
 
-    _update_state(id, Blueprint.State.deleting_deployment)
-    client = utils.get_cfy_client()
-
-    logger.info("Deleting deployment '{}'.".format(id))
     try:
-        client.deployments.delete(id)
-    except exceptions.CloudifyClientError:
-        _update_state(id, Blueprint.State.deleting_deployment, False)
-        _cancel_chain_execution(task, container_id)
-        logger.info("Deployment '{}' deletion failed.".format(id))
-        return
-
-    logger.info("Waiting for deployment environment to vanish.")
-    try:
-        execution = next(e for e in client.executions.list(id)
-                         if e.workflow_id == "delete_deployment_environment")
+        executions = task.client.executions.list(
+            id, workflow_id="delete_deployment_environment"
+        )
     except exceptions.CloudifyClientError as e:
         if e.status_code == 404:
-            # Happy path
-            _update_state(id, Blueprint.State.deleted_deployment)
-            logger.info("Deployment '{}' deletion succeeded.".format(id))
-        else:
-            _update_state(id, Blueprint.State.deleted_deployment, False)
-            _cancel_chain_execution(task, container_id)
-            logger.info("Deployment '{}' deletion failed.".format(id))
-        return
+            return None
 
-    # Sad path
-    success = _wait_for_execution(client, execution, on_delete=True)
-    _update_state(id, Blueprint.State.deleted_deployment, success)
-    if success:
-        logger.info("Deployment '{}' deletion succeeded.".format(id))
-    else:
-        _cancel_chain_execution(task, container_id)
-        logger.info("Deployment '{}' deletion failed.".format(id))
+    if len(executions) < 1:
+        raise Exception("Deployment deletion did not start.")
+    elif len(executions) > 1:
+        raise Exception("More than one deployment deletion started.")
+
+    return executions[0].id
 
 
 @shared_task(bind=True)
@@ -371,10 +345,10 @@ def _get_undeploy_pipe(container):
 
     # Simulate C's switch statement with fall-through
     index_map = {
-        Blueprint.State.present:                 4,
-        Blueprint.State.uploading_to_cloudify:   4,
-        Blueprint.State.uploaded_to_cloudify:    3,
-        Blueprint.State.preparing_deployment:    3,
+        Blueprint.State.present:                 5,
+        Blueprint.State.uploading_to_cloudify:   5,
+        Blueprint.State.uploaded_to_cloudify:    4,
+        Blueprint.State.preparing_deployment:    4,
         Blueprint.State.prepared_deployment:     2,
         Blueprint.State.installing:              0,
         Blueprint.State.installed:               0,
@@ -385,14 +359,15 @@ def _get_undeploy_pipe(container):
         Blueprint.State.uninstalling:            0,
         Blueprint.State.uninstalled:             2,
         Blueprint.State.deleting_deployment:     2,
-        Blueprint.State.deleted_deployment:      3,
-        Blueprint.State.deleting_from_cloudify:  3,
+        Blueprint.State.deleted_deployment:      4,
+        Blueprint.State.deleting_from_cloudify:  4,
     }
     id = container.cfy_id
     pipe = [
         uninstall_blueprint.si(id),
         wait_for_execution.s(False, id),
         delete_deployment.si(id),
+        wait_for_execution.s(True, id),
         delete_blueprint.si(id),
     ]
     index = index_map[abs(container.blueprint.state)]

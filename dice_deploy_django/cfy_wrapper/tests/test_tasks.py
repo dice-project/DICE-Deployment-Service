@@ -438,80 +438,53 @@ class UninstallTest(BaseCeleryTest):
         call.assert_called_once_with(b.cfy_id, "uninstall")
 
 
-@mock.patch.object(tasks, "_cancel_chain_execution")
-@mock.patch.object(tasks, "_wait_for_execution")
-@mock.patch("cfy_wrapper.utils.CloudifyClient")
+@mock.patch("cfy_wrapper.tasks.delete_deployment.client")
 class DeleteDeploymentTest(BaseCeleryTest):
 
-    def test_happy_path(self, mock_cfy, mock_wait, mock_cancel):
+    def test_happy_path(self, mock_cfy):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        c_call = mock_cfy.return_value.deployments.delete
-        l_call = mock_cfy.return_value.executions.list
+        c_call = mock_cfy.deployments.delete
+        l_call = mock_cfy.executions.list
         l_call.side_effect = CloudifyClientError("test", status_code=404)
 
-        tasks.delete_deployment(c.cfy_id)
+        result = tasks.delete_deployment(c.cfy_id)
 
         b.refresh_from_db()
         c_call.assert_called_once_with(b.cfy_id)
-        l_call.assert_called_once_with(b.cfy_id)
-        mock_wait.assert_not_called()
-        mock_cancel.assert_not_called()
-        self.assertEqual(b.state, Blueprint.State.deleted_deployment)
+        l_call.assert_called_once_with(
+            b.cfy_id, workflow_id="delete_deployment_environment"
+        )
+        self.assertEqual(b.state, Blueprint.State.deleting_deployment)
+        self.assertIsNone(result)
 
-    def test_fail(self, mock_cfy, mock_wait, mock_cancel):
+    def test_fail(self, mock_cfy):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        c_call = mock_cfy.return_value.deployments.delete
+        c_call = mock_cfy.deployments.delete
         c_call.side_effect = CloudifyClientError("test")
-        l_call = mock_cfy.return_value.executions.list
+        l_call = mock_cfy.executions.list
 
-        tasks.delete_deployment(c.cfy_id)
+        with self.assertRaises(CloudifyClientError):
+            tasks.delete_deployment(c.cfy_id)
 
-        b.refresh_from_db()
         c_call.assert_called_once_with(b.cfy_id)
         l_call.assert_not_called()
-        mock_wait.assert_not_called()
-        mock_cancel.assert_called_once()
-        self.assertEqual(c.cfy_id, mock_cancel.mock_calls[0][1][1])
-        self.assertEqual(b.state, -Blueprint.State.deleting_deployment)
 
-    def test_sad_path_success(self, mock_cfy, mock_wait, mock_cancel):
+    def test_sad_path(self, mock_cfy):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        c_call = mock_cfy.return_value.deployments.delete
-        l_call = mock_cfy.return_value.executions.list
-        l_call.return_value = \
-            [mock.Mock(workflow_id="delete_deployment_environment")]
-        mock_wait.return_value = True
+        c_call = mock_cfy.deployments.delete
+        l_call = mock_cfy.executions.list
+        l_call.return_value = [mock.Mock(id="abc123")]
 
-        tasks.delete_deployment(c.cfy_id)
+        result = tasks.delete_deployment(c.cfy_id)
 
-        b.refresh_from_db()
         c_call.assert_called_once_with(b.cfy_id)
-        l_call.assert_called_once_with(b.cfy_id)
-        mock_wait.assert_called_once()
-        mock_cancel.assert_not_called()
-        self.assertEqual(b.state, Blueprint.State.deleted_deployment)
-
-    def test_sad_path_fail(self, mock_cfy, mock_wait, mock_cancel):
-        b = Blueprint.objects.create()
-        c = Container.objects.create(blueprint=b)
-        c_call = mock_cfy.return_value.deployments.delete
-        l_call = mock_cfy.return_value.executions.list
-        l_call.return_value = \
-            [mock.Mock(workflow_id="delete_deployment_environment")]
-        mock_wait.return_value = False
-
-        tasks.delete_deployment(c.cfy_id)
-
-        b.refresh_from_db()
-        c_call.assert_called_once_with(b.cfy_id)
-        l_call.assert_called_once_with(b.cfy_id)
-        mock_wait.assert_called_once()
-        mock_cancel.assert_called_once()
-        self.assertEqual(c.cfy_id, mock_cancel.mock_calls[0][1][1])
-        self.assertEqual(b.state, -Blueprint.State.deleted_deployment)
+        l_call.assert_called_once_with(
+            b.cfy_id, workflow_id="delete_deployment_environment"
+        )
+        self.assertEqual("abc123", result)
 
 
 @mock.patch.object(tasks, "_cancel_chain_execution")
