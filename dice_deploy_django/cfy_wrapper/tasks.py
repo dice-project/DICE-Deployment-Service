@@ -64,57 +64,6 @@ class Job(Task):
         release_container(container_id)
 
 
-def _update_state(blueprint_id, state, success=True):
-    blueprint = Blueprint.get(blueprint_id)
-    blueprint.state = state if success else -state
-    blueprint.save()
-
-
-def _cancel_chain_execution(task, container_id):
-    task.request.callbacks = None
-    release_container(container_id)
-
-
-def _wait_for_execution(client, execution, on_deleted=False):
-    """
-    This function waits for cloudify execution to reach terminal state. It
-    returns true when cloudify executions terminates in success state.
-
-    It is possible to override return value in the case of deleted execution
-    (such as when we delete deployment environment and all executions get
-    deleted too).
-    """
-
-    success = False
-    try:
-        while execution.status not in executions.Execution.END_STATES:
-            time.sleep(settings.POOL_SLEEP_INTERVAL)
-            execution = client.executions.get(execution.id)
-        success = execution.status == executions.Execution.TERMINATED
-    except exceptions.CloudifyClientError as e:
-        success = on_deleted if e.status_code == 404 else False
-    return success
-
-
-def _run_workflow(task, workflow_id, container_id, blueprint_id,
-                  start_state, end_state):
-    _update_state(blueprint_id, start_state)
-    client = utils.get_cfy_client()
-    success = False
-
-    try:
-        execution = client.executions.start(blueprint_id, workflow_id)
-        success = _wait_for_execution(client, execution)
-    except exceptions.CloudifyClientError:
-        _update_state(blueprint_id, start_state, False)
-    else:
-        _update_state(blueprint_id, end_state, success)
-
-    if not success:
-        _cancel_chain_execution(task, container_id)
-    return success
-
-
 def _get_blueprint_with_state(container_id, state):
     blueprint = Container.get(container_id).blueprint
     blueprint.state = state
