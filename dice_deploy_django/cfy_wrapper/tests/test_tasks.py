@@ -487,36 +487,30 @@ class DeleteDeploymentTest(BaseCeleryTest):
         self.assertEqual("abc123", result)
 
 
-@mock.patch.object(tasks, "_cancel_chain_execution")
-@mock.patch("cfy_wrapper.utils.CloudifyClient")
+@mock.patch("cfy_wrapper.tasks.delete_blueprint.client")
 class DeleteBlueprintTest(BaseCeleryTest):
 
-    def test_valid(self, mock_cfy, mock_cancel):
+    def test_valid(self, mock_cfy):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        call = mock_cfy.return_value.blueprints.delete
+        call = mock_cfy.blueprints.delete
 
         tasks.delete_blueprint(c.cfy_id)
 
         b.refresh_from_db()
         call.assert_called_once_with(b.cfy_id)
-        mock_cancel.assert_not_called()
         self.assertEqual(b.state, Blueprint.State.present)
 
-    def test_invalid(self, mock_cfy, mock_cancel):
+    def test_invalid(self, mock_cfy):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        call = mock_cfy.return_value.blueprints.delete
+        call = mock_cfy.blueprints.delete
         call.side_effect = CloudifyClientError("test")
 
-        tasks.delete_blueprint(c.cfy_id)
+        with self.assertRaises(CloudifyClientError):
+            tasks.delete_blueprint(c.cfy_id)
 
-        b.refresh_from_db()
         call.assert_called_once_with(b.cfy_id)
-        mock_cancel.assert_called_once()
-        self.assertEqual(c.cfy_id, mock_cancel.mock_calls[0][1][1])
-        self.assertEqual(c.cfy_id, mock_cancel.mock_calls[0][1][1])
-        self.assertEqual(b.state, -Blueprint.State.deleting_from_cloudify)
 
 
 @mock.patch.object(tasks, "requests")

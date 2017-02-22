@@ -262,22 +262,17 @@ def delete_deployment(task, container_id):
     return executions[0].id
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, base=Job, autoretry_for=Job.autoretry_excs,
+             retry_kwargs=dict(max_retries=5))
 def delete_blueprint(task, container_id):
-    id = Container.get(container_id).blueprint.cfy_id
-
-    _update_state(id, Blueprint.State.deleting_from_cloudify)
-    client = utils.get_cfy_client()
+    blueprint, id = _get_blueprint_with_state(
+        container_id, Blueprint.State.deleting_from_cloudify
+    )
 
     logger.info("Deleting blueprint '{}'.".format(id))
-    try:
-        client.blueprints.delete(id)
-        _update_state(id, Blueprint.State.present)
-        logger.info("Blueprint '{}' deletion succeeded.".format(id))
-    except exceptions.CloudifyClientError:
-        _update_state(id, Blueprint.State.deleting_from_cloudify, False)
-        _cancel_chain_execution(task, container_id)
-        logger.info("Blueprint '{}' deletion failed.".format(id))
+    task.client.blueprints.delete(id)
+    blueprint.state = Blueprint.State.present
+    blueprint.save()
 
 
 @shared_task
