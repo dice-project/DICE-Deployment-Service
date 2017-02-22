@@ -275,7 +275,7 @@ def delete_blueprint(task, container_id):
     blueprint.save()
 
 
-@shared_task
+@shared_task(base=Job)
 def process_container_queue(container_id):
     logger.info("Switching container blueprint")
     container = Container.get(container_id)
@@ -286,7 +286,7 @@ def process_container_queue(container_id):
     container.save()
 
 
-@shared_task
+@shared_task(base=Job)
 def release_container(container_id):
     logger.info("Releasing container {}".format(container_id))
     container = Container.get(container_id)
