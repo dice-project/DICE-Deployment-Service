@@ -292,19 +292,15 @@ def _get_undeploy_pipe(container):
     index_map = {
         Blueprint.State.present:                 5,
         Blueprint.State.uploading_to_cloudify:   5,
-        Blueprint.State.uploaded_to_cloudify:    4,
         Blueprint.State.preparing_deployment:    4,
         Blueprint.State.prepared_deployment:     2,
         Blueprint.State.installing:              0,
-        Blueprint.State.installed:               0,
         Blueprint.State.fetching_outputs:        0,
 
         Blueprint.State.deployed:                0,
 
         Blueprint.State.uninstalling:            0,
-        Blueprint.State.uninstalled:             2,
         Blueprint.State.deleting_deployment:     2,
-        Blueprint.State.deleted_deployment:      4,
         Blueprint.State.deleting_from_cloudify:  4,
     }
     id = container.cfy_id

@@ -59,16 +59,13 @@ class Blueprint(Base):
         preparing_deployment = 4
         prepared_deployment = 5
         installing = 6
-        installed = 7  # This is what we reach after install workflow finishes
         fetching_outputs = 8
 
         deployed = 9  # This is idle state
 
         # Uninstall workflow
         uninstalling = 10
-        uninstalled = 11
         deleting_deployment = 12
-        deleted_deployment = 13
         deleting_from_cloudify = 14
 
     # Fields
