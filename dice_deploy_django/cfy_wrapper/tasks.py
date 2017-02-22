@@ -189,16 +189,15 @@ def wait_for_execution(task, execution_id, allow_missing, container_id):
         raise Exception(msg)
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, base=Job, autoretry_for=Job.autoretry_excs,
+             retry_kwargs=dict(max_retries=5))
 def install_blueprint(task, container_id):
-    id = Container.get(container_id).blueprint.cfy_id
+    blueprint, id = _get_blueprint_with_state(
+        container_id, Blueprint.State.installing
+    )
 
-    logger.info("Running install on deployment '{}'.".format(id))
-    success = _run_workflow(task, "install", container_id, id,
-                            Blueprint.State.installing,
-                            Blueprint.State.installed)
-    msg = "Install on deployment '{}' {}."
-    logger.info(msg.format(id, "succeeded" if success else "failed"))
+    logger.info("Scheduling install on deployment '{}'.".format(id))
+    return task.client.executions.start(id, "install").id
 
 
 @shared_task(bind=True)
@@ -359,6 +358,7 @@ def _get_deploy_pipe(container, register_app):
         create_deployment.si(id),
         wait_for_execution.s(False, id),
         install_blueprint.si(id),
+        wait_for_execution.s(False, id),
         fetch_blueprint_outputs.si(id),
     ]
     if register_app:

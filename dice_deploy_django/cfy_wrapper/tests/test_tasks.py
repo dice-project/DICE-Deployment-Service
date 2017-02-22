@@ -273,36 +273,30 @@ class WaitForExecutionTest(BaseCeleryTest):
         l_call.assert_has_calls([mock.call("e_id")] * 2)
 
 
-@mock.patch.object(tasks, "_run_workflow")
+@mock.patch("cfy_wrapper.tasks.install_blueprint.client")
 class InstallTest(BaseCeleryTest):
 
-    def test_success(self, mock_run):
+    def test_success(self, mock_cfy):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        mock_run.return_value = True
-        tasks.install_blueprint(c.cfy_id)
+        call = mock_cfy.executions.start
+        call.return_value = mock.Mock(id="abc123")
 
-        mock_run.assert_called_once()
-        # Next line: get all but first positional param of first mock call
-        call_params_without_task = mock_run.mock_calls[0][1][1:]
-        self.assertEqual(call_params_without_task,
-                         ("install", c.cfy_id, b.cfy_id,
-                          Blueprint.State.installing,
-                          Blueprint.State.installed))
+        result = tasks.install_blueprint(c.cfy_id)
 
-    def test_fail(self, mock_run):
+        call.assert_called_once_with(b.cfy_id, "install")
+        self.assertEqual("abc123", result)
+
+    def test_fail(self, mock_cfy):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        mock_run.return_value = False
-        tasks.install_blueprint(c.cfy_id)
+        call = mock_cfy.executions.start
+        call.side_effect = CloudifyClientError("test")
 
-        mock_run.assert_called_once()
-        # Next line: get all but first positional param of first mock call
-        call_params_without_task = mock_run.mock_calls[0][1][1:]
-        self.assertEqual(call_params_without_task,
-                         ("install", c.cfy_id, b.cfy_id,
-                          Blueprint.State.installing,
-                          Blueprint.State.installed))
+        with self.assertRaises(CloudifyClientError):
+            tasks.install_blueprint(c.cfy_id)
+
+        call.assert_called_once_with(b.cfy_id, "install")
 
 
 @mock.patch("cfy_wrapper.utils.CloudifyClient")
