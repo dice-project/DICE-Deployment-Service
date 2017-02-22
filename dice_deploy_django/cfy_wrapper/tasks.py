@@ -225,16 +225,15 @@ def fetch_blueprint_outputs(task, container_id):
     blueprint.save()
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, base=Job, autoretry_for=Job.autoretry_excs,
+             retry_kwargs=dict(max_retries=5))
 def uninstall_blueprint(task, container_id):
-    id = Container.get(container_id).blueprint.cfy_id
+    blueprint, id = _get_blueprint_with_state(
+        container_id, Blueprint.State.uninstalling
+    )
 
-    logger.info("Running uninstall on deploment '{}'.".format(id))
-    success = _run_workflow(task, "uninstall", container_id, id,
-                            Blueprint.State.uninstalling,
-                            Blueprint.State.uninstalled)
-    msg = "Uninstall on deployment '{}' {}."
-    logger.info(msg.format(id, "succeeded" if success else "failed"))
+    logger.info("Scheduling uninstall on deployment '{}'.".format(id))
+    return task.client.executions.start(id, "uninstall").id
 
 
 @shared_task(bind=True)
@@ -372,11 +371,11 @@ def _get_undeploy_pipe(container):
 
     # Simulate C's switch statement with fall-through
     index_map = {
-        Blueprint.State.present:                 3,
-        Blueprint.State.uploading_to_cloudify:   3,
-        Blueprint.State.uploaded_to_cloudify:    2,
-        Blueprint.State.preparing_deployment:    2,
-        Blueprint.State.prepared_deployment:     1,
+        Blueprint.State.present:                 4,
+        Blueprint.State.uploading_to_cloudify:   4,
+        Blueprint.State.uploaded_to_cloudify:    3,
+        Blueprint.State.preparing_deployment:    3,
+        Blueprint.State.prepared_deployment:     2,
         Blueprint.State.installing:              0,
         Blueprint.State.installed:               0,
         Blueprint.State.fetching_outputs:        0,
@@ -384,14 +383,15 @@ def _get_undeploy_pipe(container):
         Blueprint.State.deployed:                0,
 
         Blueprint.State.uninstalling:            0,
-        Blueprint.State.uninstalled:             0,
-        Blueprint.State.deleting_deployment:     1,
-        Blueprint.State.deleted_deployment:      1,
-        Blueprint.State.deleting_from_cloudify:  2,
+        Blueprint.State.uninstalled:             2,
+        Blueprint.State.deleting_deployment:     2,
+        Blueprint.State.deleted_deployment:      3,
+        Blueprint.State.deleting_from_cloudify:  3,
     }
     id = container.cfy_id
     pipe = [
         uninstall_blueprint.si(id),
+        wait_for_execution.s(False, id),
         delete_deployment.si(id),
         delete_blueprint.si(id),
     ]

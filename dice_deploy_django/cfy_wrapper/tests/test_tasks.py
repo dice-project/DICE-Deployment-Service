@@ -412,38 +412,30 @@ class FetchOutputsTest(BaseCeleryTest):
         self.assertEqual(b.state, Blueprint.State.deployed)
 
 
-@mock.patch.object(tasks, "_run_workflow")
+@mock.patch("cfy_wrapper.tasks.uninstall_blueprint.client")
 class UninstallTest(BaseCeleryTest):
 
-    def test_success(self, mock_run):
+    def test_success(self, mock_cfy):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        mock_run.return_value = True
+        call = mock_cfy.executions.start
+        call.return_value = mock.Mock(id="abc123")
 
-        tasks.uninstall_blueprint(c.cfy_id)
+        result = tasks.uninstall_blueprint(c.cfy_id)
 
-        mock_run.assert_called_once()
-        # Next line: get all but first positional param of first mock call
-        call_params_without_task = mock_run.mock_calls[0][1][1:]
-        self.assertEqual(call_params_without_task,
-                         ("uninstall", c.cfy_id, b.cfy_id,
-                          Blueprint.State.uninstalling,
-                          Blueprint.State.uninstalled))
+        call.assert_called_once_with(b.cfy_id, "uninstall")
+        self.assertEqual("abc123", result)
 
-    def test_fail(self, mock_run):
+    def test_fail(self, mock_cfy):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        mock_run.return_value = False
+        call = mock_cfy.executions.start
+        call.side_effect = CloudifyClientError("test")
 
-        tasks.uninstall_blueprint(c.cfy_id)
+        with self.assertRaises(CloudifyClientError):
+            tasks.uninstall_blueprint(c.cfy_id)
 
-        mock_run.assert_called_once()
-        # Next line: get all but first positional param of first mock call
-        call_params_without_task = mock_run.mock_calls[0][1][1:]
-        self.assertEqual(call_params_without_task,
-                         ("uninstall", c.cfy_id, b.cfy_id,
-                          Blueprint.State.uninstalling,
-                          Blueprint.State.uninstalled))
+        call.assert_called_once_with(b.cfy_id, "uninstall")
 
 
 @mock.patch.object(tasks, "_cancel_chain_execution")
