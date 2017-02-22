@@ -299,13 +299,13 @@ class InstallTest(BaseCeleryTest):
         call.assert_called_once_with(b.cfy_id, "install")
 
 
-@mock.patch("cfy_wrapper.utils.CloudifyClient")
+@mock.patch("cfy_wrapper.tasks.fetch_blueprint_outputs.client")
 class FetchOutputsTest(BaseCeleryTest):
 
     def test_success_non_empty(self, mock_cfy):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        deploys = mock_cfy.return_value.deployments
+        deploys = mock_cfy.deployments
         deploys.get.return_value = {
             "key": "value",
             "outputs": {
@@ -337,7 +337,7 @@ class FetchOutputsTest(BaseCeleryTest):
     def test_success_empty(self, mock_cfy):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        deploys = mock_cfy.return_value.deployments
+        deploys = mock_cfy.deployments
         deploys.get.return_value = {
             "key": "value",
             "outputs": {
@@ -359,7 +359,7 @@ class FetchOutputsTest(BaseCeleryTest):
     def test_success_missing_desc(self, mock_cfy):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        deploys = mock_cfy.return_value.deployments
+        deploys = mock_cfy.deployments
         deploys.get.return_value = {
             "key": "value",
             "outputs": {
@@ -390,7 +390,7 @@ class FetchOutputsTest(BaseCeleryTest):
     def test_success_empty_desc(self, mock_cfy):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)
-        deploys = mock_cfy.return_value.deployments
+        deploys = mock_cfy.deployments
         deploys.get.return_value = {"key": "value"}
         deploys.outputs.get.return_value = {
             "key": "value",

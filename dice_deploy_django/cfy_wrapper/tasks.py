@@ -200,30 +200,29 @@ def install_blueprint(task, container_id):
     return task.client.executions.start(id, "install").id
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, base=Job, autoretry_for=Job.autoretry_excs,
+             retry_kwargs=dict(max_retries=5))
 def fetch_blueprint_outputs(task, container_id):
     # TODO: If we cannot get outputs, something is wrong with connection, but
     # we certainly would not like to fail run for this. Needs more thought,
     # leave only happy path in for now.
-    id = Container.get(container_id).blueprint.cfy_id
+    blueprint, id = _get_blueprint_with_state(
+        container_id, Blueprint.State.fetching_outputs
+    )
 
-    _update_state(id, Blueprint.State.fetching_outputs)
     logger.info("Collecting outputs for blueprint '{}'.".format(id))
+    descs = task.client.deployments.get(id).get("outputs", {})
+    outs = task.client.deployments.outputs.get(id).get("outputs", {})
 
-    client = utils.get_cfy_client()
-    descs = client.deployments.get(id).get("outputs", {})
-    outs = client.deployments.outputs.get(id).get("outputs", {})
-
-    for key, value in outs.iteritems():
+    for key, value in outs.items():
         outs[key] = {
             "value": value,
             "description": descs.get(key, {}).get("description", "")
         }
 
-    blueprint = Blueprint.get(id)
     blueprint.outputs = outs
+    blueprint.state = Blueprint.State.deployed
     blueprint.save()
-    _update_state(id, Blueprint.State.deployed)
 
 
 @shared_task(bind=True)
