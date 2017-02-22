@@ -294,11 +294,14 @@ def release_container(container_id):
     container.save()
 
 
-@shared_task
+@shared_task(base=Job, autoretry_for=Job.autoretry_excs,
+             retry_kwargs=dict(max_retries=5))
 def register_app(container_id):
-    logger.info("Registering application.")
-    blueprint = Container.get(container_id).blueprint
+    blueprint, id = _get_blueprint_with_state(
+        container_id, Blueprint.State.deleting_from_cloudify
+    )
 
+    logger.info("Registering application.")
     try:
         dmon_address = Input.objects.get(key="dmon_address")
     except Input.DoesNotExist:
@@ -306,10 +309,8 @@ def register_app(container_id):
                             "Cannot register application with dmon.")
         return
 
-    url = "http://{}/dmon/v1/overlord/application/{}".format(
-        dmon_address.value, Container.get(container_id).blueprint.cfy_id
-    )
-    response = requests.put(url)
+    url = "http://{}/dmon/v1/overlord/application/{}"
+    response = requests.put(url.format(dmon_address.value, id))
     if response.status_code != 200:
         msg = "Application registration failed: '{}'"
         blueprint.log_error(msg.format(response.text))
