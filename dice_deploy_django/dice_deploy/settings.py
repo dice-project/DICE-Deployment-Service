@@ -89,8 +89,10 @@ CELERY_TASK_ROUTES = {'dice_deploy': 'dice_deploy'}
 
 # Cloudify settings
 CFY_MANAGER_URL = "172.16.95.115"
+CFY_MANAGER_PROTOCOL = "http"  # Other valid option is "https"
 CFY_MANAGER_USERNAME = "username"
 CFY_MANAGER_PASSWORD = "password"
+CFY_MANAGER_CACERT = None  # Path to self-signed certificate if needed
 POOL_SLEEP_INTERVAL = 3  # In seconds
 
 # File upload storage

@@ -85,4 +85,7 @@ def get_cfy_client():
                            settings.CFY_MANAGER_PASSWORD)
     creds_enc = base64.urlsafe_b64encode(creds.encode("utf-8"))
     headers = {"Authorization": "Basic {}".format(creds_enc)}
-    return CloudifyClient(settings.CFY_MANAGER_URL, headers=headers)
+    return CloudifyClient(host=settings.CFY_MANAGER_URL,
+                          protocol=settings.CFY_MANAGER_PROTOCOL,
+                          cert=settings.CFY_MANAGER_CACERT,
+                          headers=headers)
