@@ -90,7 +90,8 @@ Replace `ADMIN_PASS` and `RABBIT_PASS` placeholders with secure passwords.
 has a bug that prevents connecting to RabbitMQ if `rabbitmq_username`or
 `rabbitmq_password` contains characters that need to be escaped when used in
 URLs. Bug has been fixed, but current version does not have it applied yet. In
-the mean time, use longer, ASCII only username and password.
+the mean time, use longer username and password that match regular expression
+`[A-Za-z0-9_.-~]+`.
 
 Next, we must create floating IP for the server.
 
@@ -156,7 +157,7 @@ replace IP address with address of the floating IP we just created.
     default_ca = CA_default
     
     [ CA_default ]
-    dir = ./demoCA
+    dir = ./diceCA
     certs = $dir/certs
     crl_dir = $dir/crl
     database = $dir/index.txt
@@ -229,7 +230,7 @@ replace IP address with address of the floating IP we just created.
     default_tsa = tsa_config1
     
     [ tsa_config1 ]
-    dir = ./demoCA
+    dir = ./diceCA
     serial = $dir/tsaserial
     crypto_device = builtin
     signer_cert = $dir/tsacert.pem
@@ -237,7 +238,7 @@ replace IP address with address of the floating IP we just created.
     signer_key = $dir/private/tsakey.pem
     default_policy = tsa_policy1
     other_policies = tsa_policy2, tsa_policy3
-    digests = md5, sha1
+    digests = sha256, sha384, sha512
     accuracy = secs:1, millisecs:500, microsecs:100
     clock_precision_digits = 0
     ordering = yes
