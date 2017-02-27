@@ -28,6 +28,9 @@ inputs:
   superuser_email:
     description: This e-mail will be assigned to the deployment service admin
 
+  floating_ip_id:
+    description: Floating IP that should be attached to DDS VM
+
   # Inputs that will most likely only need to be set to non-default values by
   # service developers and/or continuous integration scripts.
 
@@ -96,6 +99,8 @@ node_types:
               default:
                 - [ dds_tarball, { get_property: [ SELF, sources        ] } ]
                 - [ cfy_crt,     { get_property: [ SELF, manager_cacert ] } ]
+                - [ dds_crt,     ssl/dds.crt                                ]
+                - [ dds_key,     ssl/dds.key                                ]
 
 
   dice.firewall_rules.DeploymentService:
@@ -112,6 +117,8 @@ node_types:
             protocol: udp
           - remote_ip_prefix: 0.0.0.0/0
             port: 80
+          - remote_ip_prefix: 0.0.0.0/0
+            port: 443
           - remote_ip_prefix: 0.0.0.0/0
             port: 5555
           - remote_ip_prefix: 0.0.0.0/0
@@ -131,6 +138,9 @@ node_templates:
 
   ip:
     type: dice.VirtualIP
+    properties:
+      resource_id: { get_input: floating_ip_id }
+      use_external_resource: true
 
   fw:
     type: dice.firewall_rules.DeploymentService
@@ -155,4 +165,4 @@ outputs:
   http_endpoint:
     description: DICE Deployment Service endpoint
     value:
-      concat: [ "http://", { get_attribute: [ip, floating_ip_address] } ]
+      concat: [ "https://", { get_attribute: [ip, floating_ip_address] } ]

@@ -13,6 +13,10 @@ ubuntu_image_id: ca290f2d-5163-483b-9dd5-fafe21517c0a
 # $ . openstack.rc
 # $ nova flavor-list
 medium_flavor_id: d3046a41-245a-4042-862e-59568e81f8fa
+
+# Floating IP that service should be associated with. This is needed because
+# we need to have an IP when generating certificate for service.
+floating_ip_id: 02468ace-1357-9bdf-0246-8ace13579bdf
 # ----------------------------------------------------------------------------
 
 
@@ -68,6 +72,10 @@ vdc: vdc-uuid
 # the Information tab. The UUIDs are listed in the Related resources & UUIDs
 # panel for the item Network.
 network: network-uuid
+
+# Since FCO platform does not support floating IPs, we can place any dummy
+# value here, since it will not be used.
+floating_ip_id: dummy-floating-ip-id
 # ----------------------------------------------------------------------------
 
 
