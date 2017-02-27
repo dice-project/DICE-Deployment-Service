@@ -10,4 +10,4 @@ flower==0.9.1
 jsonfield==1.0.3
 markdown==2.6.6
 PyYAML==3.11
-requests
+requests[security]

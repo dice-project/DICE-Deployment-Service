@@ -1,0 +1,148 @@
+# ----------------------------------------------------------------------------
+# OpenStack related parameters (comment out or remove this section if you are
+# not installing on OpenStack)
+
+# Set the ID of the image to be used as the basis for the DICE Deployment
+# Service VM. It is possible to look up this ID using the nova client, e.g.:
+# $ . openstack.rc
+# $ glance image-list
+ubuntu_image_id: ca290f2d-5163-483b-9dd5-fafe21517c0a
+
+# The flavour of the VM to instantiate the deployer service in. Again, use
+# the nova client to look the IDs up:
+# $ . openstack.rc
+# $ nova flavor-list
+medium_flavor_id: d3046a41-245a-4042-862e-59568e81f8fa
+# ----------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------
+# Flexiant Cloud Orchestrator (FCO) related parameters (comment out or remove
+# this section if you are not using on FCO)
+
+# The URL of the FCO API
+service_url: https://cp.diceproject.flexiant.net
+
+# FCO VM settings.
+medium_image_id: 03e7505d-1616-339f-951e-d6e815b940da
+medium_disk: 100 GB Storage Disk
+medium_server_type: 2 GB / 1 CPU
+
+# User's FCO credentials: the username (e-mail address) or the API key user
+# ID.  The best practice is to create an API key user in the FCO, which is
+# then delegated to the automation. The API key user must be a member of the
+# Admin Group to be able to deploy and delete VMs. Obtain the API username ID
+# by visiting the FCO web GUI console, switching to Users section in the
+# navigation at the left side of the interface, clicking on your API Key User
+# entry and referring to the API username field. The user id is the first part
+# of the entry before the "/" delimiter.
+username: username
+
+# User's FCO credentials: the password
+password: password
+
+# FCO customer ID.  For an API key user, this ID is in the part after the "/"
+# delimiter of the API username field. For a regular user, obtain this ID by
+# visiting th FCO console (the web GUI). In the Users tab, click on one of
+# the groups. Then open the Information panel and find the Customer
+# information in Related resources & UUIDs.
+customer: customer
+
+# Set the ID of the SSH key to be used by the agent to make the VM accessible.
+# This is the UUID that can be found in the SSH keys section of the FCO web
+# GUI console, where you can click on the SSH key designated for Cloudify to
+# be able to connect to the VMs, then switch to the Information tab. The UUIDs
+# are listed in the Related resources & UUIDs panel for the item Network.
+agent_key: agent-key-uuid
+
+# Set the ID of the VCD where the DICE Deployment Service VM will be deployed.
+# This is the UUID that can be found in the VCDs section of the FCO web GUI
+# console, where you can click on the VCD designated to receive the
+# blueprints, then switch to the Information tab. The UUIDs are listed in the
+# Related resources & UUIDs panel.
+vdc: vdc-uuid
+
+# Set the ID of the FCO network that the VM will connect to.  This is the UUID
+# that can be found in the Networks section of the FCO web GUI console, where
+# you can click on the network designated to connect the VMs, then switch to
+# the Information tab. The UUIDs are listed in the Related resources & UUIDs
+# panel for the item Network.
+network: network-uuid
+# ----------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------
+# VM settings
+
+# The Linux user name available in the provisioned VM. By default, DICE TOSCA
+# library assumes ubuntu user, you can override this if your images are
+# created differently.
+#ubuntu_agent_user: ubuntu
+# ----------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------
+# Cloudify Manager settings
+
+# Address of the Cloudify Manager that the DICE Deployment Service should use
+# as its back-end.
+cfy_manager: 172.16.95.115
+
+# Cloudify Manager security username. If your Cloudify Manager does not have
+# any security set, use an arbitrary value.
+cfy_manager_username: username
+
+# Cloudify Manager security password. If your Cloudify Manager does not have
+# any security set, use an arbitrary value.
+cfy_manager_password: password
+
+# Protocol that Cloudify Manager is using to communicate with clients
+# (http or https).
+cfy_manager_protocol: https
+
+# Certificate that should be used to validate https connection to Cloudify
+# Manager. If Cloudify Manager is accessed over http or certificate that is
+# being used is trusted, you should set this to null.
+cfy_manager_cacert: ssl/cfy.crt
+# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+# DICE Deployment Service parameters
+
+# The blueprint creates a superuser. This is the username it will use.
+superuser_username: admin
+
+# This is the password for the superuser.
+superuser_password: changeme
+
+# This is the e-mail address to be used by the created superuser.
+superuser_email: admin@example.com
+
+# Number of celery workers. If this is commented out, default value of 5 will
+# be used.
+#no_celery_workers: 5
+
+# If you wish to enable debug installation, set this to 'true'. If you leave
+# this commented, debug mode is disabled
+#enable_debug: true
+
+# You can add one additional ssh key to the server. If this is commented out,
+# no additional key is added.
+#ssh_key: "ssh-rsa
+#          AAAAB3NzaC1yc2Eksnkljsdnfksncasalwerujwlicuniudiww4nk5j98foajcdsi\
+#          nvie587thhnvksjacbHJhbkjBNKJNBSKJBDFKJBKHJBjbkdjfbvkjdsnaliuuz4r8\
+#          7jLKHKIFHUkdnflčykndslckvdjnstrhugnkjdsnvXhm7RptKmRG5OtrZTBLmpIue\
+#          f0chMcH6dRnbr/ZAbe7nZlqn0Jnn6wL3TKtSC0i4ceAbxv989mKH+s83Uvt1ENkQu\
+#          7PGDkzBQHAHM/GPOZXWZT18KImCHttKjuv95MGTyPRxV8Dznfklz9JOOfnr84m/UX\
+#          fcoH1RbX2aCD0YgOJUGjydVsUBttWQ/jYsyXZ9h4N3R+Q=="
+# ----------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------
+# Dummy values that are only present to satisfy library requirements - we do
+# not use them, so they can have default dummy values.
+centos_image_id: dummy
+small_flavor_id: dummy
+large_flavor_id: dummy
+dns_server: dummy
+# ----------------------------------------------------------------------------

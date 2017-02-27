@@ -11,6 +11,14 @@ inputs:
   cfy_manager_password:
     description: Password that should be used when connecting to manager
 
+  cfy_manager_cacert:
+    description: Cloudify's self signed certificate
+    default: null
+
+  cfy_manager_protocol:
+    description: Protocol to be used for connecting to Cloudify (http or https)
+    default: https
+
   superuser_username:
     description: This username will be set for the deployment service admin
 
@@ -58,6 +66,8 @@ node_types:
       manager:            { default: { get_input: cfy_manager          } }
       manager_user:       { default: { get_input: cfy_manager_username } }
       manager_pass:       { default: { get_input: cfy_manager_password } }
+      manager_cacert:     { default: { get_input: cfy_manager_cacert   } }
+      manager_protocol:   { default: { get_input: cfy_manager_protocol } }
       superuser_username: { default: { get_input: superuser_username   } }
       superuser_password: { default: { get_input: superuser_password   } }
       superuser_email:    { default: { get_input: superuser_email      } }
@@ -77,18 +87,15 @@ node_types:
     interfaces:
       cloudify.interfaces.lifecycle:
         create:
-          implementation: dice.dice_plugin.tasks.base.download_resource
+          implementation: dice.dice_plugin.tasks.base.download_resources
           inputs:
-            source:
-              default: { get_property: [SELF, sources] }
-            destination_key:
+            resource_pairs:
               description: >
-                DO NOT CHANGE THIS DEFAULT VALUE WITHOUT CHANGING CHEF
+                DO NOT CHANGE THIS DEFAULT MAPPING WITHOUT CHANGING CHEF
                 RECIPE FOR DICE DEPLOYMENT SERVICE. You have been warned.
-                When resource is downloaded to some temporary location, path
-                to the downloaded file will be stored inside
-                node.runtime_properties[destination_key] for Chef.
-              default: dds_tarball
+              default:
+                - [ dds_tarball, { get_property: [ SELF, sources        ] } ]
+                - [ cfy_crt,     { get_property: [ SELF, manager_cacert ] } ]
 
 
   dice.firewall_rules.DeploymentService:
