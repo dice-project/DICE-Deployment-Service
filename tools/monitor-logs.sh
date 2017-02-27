@@ -22,7 +22,9 @@ function ensure_log_path() {
 
 function run() {
     LOG_PATH="$1"
+    local DEBUG_ON="" # "-vv"
 
+    echo "Logging to $LOG_PATH"
     while [ 1 ]
     do
         local EXECUTIONS=$(cfy executions list | \
@@ -46,7 +48,7 @@ function run() {
                 echo "starting $LOG"
 
                 touch "$LOG"
-                cfy events list -l --tail -e $EVENT_ID > "$LOG" &
+                cfy events list -l $DEBUG_ON --tail -e $EVENT_ID > "$LOG" &
             fi
         done
         sleep 1
