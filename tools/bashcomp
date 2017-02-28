@@ -4,6 +4,7 @@ function _get_commands ()
   # (this script is not executed, it is sourced into active shell session!).
   echo "
     authenticate
+    cacert
     container-info
     create delete
     deploy
@@ -98,6 +99,7 @@ function _dice_deploy_cli ()
       [[ $COMP_CWORD -ge 4 && ${COMP_WORDS[COMP_CWORD - 3]} == "$cmd" ]] \
         && COMPREPLY=( $(compgen -W "--register-app" -- "$cur"))
       ;;
+    cacert) ;&
     set-inputs)
       [[ "$prev" == "$cmd" ]] && \
         COMPREPLY=($(compgen -o plusdirs -f -- "$cur"))

@@ -50,13 +50,18 @@ class ArgParser(argparse.ArgumentParser):
 
 class Config:
 
-    valid_keys = {"url", "token"}
+    valid_keys = {"url", "token", "cacert"}
     invalid_key_msg = "Invalid settings key: {}"
 
     def __init__(self, data={}):
         invalid = [k for k in data.keys() if k not in self.valid_keys]
         if len(invalid) != 0:
             fail("Invalid settings key(s) found: {}", ",".join(invalid))
+
+        # If no certificate is present, requests should validate it against
+        # system certificates.
+        self.cacert = True
+
         for k, v in data.items():
             setattr(self, k, v)
 
@@ -95,13 +100,16 @@ class Command(object):
     def execute(self):
         raise NotImplementedError("Command is an abstract class")
 
-
     def check_endpoint(self):
         logger.info("Checking DICE Deployment Service URL")
         url = self.config.url
         try:
-            resp = requests.get("{}/heartbeat".format(url))
+            resp = requests.get("{}/heartbeat".format(url),
+                                verify=self.config.cacert)
             logger.debug(resp.content)
+        except requests.exceptions.SSLError as e:
+            logger.debug(e)
+            fail("Invalid certificate. Forgot to run 'cacert' command?")
         except Exception as e:
             logger.debug(e)
             fail("URL '{}' is not valid", url)
@@ -130,7 +138,7 @@ class Command(object):
             kwargs["headers"] = headers
         # Execute call
         url = "{}{}".format(self.config.url, endpoint)
-        resp = method(url, **kwargs)
+        resp = method(url, verify=self.config.cacert, **kwargs)
         logger.debug(resp.content)
         return resp
 
@@ -145,6 +153,36 @@ class Command(object):
 
     def delete(self, endpoint, auth=True, **kwargs):
         return self.request(requests.delete, endpoint, auth, **kwargs)
+
+
+class Cacert(Command):
+
+    @staticmethod
+    def add_subparser(subparsers):
+        parser = subparsers.add_parser(
+            "cacert", help="Set DICE Deployment Service server certificate"
+        )
+        parser.add_argument("cert", help="Server certificate",
+                            type=argparse.FileType("rb"))
+        return parser
+
+    def __init__(self, args):
+        super(Cacert, self).__init__(args, fail_on_missing_config=False)
+
+    def check_endpoint(self):
+        pass  # Check can only be done from execute method
+
+    def check_auth(self):
+        pass  # Check can only be done from execute method
+
+    def execute(self):
+        logger.info("Settings server certificate")
+        path = os.path.abspath(os.path.expanduser(self.args.cert.name))
+        self.config.cacert = path
+        if hasattr(self.config, "url"):
+            super(Cacert, self).check_endpoint()
+        self.config.save(self.args.config)
+        logger.info("Server certificate set successfully")
 
 
 class Use(Command):
@@ -342,6 +380,7 @@ class SetInputs(Command):
             fail("Invalid data file passed as parameter")
         logger.info("Successfully updated inputs")
 
+
 class GetInputs(Command):
 
     @staticmethod
@@ -468,8 +507,8 @@ class Instances(Command):
 # Entry point
 def create_parser():
     def is_command(item):
-        return (inspect.isclass(item) and item != Command
-                and issubclass(item, Command))
+        return (inspect.isclass(item) and item != Command and
+                issubclass(item, Command))
 
     parser = ArgParser(description="DICE Deployment Service CLI",
                        formatter_class=argparse.ArgumentDefaultsHelpFormatter)

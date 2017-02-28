@@ -1,2 +1,3 @@
 PyYAML
 cloudify-dsl-parser>=3.4, <3.5
+requests[security]
