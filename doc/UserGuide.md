@@ -1,6 +1,6 @@
 # Using DICE deployment service
 
-## Command line tool
+## Command line tool tutorial
 
 The DICE deployment tool comes with a helper utility `dice-deploy-cli` available
 in the `tools/` subdirectory. Use it to manually manage the containers and 
@@ -160,7 +160,6 @@ $ dice-deploy-cli container-info $CONTAINER_UUID | python -mjson.tool
     "id": "02bba363-fb85-4a54-8a2f-f1a11a25ad9d",
     "modified_date": "2016-08-16T14:11:52"
 }
-
 ```
 
 At this point we can re-issue the `deploy` action with the same or a different
@@ -188,6 +187,86 @@ $ dice-deploy-cli delete $CONTAINER_UUID
 [INFO] - Deletion succeeded
 ```
 
+## Obtaining status of the virtual deployment container
+
+The command line tool provides actions to obtain the status and runtime-specific
+information about the application deployed in a virtual deployment container.
+
+### List deployed instances
+
+Most of the useful blueprints consists of one or more node templates for a
+virtual machine (e.g., of type `dice.hosts.Medium`). These usually instantiate
+into a compute host or a virtual machine with a local network address. Some
+clients or use cases require an insight into a full list of these hosts and
+their properties. This is partially possible through authoring the blueprint
+into providing runtime information in the outputs, but Cloudify has some
+constraints in terms of getting runtime attributes of node templates
+instantiating into cardinality larger than 1. Additionally, extending blueprints
+may not always be practical, and it would also result in non-standardised naming
+of the parameters of interest.
+
+Additionally, we might need an information about what services and other
+programs run in each of the nodes. This information is available in the
+blueprint for the extraction, but for clients it is simpler to be able to obtain
+everything in one bundle.
+
+The action `list-instances` provides this information:
+
+```bash
+$ dice-deploy-cli list-instances $CONTAINER_UUID
+[INFO] - Checking DICE Deployment Service URL
+[INFO] - Checking DICE Deployment Service authentication data
+[INFO] - Obtaining VM instances for container 02bba363-fb85-4a54-8a2f-f1a11a25ad9d
+  {
+    "ip": "109.231.122.34",
+        "node_id": "cluster3",
+        "id": "cluster3_w878qh",
+        "components": [
+      "dice.components.cassandra.Worker",
+            "dice.hosts.Small"
+    ]
+  },
+    {
+    "ip": "109.231.122.197",
+        "node_id": "cassandra1_seed_vm",
+        "id": "cassandra1_seed_vm_zr6lpy",
+        "components": [
+      "dice.components.cassandra.Seed",
+            "dice.hosts.Small"
+    ]
+  },
+    {
+    "ip": "109.231.122.173",
+        "node_id": "cluster2",
+        "id": "cluster2_gj2x98",
+        "components": [
+      "dice.components.zookeeper.Server",
+            "dice.hosts.Small"
+    ]
+  },
+    {
+    "ip": "109.231.122.74",
+        "node_id": "cluster1",
+        "id": "cluster1_7vq10l",
+        "components": [
+      "dice.components.storm.Worker",
+            "dice.hosts.Small"
+    ]
+  },
+    {
+    "ip": "109.231.122.136",
+        "node_id": "storm1_master_vm",
+        "id": "storm1_master_vm_fmyc8k",
+        "components": [
+      "dice.components.storm.Nimbus",
+            "dice.hosts.Small",
+            "dice.components.storm.Topology"
+    ]
+  }
+]
+[INFO] - Information successfully obtained
+```
+
 ## Command line tool action reference
 
 Complete reference documentation is displayed when the tool is invoked with no
@@ -200,9 +279,23 @@ command, use `dice-deploy-cli COMMAND -h`.
   * parameters: url
   * example: `dice-deploy-cli use http://109.231.122.46:8000`
 
-* `authenticate`: provide username and password to obtain the authentication token
+* `authenticate`: provide username and password to obtain the authentication
+  token
   * parameters: username password
   * example: `dice-deploy-cli authenticate testuser 123456`
+
+* `cacert`: Set DICE Deployment Service server certificate
+  * parameters: cert
+  * example: `dice-deploy-cli cacert pki/deployment-service.cer`
+
+* `get-inputs`: Obtain the service inputs that are currently set globally at the
+  DICE Deployment Service
+  * example: `dice-deploy-cli get-inputs`
+
+* `set-inputs`: Set (update or replace) the collection of service inputs
+   set globally at the DICE Deployment Service
+   * parameters: inputs-file
+   * example: `dice-deploy-cli set-inputs my-inputs.json`
 
 ### Container actions
 
@@ -228,7 +321,12 @@ These actions (except for `create`) require the container's UUID as a parameter.
 * `container-info`: reports container state
   * parameters: container-uuid
   * returns: container information
-  * example:  `dice-deploy-cli container-info $CONTAINER_UUID`
+  * example: `dice-deploy-cli container-info $CONTAINER_UUID`
+
+* `status`: Obtain container status
+  * parameters: container-uuid
+  * returns: container status
+  * example: `dice-deploy-cli status $CONTAINER_UUID`
 
 * `delete`: deletes an existing container
   * parameters: container-uuid
@@ -238,6 +336,11 @@ These actions (except for `create`) require the container's UUID as a parameter.
   * parameters: container-uuid
   * returns: dict of deployment parameters
   * example: `dice-deploy-cli outputs $CONTAINER_UUID`
+
+* `list-instances`: List VM instances in container
+  * parameters: container-uuid
+  * returns: dict of the deployed hosts' properties
+  * example: `dice-deploy-cli list_instances $CONTAINER_UUID`
 
 * `teardown`: uninstalls and deletes an existing deployment from the container
   * parameters: container-uuid

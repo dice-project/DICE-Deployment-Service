@@ -386,7 +386,7 @@ class GetInputs(Command):
     @staticmethod
     def add_subparser(subparsers):
         parser = subparsers.add_parser("get-inputs",
-                                       help="Set service inputs")
+                                       help="Get service inputs")
         return parser
 
     def execute(self):
