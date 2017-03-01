@@ -63,13 +63,17 @@ Usage is really simple. Just execute
     $ ./create-openstack-inputs.py > os-inputs.yaml
 
 and follow the instructions. Just make sure you use CentOS image when asked
-about image and make sure that flavor that you use has at least 5 GB of RAM
-and at least 2 CPUs. Another thing that can cause troubles down the road are
-non-unique names of various resources. This is problematic only if you have
-multiple cloudify installations being hosted on the same OpenStack
-installation. The input preparation script asks about prefix that can be used
-to avoid name collisions. Default prefix is set to `cfy-`, but you can change
-it to just about anything.
+about image and make sure that flavor that you use has at least 6 GB of RAM
+and at least 4 CPUs. It is possible to install Cloudify Manager to server
+with only 4 GB of RAM, but in this case, validations need to be disabled and
+swap activated as described below.
+
+Another thing that can cause troubles down the road are non-unique names of
+various resources. This is problematic only if you have multiple cloudify
+installations being hosted on the same OpenStack installation. The input
+preparation script asks about prefix that can be used to avoid name
+collisions. Default prefix is set to `cfy-`, but you can change it to just
+about anything.
 
 When the script terminates, `os-inputs.yaml` file will contain data that can
 be used to bootstrap manager.
@@ -92,6 +96,12 @@ has a bug that prevents connecting to RabbitMQ if `rabbitmq_username`or
 URLs. Bug has been fixed, but current version does not have it applied yet. In
 the mean time, use longer username and password that match regular expression
 `[A-Za-z0-9_.-~]+`.
+
+If our server has less than 6 GB of RAM, we should also disable bootstrap
+validations, since they will fail. We can do that by appending the following
+line to our inputs:
+
+    ignore_bootstrap_validations: true
 
 Next, we must create floating IP for the server.
 
@@ -130,37 +140,108 @@ we need to append the following line to the inputs:
 
     manager_floating_ip_id: e2f2955f-cdd8-4cd7-a73a-ade4c79a6a69
 
-Now we need to create server key and certificate.
+Replace `id` in the example above appropriately. Now we need to create server
+key and certificate.
 
 
 ## Creating server certificate
 
 Instructions on how to create server certificate are out of scope for this
 document. If you need help with this, consult
-[certificate instructions](certificates.md).
+[certificate instructions](certificates.md#creating-self-signed-certificates).
 
 After certificate is ready, place it (along with generated key) into
 `resources/ssl` folder and change their names to `server.crt` and `server.key`
-respectivelly. Now we can proceed to actually executing bootstrap procedure.
+respectively. Now we can proceed to actually executing bootstrap procedure.
 
 
 ## Executing bootstrap
 
-First, we need to create initial folder structure for bootstrap process.
-Running `cfy init` will take care of that. After this is done, we can
-finally bootstrap the manager by executing
+Since we enabled security options in blueprint, we need to export some
+environment variables that will inform cfy command about various settings that
+we used. After this is done, we can bootstrap the manager. Commands that
+perform all described actions are:
 
     $ export CLOUDIFY_USERNAME=admin
     $ export CLOUDIFY_PASSWORD=ADMIN_PASS
     $ export CLOUDIFY_SSL_CERT="$PWD/resources/ssl/server.crt"
     $ cfy bootstrap -p openstack-manager-blueprint.yaml -i os-inputs.yaml
-    $ cfy status
+
+Note that installation step may take up to 30 minutes on a slow platform,
+but in most cases, it should finish in no more than 15 minutes.
+
+
+## Testing installation
+
+First thing we can do is execute `cfy status`. Output of that command should
+be similar to this:
+
+    Getting management services status... [ip=109.231.122.46]
+    Services:
+    +--------------------------------+---------+
+    |            service             |  status |
+    +--------------------------------+---------+
+    | InfluxDB                       | running |
+    | Celery Management              | running |
+    | Logstash                       | running |
+    | RabbitMQ                       | running |
+    | AMQP InfluxDB                  | running |
+    | Manager Rest-Service           | running |
+    | Cloudify UI                    | running |
+    | Webserver                      | running |
+    | Riemann                        | running |
+    | Elasticsearch                  | running |
+    +--------------------------------+---------+
+
+Another way to test if manager is working is to point our web browser to
+server's IP address, where we should be greeted by Cloudify's UI.
+
+
+## Enabling swap
+
+To use a swap file, either use an image, which enables this by default,
+or create one manually. To do that, first create a file with at least
+6 GB to serve as a swap file. Notice that `fallocate` will not produce
+a usable swap file on the Centos's default file system.
+
+    $ sudo su
+    $ dd if=/dev/zero of=/swapfile bs=1MB count=6144
+
+    $ chmod 0600 swapfile
+    $ mkswap /swapfile
+    $ swapon /swapfile
+
+Then add the following line to the `/etc/fstab` to make the change
+permanent:
+
+    /swapfile	none	swap	defaults	0	0
+
+
+## Granting access to the Cloudify Manager
+
+In order for our users to be able to use installed manager, we need to give
+them next pieces of information:
+
+ 1. manager's IP address (address of the server we created),
+ 2. manager's port (443),
+ 3. manager's username and password (*admin* and *ADMN_PASS* in our case) and
+ 4. manager's certificate (*resources/ssl/server.crt*).
+
+Users can now access manager by installing Cloudify command-line tool (`cfy`)
+and executing:
+
+    $ cfy init
+    $ export CLOUDIFY_USERNAME=admin
+    $ export CLOUDIFY_PASSWORD=ADMIN_PASS
+    $ export CLOUDIFY_SSL_CERT="/path/to/server.crt"
+    $ cfy use -t manager_ip_address --port 443
 
 
 ## Removing installation
 
 Simply execute `cfy teardown -f`. This will remove all traces of Cloudify
 manager from OpenStack.
+
 
 # Official documentation
 
