@@ -18,8 +18,8 @@ The DICE deployment service relies on an instance of a Cloudify
 Manager running in the network. Here are our notes and instructions on
 bootstrapping the Cloudify Manager:
 
-  * [OpenStack](Cloudify-3.4.0-OpenStack.md)
-  * [FCO](Cloudify-3.4.0-FCO.md)
+  * [OpenStack](Cloudify-OpenStack.md)
+  * [FCO](Cloudify-FCO.md)
 
 
 ## Cloudify command line tool installation
@@ -29,8 +29,8 @@ Cloudify. This requires that the workstation we are installing from has the
 Cloudify's command line tool installed. We can use the same tool used in the
 Cloudify Manager installation. Please refer to *preparing environment* section
 of Cloudify Mananger bootstrap document for installation details
-([OpenStack](Cloudify-3.4.0-OpenStack.md#preparing-environment),
-[FCO](Cloudify-3.4.0-FCO.md#preparing-environment)).
+([OpenStack](Cloudify-OpenStack.md#preparing-environment),
+[FCO](Cloudify-FCO.md#preparing-environment)).
 
 
 ## DICE Deployment service installation
@@ -197,9 +197,9 @@ The OpenStack inputs consist of the following information:
   of RAM, the medium instance has 1 GB or 2 GB of RAM, a large instance has
   at least 4 GB of RAM.
 
-The UUIDs for images and flavours can be obtained using the `nova` client. See
-[this document](Cloudify-3.4.0-OpenStack.md#preparing-inputs) to get
-examples of the client usage.
+The UUIDs for images and flavours can be obtained using the OpenStack client.
+See [this document](Cloudify-OpenStack.md#preparing-inputs) to get examples of
+the client usage.
 
 To prepare the inputs, open a text file named `openstack-inputs.json` with
 contents like in the following example:
