@@ -2,129 +2,138 @@
 
 Table of Contents:
 
-1. [Prerequisites](Prerequisites.md)
-2. [Bootstrapping Cloudify Manager](#cloudify-manager-installation)
-3. [Installing Cloudify command line tool](#cloudify-command-line-tool-installation)
-4. [Deploying the DICE deployment service](#dice-deployment-service-installation)
-5. [DICE deployment service configuration](#dice-deployment-service-configuration)
-  1. [OpenStack inputs](#openstack-inputs)
-  2. [FCO inputs](#fco-inputs)
-6. [Container management](#container-management)
-7. [Testing installation](#testing-installation)
+ 0. [Prerequisites](#prerequisites)
+ 0. [Cloudify command line tool installation](#cloudify-command-line-tool-installation)
+ 0. [DICE Deployment service installation](#dice-deployment-service-installation)
+ 0. [DICE deployment service configuration](#dice-deployment-service-configuration)
+   0. [General inputs](#general-inputs)
+   0. [OpenStack inputs](#openstack-inputs)
+   0. [FCO inputs](#fco-inputs)
+   0. [Monitoring inputs](#monitoring-inputs)
+ 0. [Container management](#container-management)
+ 0. [Testing installation](#testing-installation)
+ 0. [Monitoring support](#monitoring-support)
+ 0. [Removing the service](#removing-the-service)
 
-## Cloudify Manager installation
 
-The DICE deployment service relies on an instance of a Cloudify
-Manager running in the network. Here are our notes and instructions on
-bootstrapping the Cloudify Manager:
+## Prerequisites
 
-  * [OpenStack](Cloudify-OpenStack.md)
-  * [FCO](Cloudify-FCO.md)
+Before we can install DICE deployment service, we need to have access to
+working Cloudify Manager. We need the following pieces of information about
+manager:
+
+ 1. manager's IP address (`CFY_ADDRESS`),
+ 2. manager's port (`CFY_PORT`),
+ 3. manager's username and password (`CFY_USERNAME`, `CFY_PASSWORD`) and
+ 4. manager's certificate (`CFY_CERT`).
+
+Alternatively, we can also install our own Cloudify Manager. Detailed
+instructions on how to do that are available in
+[OpenStack](Cloudify-OpenStack.md) and [FCO](Cloudify-FCO.md) documents.
+
+Apart from Cloudify Manager, we will also need `virtualenv` command installed.
+The simplest way of getting this package is to use system's package manager,
+since this package is present in almost any distribution of GNU/Linux.
 
 
 ## Cloudify command line tool installation
 
 The recommended way of installing the DICE Deployment service is by using
 Cloudify. This requires that the workstation we are installing from has the
-Cloudify's command line tool installed. We can use the same tool used in the
-Cloudify Manager installation. Please refer to *preparing environment* section
-of Cloudify Mananger bootstrap document for installation details
-([OpenStack](Cloudify-OpenStack.md#preparing-environment),
-[FCO](Cloudify-FCO.md#preparing-environment)).
+Cloudify's command line tool installed and configured.
+
+We can install cfy tool using the next sequence of commands:
+
+    $ mkdir ~/dds && cd ~/dds
+    $ virtualenv venv
+    $ . venv/bin/activate
+    $ pip install cloudify==3.4.1
+    $ pip install -U requests[security]
+
+In order to configure the tool we need to execute:
+
+    $ cfy init
+    $ export CLOUDIFY_USERNAME=CFY_USERNAME
+    $ export CLOUDIFY_PASSWORD=CFY_PASSWORD
+    $ export CLOUDIFY_SSL_CERT="/path/to/CFY_CERT"
+    $ cfy use -t CFY_ADDRESS --port CFY_PORT
+
+Make sure you replace `CFY_*` placeholders with Cloudify Manager data. To test
+if everything works, execute `cfy status`. This command should output
+something similar to this:
+
+    Getting management services status... [ip=109.231.122.46]
+    Services:
+    +--------------------------------+---------+
+    |            service             |  status |
+    +--------------------------------+---------+
+    | InfluxDB                       | running |
+    | Celery Management              | running |
+    | Logstash                       | running |
+    | RabbitMQ                       | running |
+    | AMQP InfluxDB                  | running |
+    | Manager Rest-Service           | running |
+    | Cloudify UI                    | running |
+    | Webserver                      | running |
+    | Riemann                        | running |
+    | Elasticsearch                  | running |
+    +--------------------------------+---------+
+
+If everything went well, we are now ready to start service installation.
 
 
 ## DICE Deployment service installation
 
-Once Cloudify is installed in our network, we can use it to bootstrap the DICE
-deployment service.
+First, we need to download the DICE deployment tools. We will be using git in
+this documentation, but you can also download released tarball from Github.
 
-### Getting the DICE Deployment service
-
-First download the DICE deployment tools using git by executing:
-
-```bash
-$ mkdir -p ~/dice ; cd ~/dice
-$ git clone --depth 1 https://github.com/dice-project/DICE-Deployment-Service.git
-$ cd DICE-Deployment-Service
-```
-
-The package contains a [command line tool](UserGuide.md#command-line-tool),
-which we can put in the execution path for convenience:
-
-```bash
-$ cd tools
-$ export PATH=$PATH:$(pwd)
-```
-
-### Installation from TOSCA blueprint
+    $ git clone --depth 1 --branch develop \
+        https://github.com/dice-project/DICE-Deployment-Service.git
+    $ cd DICE-Deployment-Service
 
 Currently, we support the following platforms with TOSCA blueprints:
 
-* `fco` - the Flexiant Cloud Orchestrator
-* `openstack` - an OpenStack platform
+  * `fco` - the Flexiant Cloud Orchestrator
+  * `openstack` - an OpenStack platform
 
 We have tested the blueprints on Ubuntu 14.04 cloud install images, using a
 flavour equivalent to 512 MB of RAM, 1 VCPU and 10 GB of storage.
-To deploy the service, first activate the appropriate virtual environment:
 
-```bash
-$ cd ~/dice
-$ . venv/bin/activate
-```
+Next, we must choose platform from one of the available ones on the list
+above, and prepare the parameters in the respective inputs file. There is a
+`inputs-example.yaml` file in the `install` subfolder that we will use as a
+reference. We need to copy this file to the repository's root directory:
 
-Next, choose your platform from one of the available ones on the list above, and
-prepare the parameters in the respective inputs file. In the `install` subfolder
-of the DICE Deployment Service GIT repository you can find templates for the
-input files named as `inputs-PLATFORM-example.yaml`. Copy the selected template
-to the repository's root directory and fill in the parameters, e.g., for
-OpenStack:
+    $ cp install/inputs-example.yaml inputs-openstack.yaml  # OpenStack
+    $ cp install/inputs-example.yaml inputs-fco.yaml        # FCO
 
-```bash
-$ cd DICE-deployment-service
-$ cp install/inputs-openstack-example.yaml inputs-openstack.yaml
-$ nano inputs-openstack.yaml
-```
+Now we must open this file, follow the comments, which explain the meaning of
+each property, replace the generic values with the actual ones, and save the
+inputs file.
 
-Your editor will open with the configuration file, which has all its properties
-set to generic values. Follow the comments, which explain the meaning of each
-property, replace the generic values with the actual ones, and save the inputs
-file.
+All that is left now is to start the installation.
 
-Then, make sure the Cloudify's virtual environment is activated, point the `cfy`
-to your Cloudify Manager - the same one that will serve as the DICE Deployment
-Service's backend - and use `up.sh` to deploy the blueprint:
-
-```bash
-# activate the virtual environment (skip the step if already active from before)
-$ . ~/dice/venv/bin/activate
-# configure the Cloudify CLI to use your Cloudify Manager, e.g.
-$ export CLOUDIFY_USERNAME=admin
-$ export CLOUDIFY_PASSWORD=ADMIN_PASS
-$ cfy use -t 10.10.20.115
-# start the deployment
-$ ./up.sh openstack
-```
+    $ ./up.sh openstack  # for OpenStack installation
+    $ ./up.sh fco        # for FCO
 
 The last step will take a while. When it is done, it will print the URL to
 the deployment service. If this does not happen because the deployment takes
 longer than the preconfigured time, use `cfy` to learn the outputs:
 
-```bash
-$ cfy deployments outputs -d dice_deploy
-Getting outputs for deployment: dice_deploy [manager=10.10.20.115]
- - "http_endpoint":
-  *  Description: Web server external endpoint
-  *  Value: http://10.10.20.35:8000
-```
+    $ cfy deployments outputs -d dice_deploy
+    Getting outputs for deployment: dice_deploy [manager=10.10.20.115]
+     - "http_endpoint":
+      *  Description: Web server external endpoint
+      *  Value: https://10.10.20.35
 
-Now the RESTful interface is running and the Web interface is available. You can
-visit the assigned address (in the above case visit `http://10.10.20.35`)
-with your browser. You will be greeted with a prompt for providing credentials:
+Now the RESTful interface is running and the Web interface is available. We
+can visit the address listed above with our browser and we should be greeted
+by a login form.
 
 ![DICE deployment service GUI login prompt](images/DICEDeploymentServiceGUILogin.png)
 
-To log in, use the credentials set earlier in the inputs
-file, i.e., the values of the `superuser_username` and `superuser_password`.
+To log in, we can use the credentials set earlier in the inputs file, i.e.,
+the values of the `superuser_username` and `superuser_password`.
 
 If additional instances of the service are needed, then we need to name each
 deployment differently. By default, calling `./up.sh PLATFORM` will create a
@@ -132,29 +141,50 @@ blueprint and deployment named `dice_deploy`. If we need an instance that is
 named differently, we can provide the name as the second parameter of the
 `up.sh` tool, e.g.:
 
-```bash
-$ ./up.sh openstack staging_deployment
-```
+    $ ./up.sh openstack staging_deployment
 
-Next, proceed to [adding virtual containers](#container-management).
-
-### Removing the service
-
-Tearing down the deployment service is then as easy as running the `dw.sh` script:
-
-```bash
-$ ./dw.sh
-```
-
-By default, this script will remove the deployment and blueprint named
-`dice_deploy`. It is possible to supply a different name as a parameter, e.g.:
-
-```bash
-$ ./dw.sh staging_deployment
-```
+Now we must configure the service.
 
 
 ## DICE deployment service configuration
+
+DICE deployment service is managed using command line tool `dice-deploy-cli`
+that is available in `tools` subfolder. Complete usage instructions are
+available in [user guide](UserGuide.md#command-line-tool-action-reference),
+but for the sake of completeness, we will describe the commands that we need
+in this document also.
+
+First thing we need to do is obtain server certificate. We can use web browser
+for this (export certificate that server identified itself with) or do some
+command line magic (replace IP with your own in the next command):
+
+    $ openssl s_client -showcerts -connect 10.10.43.120:443 < /dev/null \
+        | openssl x509 -out dds.crt
+
+Server certificate has been placed in `dds.crt` file and can be inspected by
+executing
+
+    $ openssl x509 -in dds.crt -text -noout
+
+Now that we have server certificate available, we can configure the tool. This
+is done by executing next sequence of commands (replace `user` and `pass` with
+credentials for super user, set in inputs file):
+
+    $ tools/dice-deploy-cli cacert dds.crt
+    [INFO] - Settings server certificate
+    [INFO] - Server certificate set successfully
+    $ tools/dice-deploy-cli use https://10.10.43.120
+    [INFO] - Trying to set DICE Deployment Service URL
+    [INFO] - Checking DICE Deployment Service URL
+    [INFO] - URL set successfully
+    $ tools/dice-deploy-cli authenticate user pass
+    [INFO] - Checking DICE Deployment Service URL
+    [INFO] - Authenticating
+    [INFO] - Authorization succeeded
+
+If anything went wrong, tool will inform us about the error. To get even more
+details, we can also consult log file `.dds.log`. And this concludes tool
+configuration. Now we need to set server's inputs.
 
 The TOSCA blueprints can define a list of parameters called
 [inputs][cfy-spec-inputs]. In DICE technology library, we use the inputs to
@@ -168,137 +198,117 @@ depending on the needs of the application blueprints. In the following
 subsections we provide the minimum inputs list that is common to all the DICE
 technology library supported blueprints.
 
-Loading the inputs can be performed by using the
-[input actions](UserGuide.md#input-actions) of the
-[DICE deployment command line tool](UserGuide.md#command-line-tool-action-reference).
-To start with the process, make sure that the tool has been associated with the
-DICE deployment service access point, and also properly authenticated:
+To get a template of required inputs, we can use `tools/blueprint-helper.py`
+script. To generate it, we execute
 
-```bash
-$ cd ~/dice
-$ dice-deploy-cli use http://10.10.20.35
-$ dice-deploy-cli authenticate user pwd434
-```
+    $ tools/blueprint-helper.py example/test-server-openstack.yaml \
+        inputs --format dice > template-openstack.json
+
+Now we must open the generated file and fill in the details. Required inputs
+can be found by simply searching for the string `REPLACE_ME` in the file.
+Detailed description of each input can be found in the sections below.
+
+When we have our inputs ready, we can proceed and upload them to DICE
+deployment service by executing
+
+    $ tools/dice-deploy-cli set-inputs template-openstack.json
+    [INFO] - Checking DICE Deployment Service URL
+    [INFO] - Checking DICE Deployment Service authentication data
+    [INFO] - Replacing service inputs
+    [INFO] - Successfully updated inputs
+
+And this is it. We successfully configured DICE deployment service that is now
+fully operational.
+
+
+### General inputs
+
+These inputs are not platform specific.
+
+  * `{ ubuntu | centos }_agent_user`: defines the name of the Linux
+    user pre-installed and available on the VMs provisioned from the cloud
+    image. This user has to be a sudoer, configured to run sudo without a
+    password prompt. The `ubuntu_agent_user` is used on Ubuntu 14.04 servers,
+    and there it is usually `ubuntu`, as indicated by default value for this
+    input. The `centos_agent_user` will be used on CentOS 7 servers, where the
+    value is usually `centos`.
+
 
 ### OpenStack inputs
 
 The OpenStack inputs consist of the following information:
 
-* `{ ubuntu | centos }_agent_user`: defines the name of the Linux
-  user pre-installed and available at the VMs provisionned from the cloud image.
-  This user has to be a sudoer, configured to run sudo without a password
-  prompt. The `ubuntu_agent_user` is used on Ubunutu 14.04 servers,
-  and there it is usually `ubuntu`. The `centos_agent_user` will be used on
-  CentOS 7 servers, where the value is usually `centos`.
-* `{ ubuntu | centos }_image_id`: the UUID of the VM image to be used
-  for provisionning an Ubunutu 14.04 or CentOS 7 VM instance, respectively.
-* `{ small | medium | large }_flavor_id`: the UUID of the image flavour to
-  be used when provisionning the VMs. A small instance normally has 512 MB
-  of RAM, the medium instance has 1 GB or 2 GB of RAM, a large instance has
-  at least 4 GB of RAM.
+  * `{ ubuntu | centos }_image_id`: the UUID of the VM image to be used
+    for provisioning an Ubuntu 14.04 or CentOS 7 VM instance, respectively.
+  * `{ small | medium | large }_flavor_id`: the UUID of the flavour to
+    be used when provisioning the VMs. A small instance normally has 512 MB of
+    RAM, the medium instance has 1 GB or 2 GB of RAM, a large instance has at
+    least 4 GB of RAM.
 
-The UUIDs for images and flavours can be obtained using the OpenStack client.
+The UUIDs for images and flavours can be obtained using the OpenStack clients.
 See [this document](Cloudify-OpenStack.md#preparing-inputs) to get examples of
 the client usage.
 
-To prepare the inputs, open a text file named `openstack-inputs.json` with
-contents like in the following example:
-
-```json
-[
-  {"key": "ubuntu_agent_user", "value": "ubuntu"                              },
-  {"key": "centos_agent_user", "value": "centos"                              },
-  {"key": "ubuntu_image_id",   "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea"},
-  {"key": "centos_image_id",   "value": "9ea4856a-32b2-4553-b408-cfa4cb1bb40b"},
-  {"key": "small_flavor_id",   "value": "070005dc-9bd5-4c0c-b2c6-88f81a7b7239"},
-  {"key": "medium_flavor_id",  "value": "45170672-5608-473e-af9c-9097510472d6"},
-  {"key": "large_flavor_id",   "value": "1bd34fe1-57b3-4937-bf60-5edd35382b78"}
-]
-```
-
-Then submit the inputs to the deployment service:
-
-```bash
-$ dice-deploy-cli set-inputs openstack-inputs.json
-```
 
 ### FCO inputs
 
 For the DICE deployment service installed in the FCO, provide the following
 inputs:
 
-* `{ ubuntu | centos }_agent_user`: defines the name of the Linux
-  user pre-installed and available at the VMs provisionned from the cloud image.
-  This user has to be a sudoer, configured to run sudo without a password
-  prompt. The `ubuntu_agent_user` is used on Ubunutu 14.04 servers,
-  and there it is usually `ubuntu`. The `centos_agent_user` will be used on
-  CentOS 7 servers, where the value is usually `centos`.
-* `{ ubuntu | centos }_image_id`: the UUID of the VM image to be used
-  for provisionning an Ubunutu 14.04 or CentOS 7 VM instance, respectively.
-* `{ small | medium | large }_server_type`: the UUID of the image flavour to
-  be used when provisionning the VMs. A small instance normally has 512 MB
-  of RAM, the medium instance has 1 GB or 2 GB of RAM, a large instance has
-  at least 4 GB of RAM.
-* `{ small | medium | large }_disk`: the name of the small, medium and large
-  storage type as defined in the FCO.
-* `username`: User's FCO credentials: the username (e-mail address) or the API
-  key user ID. The best practice is to create an API key user in the FCO, which
-  is then delegated to the automation. The API key user must be a member of the
-  Admin Group to be able to deploy and delete VMs. Obain the API username ID by
-  visiting the FCO web GUI console, switching to Users section in the
-  navigation at the left side of the interface, clicking on your API Key User
-  entry and referring to the API username field. The user id is the first part
-  of the entry before the "/" delimiter.
-* `password`: user's FCO credentials: the password.
-* `customer`: FCO customer ID. For an API key user, this ID is in the part after
-  the "/" delimiter of the API username field. For a regular user, obtain this
-  ID by visiting th FCO console (the web GUI). In the Users tab, click on one of
-  the groups. Then open the Information panel and find the Customer information
-  in Related resources & UUIDs.
-* `service_url`: the URL to the FCO's API service. For DICE project, this is
-  `https://cp.diceproject.flexiant.net`.
-* `agent_key`: Set the ID of the SSH key to be used by the agent to make the VM
-  accessible. This is the UUID that can be found in the SSH keys section of the
-  FCO web GUI console, where you can click on the SSH key designated for
-  Cloudify to be able to connect to the VMs, then switch to the Information
-  tab. The UUIDs are listed in the Related resources & UUIDs panel for the item
-  Network.
-* `vdc`: Set the ID of the VCD where the DICE Deployment Service VM will be
-  deployed. This is the UUID that can be found in the VCDs section of the FCO
-  web GUI console, where you can click on the VCD designated to receive the
-  blueprints, then switch to the Information tab. The UUIDs are listed in the
-  Related resources & UUIDs panel.
-* `network`: Set the ID of the FCO network that the VM will connect to. This is
-  the UUID that can be found in the Networks section of the FCO web GUI console,
-  where you can click on the network designated to connect the VMs, then switch
-  to the Information tab. The UUIDs are listed in the Related resources & UUIDs
-  panel for the item Network.
+  * `{ ubuntu | centos }_image_id`: the UUID of the VM image to be used
+    for provisioning an Ubuntu 14.04 or CentOS 7 VM instances, respectively.
+  * `{ small | medium | large }_server_type`: the UUID of the image flavour to
+    be used when provisioning the VMs. A small instance normally has 512 MB
+    of RAM, the medium instance has 1 GB or 2 GB of RAM, a large instance has
+    at least 4 GB of RAM.
+  * `{ small | medium | large }_disk`: the name of the small, medium and large
+    storage type as defined in the FCO.
+  * `username`: User's FCO credentials: the username (e-mail address) or the
+    API key user ID. The best practice is to create an API key user in the
+    FCO, which is then delegated to the automation. The API key user must be a
+    member of the Admin Group to be able to deploy and delete VMs. Obtain the
+    API username ID by visiting the FCO web GUI console, switching to Users
+    section in the navigation at the left side of the interface, clicking on
+    your API Key User entry and referring to the API username field. The user
+    id is the first part of the entry before the "/" delimiter.
+  * `password`: user's FCO credentials: the password.
+  * `customer`: FCO customer ID. For an API key user, this ID is in the part
+    after the "/" delimiter of the API username field. For a regular user,
+    obtain this ID by visiting th FCO console (the web GUI). In the Users tab,
+    click on one of the groups. Then open the Information panel and find the
+    Customer information in Related resources & UUIDs.
+  * `service_url`: the URL to the FCO's API service. For DICE project, this is
+    `https://cp.diceproject.flexiant.net`.
+  * `agent_key`: Set the ID of the SSH key to be used by the agent to make the
+    VM accessible. This is the UUID that can be found in the SSH keys section
+    of the FCO web GUI console, where you can click on the SSH key designated
+    for Cloudify to be able to connect to the VMs, then switch to the
+    Information tab. The UUIDs are listed in the Related resources & UUIDs
+    panel for the item Network.
+  * `vdc`: Set the ID of the VCD where the DICE Deployment Service VM will be
+    deployed. This is the UUID that can be found in the VCDs section of the
+    FCO web GUI console, where you can click on the VCD designated to receive
+    the blueprints, then switch to the Information tab. The UUIDs are listed
+    in the Related resources & UUIDs panel.
+  * `network`: Set the ID of the FCO network that the VM will connect to. This
+    is the UUID that can be found in the Networks section of the FCO web GUI
+    console, where you can click on the network designated to connect the VMs,
+    then switch to the Information tab. The UUIDs are listed in the Related
+    resources & UUIDs panel for the item Network.
 
-The following sequence is an example of command line calls to load the inputs.
-Before calling them, replace the values in the example with the appropriate
-ones for your environment:
 
-```json
-[
-  {"key": "ubuntu_agent_user",  "value": "ubuntu"                              },
-  {"key": "centos_agent_user",  "value": "centos"                              },
-  {"key": "ubuntu_image_id",    "value": "87978c6d-5ceb-39b2-8e8b-935503ad0307"},
-  {"key": "centos_image_id",    "value": "9ea4856a-32b2-4553-b408-cfa4cb1bb40b"},
-  {"key": "small_server_type",  "value": "2 GB / 1 CPU"                        },
-  {"key": "small_disk",         "value": "30Gb Storage"                        },
-  {"key": "medium_server_type", "value": "2 GB / 1 CPU"                        },
-  {"key": "medium_disk",        "value": "30Gb Storage"                        },
-  {"key": "large_server_type",  "value": "2 GB / 1 CPU"                        },
-  {"key": "large_disk",         "value": "30Gb Storage"                        },
-  {"key": "username",           "value": "089e2a3a-5ae9-34e4-b03c-c694268acf1c"},
-  {"key": "password",           "value": "p@ssword"                            },
-  {"key": "customer",           "value": "e50bfd1b-253a-3290-85ff-95e218398b7e"},
-  {"key": "service_url",        "value": "https://cp.diceproject.flexiant.net",},
-  {"key": "agent_key",          "value": "288f0541-9921-37a8-a07b-bb47eb27dc10"},
-  {"key": "vdc",                "value": "9799fe42-02ef-3929-88d4-c993a02cbe1d"},
-  {"key": "network",            "value": "5264edab-8d29-329d-b4f9-5f8ca17cff78"}
-]
-```
+### Monitoring inputs
+
+DICE TOSCA Library has integrated support for application monitoring. In order
+to use monitoring, we must have access to Dmon server that applications will
+report to. Setting up Dmon server is out of scope for this document. Consult
+[monitoring tool documentation][dmon-docs] for more information about Dmon.
+
+Pieces of configuration data that we need from Dmon are:
+
+  * `dmon_address`: Main dmon address (eg. 10.50.51.4:5001).
+  * `logstash_graphite_address`: Graphite address (eg. 10.50.51.4:5002).
+  * `logstash_udp_address`: Logstash udp address (eg. 10.50.51.4:25826).
 
 
 ## Container management
@@ -308,18 +318,18 @@ and configured, the users can now start using the service. But to be able to
 submit their application deployments, they need to have virtual containers in
 place to submit their blueprints to.
 
-To do that in GUI, log in and click on the "**+ New Container**" button
-at the top right of the page (marked with an arrow in the picture below). A
-prompt will ask for a short description of the new container.
-In our example, we named the container "Fraud detection master", imagining that
-we are developing a fraud detection application, and this container will be used
-by the Continuous Integration to validate the master branch of the development.
+To do that in GUI, log in and click on the "**+ New Container**" button at the
+top right of the page (marked with an arrow in the picture below). A prompt
+will ask for a short description of the new container.  In our example, we
+named the container "Fraud detection master", imagining that we are developing
+a fraud detection application, and this container will be used by the
+Continuous Integration to validate the master branch of the development.
 
 ![Added a new container](images/DICEDeploymentServiceGUIAddContainer.png)
 
-Each container is identified by a UUID. In the image above, the UUID is circled
-in red: `62e8ffa3-4f2c-426e-bcd7-4ce54c572305`. Provide this UUID to the
-developers or use it in the CI job.
+Each container is identified by a UUID. In the image above, the UUID is
+circled in red: `62e8ffa3-4f2c-426e-bcd7-4ce54c572305`. Provide this UUID to
+the developers or use it in the CI job.
 
 Using the command line interface, adding a new container can be done with the
 following call:
@@ -361,41 +371,12 @@ for real work.
 
 ## Monitoring support
 
-DICE TOSCA Library has integrated support for application monitoring. In order
-to use monitoring, we must have access to Dmon server that applications will
-report to. Setting up Dmon server is out of scope for this document. Consult
-[monitoring tool documentation][dmon-docs] for more information about Dmon.
-
-Pieces of configuration data that we need from Dmon are:
-
-  * `dmon_address`: Main dmon address (eg. 10.50.51.4:5001).
-  * `logstash_graphite_address`: Graphite address (eg. 10.50.51.4:5002).
-  * `logstash_udp_address`: Logstash udp address (eg. 10.50.51.4:25826).
-
-This data now needs to be uploaded to DICE Deployment Service as additional
-inputs. For example, OpenStack inputs would look something like this after
-addition of monitoring:
-
-```json
-[
-  {"key": "agent_user",       "value": "ubuntu"                              },
-  {"key": "small_image_id",   "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea"},
-  {"key": "small_flavor_id",  "value": "070005dc-9bd5-4c0c-b2c6-88f81a7b7239"},
-  {"key": "medium_image_id",  "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea"},
-  {"key": "medium_flavor_id", "value": "45170672-5608-473e-af9c-9097510472d6"},
-  {"key": "large_image_id",   "value": "36dbc4e8-81dd-49f5-9e43-f44a179a64ea"},
-  {"key": "large_flavor_id",  "value": "1bd34fe1-57b3-4937-bf60-5edd35382b78"},
-
-  {"key": "dmon_address",              "value": "10.50.51.4:5001"            },
-  {"key": "logstash_graphite_address", "value": "10.50.51.4:5002"            },
-  {"key": "logstash_udp_address",      "value": "10.50.51.4:25826"           }
-]
-```
-
-Note that this only saves the configuration of the monitoring service for any
-blueprints that require monitored nodes. To actually monitor application
-being deployed, we must enable this explicitly in blueprint. Consult
-[example blueprint with monitoring enabled][blue-monitored] for more
+We have already seen that there are some inputs that control monitoring
+support. But this is only the first half of the monitoring story, since
+setting the appropriate inputs only saves the configuration of the monitoring
+service for any blueprints that require monitored nodes. To actually monitor
+application being deployed, we must enable this explicitly in blueprint.
+Consult [example blueprint with monitoring enabled][blue-monitored] for more
 information.
 
 
@@ -407,3 +388,16 @@ information.
 [Changelog-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Changelog
 [dmon-docs]: https://github.com/dice-project/DICE-Knowledge-Repository/wiki/DICE-Knowledge-Repository#monitoring
 [blue-monitored]: https://github.com/dice-project/DICE-Deployment-Examples/blob/master/storm/storm-openstack-monitored.yaml
+
+
+## Removing the service
+
+Tearing down the deployment service is then as easy as running the `dw.sh`
+script:
+
+    $ ./dw.sh
+
+By default, this script will remove the deployment and blueprint named
+`dice_deploy`. It is possible to supply a different name as a parameter, e.g.:
+
+    $ ./dw.sh staging_deployment
