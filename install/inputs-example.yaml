@@ -13,10 +13,6 @@ ubuntu_image_id: ca290f2d-5163-483b-9dd5-fafe21517c0a
 # $ . openstack.rc
 # $ nova flavor-list
 medium_flavor_id: d3046a41-245a-4042-862e-59568e81f8fa
-
-# Floating IP that service should be associated with. This is needed because
-# we need to have an IP when generating certificate for service.
-floating_ip_id: 02468ace-1357-9bdf-0246-8ace13579bdf
 # ----------------------------------------------------------------------------
 
 
@@ -72,10 +68,6 @@ vdc: vdc-uuid
 # the Information tab. The UUIDs are listed in the Related resources & UUIDs
 # panel for the item Network.
 network: network-uuid
-
-# Since FCO platform does not support floating IPs, we can place any dummy
-# value here, since it will not be used.
-floating_ip_id: dummy-floating-ip-id
 # ----------------------------------------------------------------------------
 
 
@@ -109,8 +101,18 @@ cfy_manager_password: password
 cfy_manager_protocol: https
 
 # Certificate that should be used to validate https connection to Cloudify
-# Manager. If Cloudify Manager is accessed over http or certificate that is
-# being used is trusted, you should set this to null.
+# Manager. Note that before you set the path here, you MUST copy the
+# certificate into "install" folder. For example, if you copied certificate to
+# "install/cfy.crt", set this input to "cfy.crt". Or if you copied the
+# certificate to "install/ssh/certs/mycert.crt", this input should be set to
+# "ssh/certs/mycert.crt".
+#
+# Why is this copying necessary? Server certificate must be bundled with
+# blueprint and the only way to do this is to place it into "install"
+# directory.
+#
+# If Cloudify Manager is accessed over http or certificate that is being used
+# is trusted, you should set this to null.
 cfy_manager_cacert: ssl/cfy.crt
 # ----------------------------------------------------------------------------
 

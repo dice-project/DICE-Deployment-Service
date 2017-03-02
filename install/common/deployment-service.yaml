@@ -28,9 +28,6 @@ inputs:
   superuser_email:
     description: This e-mail will be assigned to the deployment service admin
 
-  floating_ip_id:
-    description: Floating IP that should be attached to DDS VM
-
   # Inputs that will most likely only need to be set to non-default values by
   # service developers and/or continuous integration scripts.
 
@@ -63,7 +60,7 @@ inputs:
 
 node_types:
 
-  dice.components.DeploymentService:
+  dice.components.dds.DeploymentService:
     derived_from: dice.chef.SoftwareComponent
     properties:
       manager:            { default: { get_input: cfy_manager          } }
@@ -99,11 +96,9 @@ node_types:
               default:
                 - [ dds_tarball, { get_property: [ SELF, sources        ] } ]
                 - [ cfy_crt,     { get_property: [ SELF, manager_cacert ] } ]
-                - [ dds_crt,     ssl/dds.crt                                ]
-                - [ dds_key,     ssl/dds.key                                ]
 
 
-  dice.firewall_rules.DeploymentService:
+  dice.firewall_rules.dds.DeploymentService:
     derived_from: dice.firewall_rules.Base
     properties:
       rules:
@@ -134,16 +129,26 @@ node_types:
             port: 15672
 
 
+relationships:
+
+  dice.relationships.dds.IPAddressFrom:
+    derived_from: cloudify.relationships.connected_to
+    source_interfaces:
+      cloudify.interfaces.relationship_lifecycle:
+        preconfigure:
+          implementation: dice.dice_plugin.tasks.base.copy_attr_from_target
+          inputs:
+            target_name: { default: floating_ip_address }
+            source_name: { default: external_ip         }
+
+
 node_templates:
 
   ip:
     type: dice.VirtualIP
-    properties:
-      resource_id: { get_input: floating_ip_id }
-      use_external_resource: true
 
   fw:
-    type: dice.firewall_rules.DeploymentService
+    type: dice.firewall_rules.dds.DeploymentService
 
   vm:
     type: dice.hosts.Medium
@@ -154,10 +159,12 @@ node_templates:
         target: ip
 
   dds:
-    type: dice.components.DeploymentService
+    type: dice.components.dds.DeploymentService
     relationships:
       - type: dice.relationships.ContainedIn
         target: vm
+      - type: dice.relationships.dds.IPAddressFrom
+        target: ip
 
 
 outputs:
