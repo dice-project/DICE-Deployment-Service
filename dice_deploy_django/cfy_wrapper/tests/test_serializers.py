@@ -212,6 +212,19 @@ class InputSerializerTest(BaseTest):
         self.assertEqual(ins[0].key, "ko")
         self.assertEqual(ins[0].value, "vo")
 
+    def test_empty_value(self):
+        inputs = [
+            dict(key="k1", value=""),
+        ]
+        s = InputSerializer(data=inputs, many=True)
+        self.assertTrue(s.is_valid(raise_exception=True))
+        s.save()
+        ins = list(Input.objects.all())
+        self.assertEqual(len(ins), len(inputs))
+        for input in inputs:
+            i = Input.objects.get(key=input["key"])
+            self.assertEqual(input["value"], i.value)
+
 
 class VMSerializerTest(BaseTest):
 

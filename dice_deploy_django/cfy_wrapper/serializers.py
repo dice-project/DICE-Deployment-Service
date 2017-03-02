@@ -59,7 +59,7 @@ class InputSerializer(serializers.ModelSerializer):
         fields = ("key", "value", "description")
         list_serializer_class = InputListSerializer
 
-    value = serializers.CharField()
+    value = serializers.CharField(allow_blank=True)
 
 
 class VMSerializer(serializers.Serializer):
