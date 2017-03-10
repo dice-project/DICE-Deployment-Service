@@ -95,7 +95,7 @@ has a bug that prevents connecting to RabbitMQ if `rabbitmq_username`or
 `rabbitmq_password` contains characters that need to be escaped when used in
 URLs. Bug has been fixed, but current version does not have it applied yet. In
 the mean time, use longer username and password that match regular expression
-`[A-Za-z0-9_.-~]+`.
+`[A-Za-z0-9_.~-]+`.
 
 If our server has less than 6 GB of RAM, we should also disable bootstrap
 validations, since they will fail. We can do that by appending the following
