@@ -254,8 +254,11 @@ and executing:
 
 ## Removing installation
 
-Simply execute `cfy teardown -f`. This will remove all traces of Cloudify
-manager from OpenStack.
+To perform initial removal of manager components, we must execute
+`cfy teardown -f`. This will probably leave manager's volume still present in
+AWS, because for some reason, volume attached to manager instance has
+`DeleteOnTermination` set to `false`. We can safely remove this volume in
+order to avoid being billed for something that we do not use or need.
 
 
 # Official documentation
