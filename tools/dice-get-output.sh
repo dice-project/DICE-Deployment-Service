@@ -39,7 +39,7 @@ function main () {
 
     # get outputs
     OUTPUTS=$(dice-deploy-cli --config "$CONFIG_FILE" outputs $CONTAINER_ID | \
-        jq ".outputs.\"$OUTPUT_NAME\".value")
+        jq ".outputs[\"$OUTPUT_NAME\"].value")
 
     echo "$OUTPUTS"
 }
