@@ -16,7 +16,7 @@ location of the DICE Deployment Service's client configuration (see below).
     $ ./dice-get-output.sh \
         d9d639b0-99dd-405d-8922-920cc55887c5 \
         storm_nimbus_host \
-        /etc/dice/my_testbed/
+        /etc/dice/my_testbed/.dds.conf
 
 # Jenkins project set up
 
@@ -64,8 +64,8 @@ Shell such as the following:
 
 	CONTAINER_ID="d9d639b0-99dd-405d-8922-920cc55887c5"
 
-	DDS_CONFIG_DIR="$HOME/dice"
-	STORM_NIMBUS_HOST=$(dice-get-output.sh $CONTAINER_ID storm_nimbus_host "$DDS_CONFIG_DIR")
+	DDS_CONFIG="$HOME/dice/.dds.conf"
+	STORM_NIMBUS_HOST=$(dice-get-output.sh $CONTAINER_ID storm_nimbus_host "$DDS_CONFIG")
 
 	TOPOLOGY_CLASSPATH="org.apache.storm.starter.WordCountTopology"
 	TOPOLOGY_NAME="wordcount"
