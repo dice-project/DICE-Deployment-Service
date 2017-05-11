@@ -2,13 +2,6 @@
 
 set -e
 
-function get_platforms ()
-{
-  echo $(find install -maxdepth 1 -iname '*.yaml' -exec basename {} .yaml \; \
-           | grep -v example)
-}
-
-PLATFORMS="$(get_platforms)"
 NAME=$0
 TOOLDIR="$(dirname $0)"
 
@@ -18,46 +11,26 @@ function usage ()
 
 USAGE:
 
-  $NAME PLATFORM [DEPLOY_NAME]
-
-Available platforms: $PLATFORMS
+  $NAME INPUTS [DEPLOY_NAME]
 
 EOF
 }
 
 function check_inputs ()
 {
-  [ -e "$TOOLDIR/inputs-$1.yaml" ] && return
-  echo "Please create a valid inputs-$1.yaml file."
-  echo ""
+  [[ -f "$1" ]] && return
+
+  echo "Please create a valid inputs file."
+  echo
   echo "E.g.:"
-  echo "cp $TOOLDIR/install/inputs-$1-example.yaml $TOOLDIR/inputs-$1.yaml"
-  echo "${EDITOR-nano} $TOOLDIR/inputs-$1.yaml"
+  echo "cp $TOOLDIR/install/inputs-example.yaml $TOOLDIR/inputs.yaml"
+  echo "${EDITOR-nano} $TOOLDIR/inputs.yaml"
   exit 2
-}
-
-function check_args ()
-{
-  for i in $PLATFORMS
-  do
-    [[ "x$1" == "x$i" ]] && check_inputs $1 && return
-  done
-  usage
-
-  echo -n "ERROR: "
-  if [[ "x" == "x$1" ]]
-  then
-    echo "Missing platform."
-  else
-    echo "Invalid platform specified: $1."
-  fi
-  exit 1
 }
 
 function main ()
 {
-  local name="${1}.yaml"
-  local inputs="$TOOLDIR/inputs-${1}.yaml"
+  local inputs="$1"
   # :- is not optional here, because function parameters are tricky
   local deploy_name=${2:-dice_deploy}
 
@@ -71,7 +44,7 @@ function main ()
 
   # Deploy
   echo "Publishing blueprint"
-  cfy blueprints publish-archive -b $deploy_name -l $blueprint -n $name
+  cfy blueprints publish-archive -b $deploy_name -l $blueprint
   echo "Creating deploy"
   cfy deployments create -d $deploy_name -b $deploy_name -i $inputs \
     -i "sources=dds.tar.gz"
@@ -83,6 +56,6 @@ function main ()
   rm -f $blueprint
 }
 
-check_args $1
+check_inputs $1
 
 main $1 $2

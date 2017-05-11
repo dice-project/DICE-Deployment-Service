@@ -1,3 +1,10 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+
+imports:
+  - https://github.com/dice-project/DICE-Deployment-Cloudify/releases/download/unified/full.yaml
+
+
 inputs:
 
   # Mandatory inputs - platform independent
@@ -103,30 +110,38 @@ node_types:
     properties:
       rules:
         default:
-          - remote_ip_prefix: 0.0.0.0/0
+          - ip_prefix: 0.0.0.0/0
             port: 22
-          - remote_ip_prefix: 0.0.0.0/0
+            protocol: tcp
+          - ip_prefix: 0.0.0.0/0
             port: 53
-          - remote_ip_prefix: 0.0.0.0/0
+            protocol: tcp
+          - ip_prefix: 0.0.0.0/0
             port: 53
             protocol: udp
-          - remote_ip_prefix: 0.0.0.0/0
+          - ip_prefix: 0.0.0.0/0
             port: 80
-          - remote_ip_prefix: 0.0.0.0/0
+            protocol: tcp
+          - ip_prefix: 0.0.0.0/0
             port: 443
-          - remote_ip_prefix: 0.0.0.0/0
+            protocol: tcp
+          - ip_prefix: 0.0.0.0/0
             port: 5555
-          - remote_ip_prefix: 0.0.0.0/0
-            port_range_min: 8300
-            port_range_max: 8302
-          - remote_ip_prefix: 0.0.0.0/0
-            port_range_min: 8300
-            port_range_max: 8302
+            protocol: tcp
+          - ip_prefix: 0.0.0.0/0
+            from_port: 8300
+            to_port: 8302
+            protocol: tcp
+          - ip_prefix: 0.0.0.0/0
+            from_port: 8300
+            to_port: 8302
             protocol: udp
-          - remote_ip_prefix: 0.0.0.0/0
+          - ip_prefix: 0.0.0.0/0
             port: 8500
-          - remote_ip_prefix: 0.0.0.0/0
+            protocol: tcp
+          - ip_prefix: 0.0.0.0/0
             port: 15672
+            protocol: tcp
 
 
 relationships:
@@ -138,8 +153,8 @@ relationships:
         preconfigure:
           implementation: dice.dice_plugin.tasks.base.copy_attr_from_target
           inputs:
-            target_name: { default: floating_ip_address }
-            source_name: { default: external_ip         }
+            target_name: { default: address     }
+            source_name: { default: external_ip }
 
 
 node_templates:
@@ -151,7 +166,7 @@ node_templates:
     type: dice.firewall_rules.dds.DeploymentService
 
   vm:
-    type: dice.hosts.Medium
+    type: dice.hosts.ubuntu.Medium
     relationships:
       - type: dice.relationships.ProtectedBy
         target: fw
@@ -172,4 +187,4 @@ outputs:
   http_endpoint:
     description: DICE Deployment Service endpoint
     value:
-      concat: [ "https://", { get_attribute: [ip, floating_ip_address] } ]
+      concat: [ "https://", { get_attribute: [ip, address] } ]

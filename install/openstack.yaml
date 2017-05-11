@@ -1,6 +1,0 @@
-# Installation blueprint for DICE Deployment Service
-tosca_definitions_version: cloudify_dsl_1_3
-
-imports:
-  - http://dice-project.github.io/DICE-Deployment-Cloudify/spec/openstack/develop/plugin.yaml
-  - common/deployment-service.yaml
