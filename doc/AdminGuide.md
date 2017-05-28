@@ -7,8 +7,7 @@ Table of Contents:
  0. [DICE Deployment service installation](#dice-deployment-service-installation)
  0. [DICE deployment service configuration](#dice-deployment-service-configuration)
    0. [General inputs](#general-inputs)
-   0. [OpenStack inputs](#openstack-inputs)
-   0. [FCO inputs](#fco-inputs)
+   0. [Platform inputs](#platform-inputs)
    0. [Monitoring inputs](#monitoring-inputs)
  0. [Container management](#container-management)
  0. [Testing installation](#testing-installation)
@@ -28,8 +27,11 @@ manager:
  4. manager's certificate (`CFY_CERT`).
 
 Alternatively, we can also install our own Cloudify Manager. Detailed
-instructions on how to do that are available in
-[OpenStack](Cloudify-OpenStack.md) and [FCO](Cloudify-FCO.md) documents.
+instructions on how to do that are available for:
+
+* [OpenStack](Cloudify-OpenStack.md)
+* [Amazon EC2](Cloudify-Amazon.md)
+* [FCO](Cloudify-FCO.md)
 
 Apart from Cloudify Manager, we will also need `virtualenv` command installed.
 The simplest way of getting this package is to use system's package manager,
@@ -47,7 +49,7 @@ We can install cfy tool using the next sequence of commands:
     $ mkdir ~/dds && cd ~/dds
     $ virtualenv venv
     $ . venv/bin/activate
-    $ pip install cloudify==3.4.1
+    $ pip install cloudify==3.4.2
     $ pip install -U requests[security]
 
 In order to configure the tool we need to execute:
@@ -91,21 +93,14 @@ this documentation, but you can also download released tarball from Github.
         https://github.com/dice-project/DICE-Deployment-Service.git
     $ cd DICE-Deployment-Service
 
-Currently, we support the following platforms with TOSCA blueprints:
-
-  * `fco` - the Flexiant Cloud Orchestrator
-  * `openstack` - an OpenStack platform
-
 We have tested the blueprints on Ubuntu 14.04 cloud install images, using a
 flavour equivalent to 512 MB of RAM, 1 VCPU and 10 GB of storage.
 
-Next, we must choose platform from one of the available ones on the list
-above, and prepare the parameters in the respective inputs file. There is a
+Next, we must prepare the parameters in the respective inputs file. There is an
 `inputs-example.yaml` file in the `install` subfolder that we will use as a
 reference. We need to copy this file to the repository's root directory:
 
-    $ cp install/inputs-example.yaml inputs-openstack.yaml  # OpenStack
-    $ cp install/inputs-example.yaml inputs-fco.yaml        # FCO
+    $ cp install/inputs-example.yaml inputs.yaml
 
 Now we must open this file, follow the comments, which explain the meaning of
 each property, replace the generic values with the actual ones, and save the
@@ -113,8 +108,7 @@ inputs file.
 
 All that is left now is to start the installation.
 
-    $ ./up.sh openstack  # for OpenStack installation
-    $ ./up.sh fco        # for FCO
+    $ ./up.sh inputs.yaml
 
 The last step will take a while. When it is done, it will print the URL to
 the deployment service. If this does not happen because the deployment takes
@@ -136,12 +130,12 @@ To log in, we can use the credentials set earlier in the inputs file, i.e.,
 the values of the `superuser_username` and `superuser_password`.
 
 If additional instances of the service are needed, then we need to name each
-deployment differently. By default, calling `./up.sh PLATFORM` will create a
-blueprint and deployment named `dice_deploy`. If we need an instance that is
-named differently, we can provide the name as the second parameter of the
-`up.sh` tool, e.g.:
+deployment differently. By default, calling `./up.sh inputs.yaml` will create
+a blueprint and deployment named `dice_deploy`. If we need an instance that is
+named differently, we can provide the name as a second argument to the `up.sh`
+tool, e.g.:
 
-    $ ./up.sh openstack staging_deployment
+    $ ./up.sh inputs.yaml staging_deployment
 
 Now we must configure the service.
 
@@ -158,7 +152,7 @@ First thing we need to do is obtain server certificate. We can use web browser
 for this (export certificate that server identified itself with) or do some
 command line magic (replace IP with your own in the next command):
 
-    $ openssl s_client -showcerts -connect 10.10.43.120:443 < /dev/null \
+    $ openssl s_client -showcerts -connect 10.10.20.35:443 < /dev/null \
         | openssl x509 -out dds.crt
 
 Server certificate has been placed in `dds.crt` file and can be inspected by
@@ -201,8 +195,8 @@ technology library supported blueprints.
 To get a template of required inputs, we can use `tools/blueprint-helper.py`
 script. To generate it, we execute
 
-    $ tools/blueprint-helper.py example/test-server-openstack.yaml \
-        inputs --format dice > template-openstack.json
+    $ tools/blueprint-helper.py example/test-server.yaml \
+        inputs --format dice > template.json
 
 Now we must open the generated file and fill in the details. Required inputs
 can be found by simply searching for the string `REPLACE_ME` in the file.
@@ -225,76 +219,35 @@ fully operational.
 
 These inputs are not platform specific.
 
-  * `{ ubuntu | centos }_agent_user`: defines the name of the Linux
+  * `{ ubuntu | centos }_agent_user`: Defines the name of the Linux
     user pre-installed and available on the VMs provisioned from the cloud
     image. This user has to be a sudoer, configured to run sudo without a
     password prompt. The `ubuntu_agent_user` is used on Ubuntu 14.04 servers,
     and there it is usually `ubuntu`, as indicated by default value for this
     input. The `centos_agent_user` will be used on CentOS 7 servers, where the
     value is usually `centos`.
+  * `dns_server`: Defines the address of the internal DNS server. This should
+    be set to the internal address of the DICE Deployment Service.
 
 
-### OpenStack inputs
+### Platform inputs
 
-The OpenStack inputs consist of the following information:
+The platform inputs consist of the following information:
 
-  * `{ ubuntu | centos }_image_id`: the UUID of the VM image to be used
-    for provisioning an Ubuntu 14.04 or CentOS 7 VM instance, respectively.
-  * `{ small | medium | large }_flavor_id`: the UUID of the flavour to
+  * `platform`: Name of the platform that is used to deploy blueprints. Valid
+    values are `aws`, `fco` and `openstack`.
+  * `{ ubuntu | centos }_image_id`: The ID of the VM image to be used for
+    provisioning an Ubuntu 14.04 or CentOS 7 VM instance, respectively.
+    On OpenStack and FCO platform, this is UUID of the image. On Amazon EC2,
+    this is AMI ID.
+  * `{ small | medium | large }_instance_type`: the UUID of the flavour to
     be used when provisioning the VMs. A small instance normally has 512 MB of
     RAM, the medium instance has 1 GB or 2 GB of RAM, a large instance has at
     least 4 GB of RAM.
-
-The UUIDs for images and flavours can be obtained using the OpenStack clients.
-See [this document](Cloudify-OpenStack.md#preparing-inputs) to get examples of
-the client usage.
-
-
-### FCO inputs
-
-For the DICE deployment service installed in the FCO, provide the following
-inputs:
-
-  * `{ ubuntu | centos }_image_id`: the UUID of the VM image to be used
-    for provisioning an Ubuntu 14.04 or CentOS 7 VM instances, respectively.
-  * `{ small | medium | large }_server_type`: the UUID of the image flavour to
-    be used when provisioning the VMs. A small instance normally has 512 MB
-    of RAM, the medium instance has 1 GB or 2 GB of RAM, a large instance has
-    at least 4 GB of RAM.
-  * `{ small | medium | large }_disk`: the name of the small, medium and large
-    storage type as defined in the FCO.
-  * `username`: User's FCO credentials: the username (e-mail address) or the
-    API key user ID. The best practice is to create an API key user in the
-    FCO, which is then delegated to the automation. The API key user must be a
-    member of the Admin Group to be able to deploy and delete VMs. Obtain the
-    API username ID by visiting the FCO web GUI console, switching to Users
-    section in the navigation at the left side of the interface, clicking on
-    your API Key User entry and referring to the API username field. The user
-    id is the first part of the entry before the "/" delimiter.
-  * `password`: user's FCO credentials: the password.
-  * `customer`: FCO customer ID. For an API key user, this ID is in the part
-    after the "/" delimiter of the API username field. For a regular user,
-    obtain this ID by visiting th FCO console (the web GUI). In the Users tab,
-    click on one of the groups. Then open the Information panel and find the
-    Customer information in Related resources & UUIDs.
-  * `service_url`: the URL to the FCO's API service. For DICE project, this is
-    `https://cp.diceproject.flexiant.net`.
-  * `agent_key`: Set the ID of the SSH key to be used by the agent to make the
-    VM accessible. This is the UUID that can be found in the SSH keys section
-    of the FCO web GUI console, where you can click on the SSH key designated
-    for Cloudify to be able to connect to the VMs, then switch to the
-    Information tab. The UUIDs are listed in the Related resources & UUIDs
-    panel for the item Network.
-  * `vdc`: Set the ID of the VCD where the DICE Deployment Service VM will be
-    deployed. This is the UUID that can be found in the VCDs section of the
-    FCO web GUI console, where you can click on the VCD designated to receive
-    the blueprints, then switch to the Information tab. The UUIDs are listed
-    in the Related resources & UUIDs panel.
-  * `network`: Set the ID of the FCO network that the VM will connect to. This
-    is the UUID that can be found in the Networks section of the FCO web GUI
-    console, where you can click on the network designated to connect the VMs,
-    then switch to the Information tab. The UUIDs are listed in the Related
-    resources & UUIDs panel for the item Network.
+  * `{ small | medium | large }_disk_type`: The name of the small, medium and
+    large storage type as defined in the FCO. For Amazon and OpenStack
+    platforms, these inputs can be set to arbitrary values, since they are
+    ignored by the orchestrator.
 
 
 ### Monitoring inputs
@@ -308,6 +261,8 @@ Pieces of configuration data that we need from Dmon are:
 
   * `dmon_address`: Main dmon address (eg. 10.50.51.4:5001).
   * `logstash_graphite_address`: Graphite address (eg. 10.50.51.4:5002).
+  * `logstash_lumberjack_address`: Lumberjack address (eg. 10.50.51:5003).
+  * `logstash_lumberjack_crt`: Lumberjack certificate.
   * `logstash_udp_address`: Logstash udp address (eg. 10.50.51.4:25826).
 
 
