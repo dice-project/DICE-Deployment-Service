@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.4
+
+* Added option for application registration with DMon
+* Fixed required blueprint inputs detection
+* Migrated task processing to Celery 4 that offers better herror handling
+  and reporting capabilities
+* Added support for accessing Cloudify Manager over https
+* Only allow access to the DICE Deployment service over https
+* Migrated installation blueprint to latest DICE TOSCA library
+
+
 ## 0.3.3
 
 * Added better validation of sent files and better errorr messages of
