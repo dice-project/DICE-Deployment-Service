@@ -13,6 +13,10 @@ import sys
 from dsl_parser import parser as cfy_parser
 
 
+def _dump_json(data):
+    return json.dumps(data, indent=2, separators=(",", ": "), sort_keys=True)
+
+
 class ArgParser(argparse.ArgumentParser):
     """
     Argument parser that displays help on error
@@ -51,7 +55,7 @@ class Inputs(Command):
             value = v.get("default", "REPLACE_ME")
             desc = v.get("description", "").strip()
             data.append(dict(key=k, value=value, description=desc))
-        print(json.dumps(data, indent=2, sort_keys=True))
+        print(_dump_json(data))
 
     @staticmethod
     def print_table(inputs):
@@ -89,7 +93,7 @@ class Dump(Command):
         return parser
 
     def execute(self, args):
-        print(json.dumps(self.blueprint, indent=2))
+        print(_dump_json(self.blueprint))
 
 
 class Graph(object):
