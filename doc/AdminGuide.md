@@ -2,17 +2,17 @@
 
 Table of Contents:
 
- 0. [Prerequisites](#prerequisites)
- 0. [Cloudify command line tool installation](#cloudify-command-line-tool-installation)
- 0. [DICE Deployment service installation](#dice-deployment-service-installation)
- 0. [DICE deployment service configuration](#dice-deployment-service-configuration)
-   0. [General inputs](#general-inputs)
-   0. [Platform inputs](#platform-inputs)
-   0. [Monitoring inputs](#monitoring-inputs)
- 0. [Container management](#container-management)
- 0. [Testing installation](#testing-installation)
- 0. [Monitoring support](#monitoring-support)
- 0. [Removing the service](#removing-the-service)
+1. [Prerequisites](#prerequisites)
+1. [Cloudify command line tool installation](#cloudify-command-line-tool-installation)
+1. [DICE Deployment service installation](#dice-deployment-service-installation)
+1. [DICE deployment service configuration](#dice-deployment-service-configuration)
+    1. [General inputs](#general-inputs)
+    1. [Platform inputs](#platform-inputs)
+    1. [Monitoring inputs](#monitoring-inputs)
+1. [Container management](#container-management)
+1. [Testing installation](#testing-installation)
+1. [Monitoring support](#monitoring-support)
+1. [Removing the service](#removing-the-service)
 
 
 ## Prerequisites
