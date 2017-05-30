@@ -5,6 +5,7 @@ Table of Contents:
 1. [Prerequisites](#prerequisites)
 1. [Cloudify command line tool installation](#cloudify-command-line-tool-installation)
 1. [DICE Deployment service installation](#dice-deployment-service-installation)
+1. [DICE deployment command line client configuration](#dice-deployment-command-line-client-configuration)
 1. [DICE deployment service configuration](#dice-deployment-service-configuration)
     1. [General inputs](#general-inputs)
     1. [Platform inputs](#platform-inputs)
@@ -140,10 +141,11 @@ tool, e.g.:
 Now we must configure the service.
 
 
-## DICE deployment service configuration
+## DICE deployment command line client configuration
 
-DICE deployment service is managed using command line tool `dice-deploy-cli`
-that is available in `tools` subfolder. Complete usage instructions are
+DICE deployment service is managed and used through RESTful interface calls.
+The command line tool `dice-deploy-cli` uses these interfaces
+and is available in `tools` subfolder. Complete usage instructions are
 available in [user guide](UserGuide.md#command-line-tool-action-reference),
 but for the sake of completeness, we will describe the commands that we need
 in this document also.
@@ -179,6 +181,9 @@ credentials for super user, set in inputs file):
 If anything went wrong, tool will inform us about the error. To get even more
 details, we can also consult log file `.dds.log`. And this concludes tool
 configuration. Now we need to set server's inputs.
+
+
+## DICE deployment service configuration
 
 The TOSCA blueprints can define a list of parameters called
 [inputs][cfy-spec-inputs]. In DICE technology library, we use the inputs to
