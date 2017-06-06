@@ -116,6 +116,9 @@ Now we can test the configuration by running:
       ]
     }
 
+Note that in your output, the list of Vpcs might be empty, i.e., `"Vpcs" = []`,
+but that is also a valid result.
+
 If the configuration has been done properly, we should see something similar
 to the output above. Now we can run the preparation script:
 
@@ -150,9 +153,10 @@ to the output above. Now we can run the preparation script:
 
 When the script terminates, summary section will contain some information,
 relevant to the bootstrap procedure. Additionally, preparation script also
-created a templates for Cloudify's command line client configuration and
-bootstrap inputs that we will use later on. And lastly, configuration, needed
-by the DICE TOSCA Library has also been copied to the manager instance for us.
+created an environment templates for Cloudify's command line client configuration
+`cloudify.inc.sh` and bootstrap inputs that we will both use later on. And
+lastly, configuration, needed by the DICE TOSCA Library has also been copied to
+the manager instance for us.
 
 
 ### OpenStack

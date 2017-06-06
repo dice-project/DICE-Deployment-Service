@@ -23,7 +23,7 @@ working Cloudify Manager. We need the following pieces of information about
 manager:
 
  1. manager's IP address (`CFY_ADDRESS`),
- 2. manager's port (`CFY_PORT`),
+ 2. manager's port (`CFY_PORT`), normally 443 for HTTPS or 80 for HTTP,
  3. manager's username and password (`CFY_USERNAME`, `CFY_PASSWORD`) and
  4. manager's certificate (`CFY_CERT`).
 
@@ -107,6 +107,20 @@ Now we must open this file, follow the comments, which explain the meaning of
 each property, replace the generic values with the actual ones, and save the
 inputs file.
 
+Please pay special attention to the parameter `cfy_manager_cacert`, because it
+requires that the file referenced by the parameter is placed in the `install/`
+folder. If you have previously bootstrapped the Cloudify Manager, then you
+can copy the certificate created in that process, e.g.:
+
+    $ cp ~/cfy-manager/cloudify-manager-blueprints/resources/ssl/server.crt \
+        install/cfy.crt
+
+If Cloudify Manager bootstrap files are not available any longer, download it
+directly from the server:
+
+    $ openssl s_client -connect $CFY_ADDRESS:$CFY_PORT < /dev/null 2> /dev/null \
+        | openssl x509 -out install/cfy.crt
+
 All that is left now is to start the installation.
 
     $ ./up.sh inputs.yaml
@@ -120,6 +134,10 @@ longer than the preconfigured time, use `cfy` to learn the outputs:
      - "http_endpoint":
       *  Description: Web server external endpoint
       *  Value: https://10.10.20.35
+
+Let us store the newly created address in an environment variable:
+
+    $ export DDS_ADDRESS=10.10.20.35
 
 Now the RESTful interface is running and the Web interface is available. We
 can visit the address listed above with our browser and we should be greeted
@@ -154,7 +172,7 @@ First thing we need to do is obtain server certificate. We can use web browser
 for this (export certificate that server identified itself with) or do some
 command line magic (replace IP with your own in the next command):
 
-    $ openssl s_client -showcerts -connect 10.10.20.35:443 < /dev/null \
+    $ openssl s_client -showcerts -connect $DDS_ADDRESS:443 < /dev/null \
         | openssl x509 -out dds.crt
 
 Server certificate has been placed in `dds.crt` file and can be inspected by
@@ -163,17 +181,21 @@ executing
     $ openssl x509 -in dds.crt -text -noout
 
 Now that we have server certificate available, we can configure the tool. This
-is done by executing next sequence of commands (replace `user` and `pass` with
-credentials for super user, set in inputs file):
+is done by executing next sequence of commands (replace or set `$DDS_USERNAME`
+and `$DDS_PASSWORD` with DICE Deployment Service credentials for super user,
+set in inputs file for superuser_username` and `superuser_password`,
+respectively):
 
     $ tools/dice-deploy-cli cacert dds.crt
     [INFO] - Settings server certificate
     [INFO] - Server certificate set successfully
-    $ tools/dice-deploy-cli use https://10.10.43.120
+
+    $ tools/dice-deploy-cli use https://$DDS_ADDRESS
     [INFO] - Trying to set DICE Deployment Service URL
     [INFO] - Checking DICE Deployment Service URL
     [INFO] - URL set successfully
-    $ tools/dice-deploy-cli authenticate user pass
+
+    $ tools/dice-deploy-cli authenticate $DDS_USERNAME $DDS_PASSWORD
     [INFO] - Checking DICE Deployment Service URL
     [INFO] - Authenticating
     [INFO] - Authorization succeeded

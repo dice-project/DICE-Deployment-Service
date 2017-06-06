@@ -6,8 +6,8 @@
 # AWS, set to some dummy value.
 medium_disk_type: dummy
 
-# On OpenStack, this is flavor id; on AWS, instance type; and on FCO, instance
-# offer id.
+# On OpenStack, this is flavor id; on AWS, instance type (AWS_INSTANCE_TYPE in
+# aws-config.inc.sh); and on FCO, instance offer id.
 medium_instance_type: flavor_id
 
 # Next input selects platform that we are using to deploy DDS. Valid values
@@ -15,7 +15,9 @@ medium_instance_type: flavor_id
 # configured before it can be used.
 platform: aws
 
-# Ubuntu image id. This has exactly the same usage for all platforms.
+# Ubuntu 14.04 image id. This has the same usage for all platforms with
+# formatting of the ID as it applies to the platform. For AWS, we suggest to use
+# the default Ubuntu 14.04 LTS AMI.
 ubuntu_image_id: ca290f2d-5163-483b-9dd5-fafe21517c0a
 
 # ----------------------------------------------------------------------------
@@ -26,11 +28,13 @@ ubuntu_image_id: ca290f2d-5163-483b-9dd5-fafe21517c0a
 cfy_manager: 172.16.95.115
 
 # Cloudify Manager security username. If your Cloudify Manager does not have
-# any security set, use an arbitrary value.
+# any security set, use an arbitrary value. For AWS, use the value of
+# CLOUDIFY_USERNAME from aws-config.inc.sh
 cfy_manager_username: username
 
 # Cloudify Manager security password. If your Cloudify Manager does not have
-# any security set, use an arbitrary value.
+# any security set, use an arbitrary value. For AWS, use the value of
+# CLOUDIFY_PASSWORD from aws-config.inc.sh
 cfy_manager_password: password
 
 # Protocol that Cloudify Manager is using to communicate with clients
@@ -50,7 +54,7 @@ cfy_manager_protocol: https
 #
 # If Cloudify Manager is accessed over http or certificate that is being used
 # is trusted, you should set this to null.
-cfy_manager_cacert: ssl/cfy.crt
+cfy_manager_cacert: cfy.crt
 # ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
