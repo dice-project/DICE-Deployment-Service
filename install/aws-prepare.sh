@@ -162,6 +162,8 @@ readonly instance_id=$(aws ec2 run-instances \
   --key-name $AWS_KEY_NAME \
   --security-group-ids $default_group_id $manager_group_id \
   --subnet-id $subnet_id \
+  --block-device-mappings \
+      'DeviceName=/dev/sda1,Ebs={VolumeSize=20,DeleteOnTermination=true}' \
   --query 'Instances[0].InstanceId'
 )
 state instance_id
