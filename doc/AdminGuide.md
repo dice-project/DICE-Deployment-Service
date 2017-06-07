@@ -30,7 +30,7 @@ manager:
 Alternatively, we can also install our own Cloudify Manager. Detailed
 instructions on how to do that are available for:
 
-* [OpenStack](Cloudify-OpenStack.md)
+* [OpenStack](Cloudify.md)
 * [Amazon EC2](Cloudify-Amazon.md)
 * [FCO](Cloudify-FCO.md)
 
