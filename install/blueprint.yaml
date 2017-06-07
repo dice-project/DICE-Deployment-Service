@@ -188,3 +188,6 @@ outputs:
     description: DICE Deployment Service endpoint
     value:
       concat: [ "https://", { get_attribute: [ip, address] } ]
+  dns_server:
+    description: Address of the internal DNS server
+    value: { get_attribute: [vm, ip] }

@@ -134,11 +134,15 @@ longer than the preconfigured time, use `cfy` to learn the outputs:
      - "http_endpoint":
       *  Description: Web server external endpoint
       *  Value: https://10.10.20.35
+     - "dns_server":
+      *  Description: Address of the internal DNS server
+      *  Value: 192.168.50.33
 
 Let us store the newly created address in an environment variable:
 
     $ export DDS_ADDRESS=10.10.20.35
 
+Also take notice of the `dns_server` value that will be useful later on.
 Now the RESTful interface is running and the Web interface is available. We
 can visit the address listed above with our browser and we should be greeted
 by a login form.
