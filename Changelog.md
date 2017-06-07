@@ -4,7 +4,7 @@
 
 * Added option for application registration with DMon
 * Fixed required blueprint inputs detection
-* Migrated task processing to Celery 4 that offers better herror handling
+* Migrated task processing to Celery 4 that offers better error handling
   and reporting capabilities
 * Added support for accessing Cloudify Manager over https
 * Only allow access to the DICE Deployment service over https

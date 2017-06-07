@@ -17,7 +17,8 @@ platform: aws
 
 # Ubuntu 14.04 image id. This has the same usage for all platforms with
 # formatting of the ID as it applies to the platform. For AWS, we suggest to use
-# the default Ubuntu 14.04 LTS AMI.
+# the default Ubuntu 14.04 LTS AMI or search the Ubuntu EC2 AMI locator at
+# https://cloud-images.ubuntu.com/locator/ec2/.
 ubuntu_image_id: ca290f2d-5163-483b-9dd5-fafe21517c0a
 
 # ----------------------------------------------------------------------------
@@ -29,12 +30,12 @@ cfy_manager: 172.16.95.115
 
 # Cloudify Manager security username. If your Cloudify Manager does not have
 # any security set, use an arbitrary value. For AWS, use the value of
-# CLOUDIFY_USERNAME from aws-config.inc.sh
+# CLOUDIFY_USERNAME from cloudify.inc.sh
 cfy_manager_username: username
 
 # Cloudify Manager security password. If your Cloudify Manager does not have
 # any security set, use an arbitrary value. For AWS, use the value of
-# CLOUDIFY_PASSWORD from aws-config.inc.sh
+# CLOUDIFY_PASSWORD from cloudify.inc.sh
 cfy_manager_password: password
 
 # Protocol that Cloudify Manager is using to communicate with clients

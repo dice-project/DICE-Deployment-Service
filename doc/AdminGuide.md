@@ -183,7 +183,7 @@ executing
 Now that we have server certificate available, we can configure the tool. This
 is done by executing next sequence of commands (replace or set `$DDS_USERNAME`
 and `$DDS_PASSWORD` with DICE Deployment Service credentials for super user,
-set in inputs file for superuser_username` and `superuser_password`,
+set in inputs file for `superuser_username` and `superuser_password`,
 respectively):
 
     $ tools/dice-deploy-cli cacert dds.crt
@@ -223,7 +223,7 @@ To get a template of required inputs, we can use `tools/blueprint-helper.py`
 script. To generate it, we execute
 
     $ tools/blueprint-helper.py example/test-server.yaml \
-        inputs --format dice > template.json
+        inputs --format dice > dds_inputs.json
 
 Now we must open the generated file and fill in the details. Required inputs
 can be found by simply searching for the string `REPLACE_ME` in the file.
@@ -232,7 +232,7 @@ Detailed description of each input can be found in the sections below.
 When we have our inputs ready, we can proceed and upload them to DICE
 deployment service by executing
 
-    $ tools/dice-deploy-cli set-inputs template-openstack.json
+    $ tools/dice-deploy-cli set-inputs dds_inputs.json
     [INFO] - Checking DICE Deployment Service URL
     [INFO] - Checking DICE Deployment Service authentication data
     [INFO] - Replacing service inputs
@@ -266,7 +266,7 @@ The platform inputs consist of the following information:
   * `{ ubuntu | centos }_image_id`: The ID of the VM image to be used for
     provisioning an Ubuntu 14.04 or CentOS 7 VM instance, respectively.
     On OpenStack and FCO platform, this is UUID of the image. On Amazon EC2,
-    this is AMI ID.
+    this is AMI ID - use [Ubuntu AMI locator] and [CentOS AWS wiki page].
   * `{ small | medium | large }_instance_type`: the UUID of the flavour to
     be used when provisioning the VMs. A small instance normally has 512 MB of
     RAM, the medium instance has 1 GB or 2 GB of RAM, a large instance has at
@@ -276,6 +276,8 @@ The platform inputs consist of the following information:
     platforms, these inputs can be set to arbitrary values, since they are
     ignored by the orchestrator.
 
+[Ubuntu AMI locator]: https://cloud-images.ubuntu.com/locator/ec2/
+[CentOS AWS wiki page]: https://wiki.centos.org/Cloud/AWS
 
 ### Monitoring inputs
 
