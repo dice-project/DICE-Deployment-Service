@@ -483,4 +483,23 @@ class ProcessContainerQueue(BaseCeleryTest):
         self.assertIsNone(c.queue)
 
 
-# TODO: Add missing tests for sync_container and pipe helpers
+class GetDeployPipe(BaseCeleryTest):
+
+    def test_nonempty_queue_no_register(self):
+        b = Blueprint.objects.create()
+        c = Container.objects.create(queue=b)
+
+        pipe = tasks._get_deploy_pipe(c, False)
+
+        self.assertEqual(6, len(pipe))
+
+    def test_nonempty_queue_register(self):
+        b = Blueprint.objects.create()
+        c = Container.objects.create(queue=b)
+
+        pipe = tasks._get_deploy_pipe(c, True)
+
+        self.assertEqual(7, len(pipe))
+
+
+# TODO: Add missing tests for sync_container

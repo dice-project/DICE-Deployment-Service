@@ -265,7 +265,7 @@ def register_app(container_id):
         blueprint.log_error(msg.format(response.text))
 
 
-def _get_deploy_pipe(container, register_app):
+def _get_deploy_pipe(container, register):
     if container.queue is None:
         return []
 
@@ -278,7 +278,7 @@ def _get_deploy_pipe(container, register_app):
         wait_for_execution.s(False, id),
         fetch_blueprint_outputs.si(id),
     ]
-    if register_app:
+    if register:
         pipe.insert(1, register_app.si(id))
 
     return pipe
