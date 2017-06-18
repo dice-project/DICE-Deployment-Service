@@ -408,6 +408,23 @@ class RegisterAppTest(BaseCeleryTest):
         self.assertEqual(0, b.errors.all().count())
         mock_requests.put.assert_called_once()
 
+    def test_all_ok_metadata(self, mock_requests):
+        b = Blueprint.objects.create()
+        b.metadata.create(key="k 1", value="v 1")
+        b.metadata.create(key="k 2", value="v 2")
+        c = Container.objects.create(blueprint=b)
+        Input.objects.create(key="dmon_address", value="12.34.56.78:5001")
+        mock_requests.put.return_value.status_code = 200
+
+        tasks.register_app(c.cfy_id)
+
+        b.refresh_from_db()
+        self.assertEqual(0, b.errors.all().count())
+        mock_requests.put.assert_called_once()
+        # This tests keyword arguments to put call
+        self.assertEqual(mock_requests.put.mock_calls[0][2],
+                         {"json": {"k 1": "v 1", "k 2": "v 2"}})
+
     def test_no_input(self, mock_requests):
         b = Blueprint.objects.create()
         c = Container.objects.create(blueprint=b)

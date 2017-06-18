@@ -258,8 +258,13 @@ def register_app(container_id):
                             "Cannot register application with dmon.")
         return
 
+    # TODO: Currently, we pass metadata to DMon as an json dict. When DMon
+    # actually implements this, we may need to revisit the remainder of this
+    # function to get it in sync with DMon.
+    metadata = {m.key: m.value for m in blueprint.metadata.all()}
     url = "http://{}/dmon/v1/overlord/application/{}"
-    response = requests.put(url.format(dmon_address.value, id))
+    response = requests.put(url.format(dmon_address.value, id),
+                            json=metadata)
     if response.status_code != 200:
         msg = "Application registration failed: '{}'"
         blueprint.log_error(msg.format(response.text))

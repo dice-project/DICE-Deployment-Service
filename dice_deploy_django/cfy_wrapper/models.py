@@ -280,3 +280,17 @@ class Error(models.Model):
         return "id: {}, msg: {}, blueprint: {}".format(
             self.id, self.message, self.blueprint.id
         )
+
+
+@python_2_unicode_compatible
+class Metadata(models.Model):
+
+    key = models.TextField()
+    value = models.TextField()
+    blueprint = models.ForeignKey(Blueprint, on_delete=models.CASCADE,
+                                  related_name="metadata")
+
+    def __str__(self):
+        return "blueprint: {} key: {}, value: {}".format(
+            self.blueprint.id, self.key, self.value
+        )

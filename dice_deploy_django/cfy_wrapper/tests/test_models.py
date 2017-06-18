@@ -13,6 +13,7 @@ from cfy_wrapper.models import (
     Container,
     Input,
     Error,
+    Metadata,
 )
 
 
@@ -341,3 +342,25 @@ class ErrorTest(BaseTest):
         b.delete()
 
         self.assertEqual(0, Error.objects.all().count())
+
+
+class MetadataTest(BaseTest):
+
+    def test_creation_single(self):
+        b = Blueprint.objects.create()
+
+        Metadata.objects.create(blueprint=b, key="k", value="v")
+
+        self.assertEqual(1, Metadata.objects.all().count())
+        e = list(Metadata.objects.all())[0]
+        self.assertEqual(e.key, "k")
+        self.assertEqual(e.value, "v")
+        self.assertEqual(e.blueprint, b)
+
+    def test_delete_on_blueprint_delete(self):
+        b = Blueprint.objects.create()
+        Metadata.objects.create(blueprint=b, key="k", value="v")
+
+        b.delete()
+
+        self.assertEqual(0, Metadata.objects.all().count())

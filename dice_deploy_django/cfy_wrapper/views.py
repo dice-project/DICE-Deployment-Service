@@ -13,7 +13,7 @@ from django.db import IntegrityError, transaction
 
 from . import tasks
 from . import utils
-from .models import Blueprint, Container, Input
+from .models import Blueprint, Container, Input, Metadata
 from .serializers import (
     BlueprintSerializer,
     ContainerSerializer,
@@ -122,6 +122,10 @@ class ContainerBlueprintView(APIView):
             blueprint.delete()
             return Response({"detail": msg},
                             status=status.HTTP_400_BAD_REQUEST)
+
+        metadata = [Metadata(key=k, value=v, blueprint=blueprint)
+                    for k, v in request.data.items() if k != "file"]
+        Metadata.objects.bulk_create(metadata)
 
         register_param = request.query_params.get("register_app", "")
         register_app = register_param.lower() == "true"

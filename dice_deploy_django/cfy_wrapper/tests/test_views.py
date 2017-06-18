@@ -440,6 +440,29 @@ class ContainerBlueprintTest(BaseViewTest):
         self.assertEqual(mock_sync.mock_calls[0][1][0], c)
         self.assertEqual(mock_sync.mock_calls[0][1][2], False)
 
+    @mock.patch("cfy_wrapper.tasks.sync_container", return_value=(True, "OK"))
+    def test_post_valid_empty_success_metadata(self, mock_sync):
+        c = Container.objects.create()
+        b = io.StringIO(u"valid: yaml")
+        kw = dict(id=str(c.id))
+        metadata = {"mkey 1": "mvalue 1", "mkey 2": "mvalue 2"}
+        data = {"file": b}
+        data.update(metadata)
+        req = self.post(
+            reverse("container_blueprint", kwargs=kw) + "?register_app=True",
+            data=data, auth=True, format="multipart"
+        )
+
+        resp = ContainerBlueprintView.as_view()(req, **kw)
+
+        blueprint = list(Blueprint.objects.all())[0]
+        stored_metadata = {m.key: m.value for m in blueprint.metadata.all()}
+        self.assertEqual(metadata, stored_metadata)
+        self.assertEqual(status.HTTP_202_ACCEPTED, resp.status_code)
+        mock_sync.assert_called_once()
+        self.assertEqual(mock_sync.mock_calls[0][1][0], c)
+        self.assertEqual(mock_sync.mock_calls[0][1][2], True)
+
     @mock.patch("cfy_wrapper.tasks.sync_container", return_value=(False, "NO"))
     def test_post_valid_empty_fail(self, mock_sync):
         c = Container.objects.create()
