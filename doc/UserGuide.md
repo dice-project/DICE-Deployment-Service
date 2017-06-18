@@ -76,12 +76,26 @@ $ dice-deploy-cli deploy $CONTAINER_UUID ../examples/test-setup.yaml
 [INFO] - Successfully started new deploy
 ```
 
-The command both loads the blueprint in the container and starts the deployment
-process. It does not wait for the deployment to finish, but just submits the
-request to be processed and exits. To track the progress of the request, use
-the `wait-deploy` action, which blocks the execution of a script,
-internally looping until the deployment either succeeds or finishes with an
-error:
+The command both loads the blueprint in the container and starts the
+deployment process. If we would like to register deployed application with
+DMon, we must pass `--register-app` flag to the deploy command. We can also
+submit some metadata alongside the blueprint by specifying `--metadata` or
+`-m` flag (it is possible to specify this flag multiple times to pass more
+than one piece of metadata). The command that registers application with DMon
+would look something like this:
+
+```bash
+$ dice-deploy-cli \
+    --register-app \
+    -m "meta_key=Meta value" \
+    -m "More=meta data" \
+    deploy $CONTAINER_UUID ../examples/test-setup.yaml
+```
+
+After submitting deployment request, tool does not wait for the deployment to
+finish. To track the progress of the request, use the `wait-deploy` action,
+which blocks the execution of a script, internally looping until the
+deployment either succeeds or finishes with an error:
 
 ```bash
 $ dice-deploy-cli wait-deploy $CONTAINER_UUID

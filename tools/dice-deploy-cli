@@ -10,6 +10,7 @@ import time
 import sys
 import os
 
+from requests_toolbelt import MultipartEncoder
 import requests
 
 # Logging
@@ -323,18 +324,40 @@ class Deploy(Command):
         parser.add_argument("--register-app", dest="register",
                             action="store_const", const=True, default=False,
                             help="Register application with DMon")
+        parser.add_argument("--metadata", "-m", action="append",
+                            help="Additional metadata about blueprint")
         parser.add_argument("uuid", help="Container UUID")
         parser.add_argument("package",
                             help="Blueprint (tar.gz package ot YAML file)",
                             type=argparse.FileType("rb"))
         return parser
 
+    @staticmethod
+    def _parse_metadata(metadata):
+        result = {}
+        if not metadata:
+            return result
+
+        for pair in metadata:
+            k, v = pair.split("=", 1)
+            result[k] = v
+        return result
+
     def execute(self):
-        uuid = self.args.uuid
         logger.info("Starting blueprint deployment")
-        response = self.post("/containers/{}/blueprint".format(uuid),
-                             files=dict(file=self.args.package),
-                             params=dict(register_app=self.args.register))
+        try:
+            fields = self._parse_metadata(self.args.metadata)
+        except ValueError:
+            fail("Invalid metadata")
+        fields["file"] = (self.args.package.name, self.args.package)
+        encoder = MultipartEncoder(fields=fields)
+        response = self.post(
+            "/containers/{}/blueprint".format(self.args.uuid), data=encoder,
+            params={"register_app": self.args.register},
+            headers={"Content-Type": encoder.content_type}
+        )
+        print(encoder.content_type)
+        print(response.text)
         if response.status_code != 202:
             fail("Cannot start deploy")
         logger.info("Successfully started new deploy")
