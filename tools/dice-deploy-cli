@@ -325,7 +325,8 @@ class Deploy(Command):
                             action="store_const", const=True, default=False,
                             help="Register application with DMon")
         parser.add_argument("--metadata", "-m", action="append",
-                            help="Additional metadata about blueprint")
+                            help="Additional metadata about blueprint. "
+                                "Use the form 'Key=Value'")
         parser.add_argument("uuid", help="Container UUID")
         parser.add_argument("package",
                             help="Blueprint (tar.gz package ot YAML file)",
