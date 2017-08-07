@@ -161,6 +161,20 @@ the manager instance for us.
 
 ### OpenStack
 
+To create a new SSH key, execute `ssh-keygen` and follow the instructions.
+When asked about file, enter `cfy-agent`. Make sure you create SSH key with
+no password, since tools do not support password protected keys. This will
+create two files: `cfy-agent` is the private key, and `cfy-agent.pub` is
+its public key counterpart. Next, name this key pair (e.g., `cloudify-agent`)
+and register its public key with OpenStack:
+
+    $ nova keypair-add --pub-key cfy-agent.pub cloudify-agent
+
+Note down the key pair name. Also save the public and private keys somewhere so
+that you will be able to use it in case you will at some point want to connect
+to any of the provisioned VMs.
+
+
 **TODO:** Prepare similar script as for EC2.
 
 

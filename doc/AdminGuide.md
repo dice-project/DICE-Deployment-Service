@@ -3,6 +3,11 @@
 Table of Contents:
 
 1. [Prerequisites](#prerequisites)
+    1. [Obtaining infrastructure details](#obtaining-infrastructure-details)
+        1. [Amazon EC2](#amazon-ec2)
+        1. [OpenStack](#openstack)
+        1. [FCO](#fco)
+    1. [Cloudify Manager](#cloudify-manager)
 1. [Cloudify command line tool installation](#cloudify-command-line-tool-installation)
 1. [DICE Deployment service installation](#dice-deployment-service-installation)
 1. [DICE deployment command line client configuration](#dice-deployment-command-line-client-configuration)
@@ -18,28 +23,193 @@ Table of Contents:
 
 ## Prerequisites
 
-Before we can install DICE deployment service, we need to have access to
-working Cloudify Manager. We need the following pieces of information about
-manager:
+Installing DICE Deployment Service involves a number of parameters that the
+Administrator needs to prepare in advance. Another set of parameters emerges
+dynamically during various steps. We recommend to keep the list of parameters
+handy at all time. Here is the complete list of the parameters needed (the
+variable in parenthesis is the bash environment variable holding the value):
 
- 1. manager's IP address (`CFY_ADDRESS`),
- 2. manager's port (`CFY_PORT`), normally 443 for HTTPS or 80 for HTTP,
- 3. manager's username and password (`CFY_USERNAME`, `CFY_PASSWORD`) and
- 4. manager's certificate (`CFY_CERT`).
-
-Alternatively, we can also install our own Cloudify Manager. Detailed
-instructions on how to do that are available for:
-
-* [OpenStack](Cloudify.md)
-* [Amazon EC2](Cloudify-Amazon.md)
-* [FCO](Cloudify-FCO.md)
+* [Your infrastructure](#obtaining-infrastructure-details) (i.e., OpenStack,
+  Amazon EC2, etc.):
+  * flavour, instance type or product offer for a small, medium and large VM
+  * OS image ID for Ubuntu 14.04
+  * OS image ID for CentOS 7
+  * Linux username for the two images (`UBUNTU_USERNAME`, `CENTOS_USERNAME`)
+  * (FCO only) product offer for a small, medium and large disk
+* [Cloudify Manager](#cloudify-manager):
+  * IP address (`CFY_ADDRESS`),
+  * port (`CFY_PORT`), normally 443 for HTTPS or 80 for HTTP,
+  * username and password  (generated in advance for new Cloudify Manager
+    installation or that of an existing Cloudify Manager instance -
+    `CLOUDIFY_USERNAME`, `CLOUDIFY_PASSWORD`) and
+  * path to web service's certificate (`CFY_CERT`).
+* DICE Deployment Service:
+  * administrator username (chosen in advance)
+  * administrator password (chosen in advance)
+  * administrator's e-mail address
+  * path to the DICE Deployment Service's web service certificate (generated in
+    the process)
 
 Apart from Cloudify Manager, we will also need `virtualenv` command installed.
 The simplest way of getting this package is to use system's package manager,
 since this package is present in almost any distribution of GNU/Linux.
 
+### Obtaining infrastructure details
+
+This is the most tedious part of the process, but it is also fairly
+straightforward. We need to collect the relevant information from our
+infrastructure. The steps differ depending on the platform, but in all cases
+the regular user level account is sufficient.
+
+#### Amazon EC2
+
+* Instance types are available at the [AWS Instance Types] page.
+  * The medium sized instance type goes into `AWS_INSTANCE_TYPE` variable for
+    Cloudify Manager bootstrap.
+* Use [Ubuntu AMI locator] and [CentOS AWS wiki page] to obtain a suitable AMI
+  ID for the Ubuntu 14.04 and CentOS 7 images.
+* Linux usernames are usually `ubuntu` for Ubuntu and `centos` for CentOS.
+
+[Go back to Prerequisites](#prerequisites)
+
+[AWS Instance Types]: https://aws.amazon.com/ec2/instance-types/
+
+#### OpenStack
+
+The easiest way to obtain what we need is by using the OpenStack's `nova` and
+`glance` command line clients. First thing we need to do is install latest
+`python-novaclient` and `python-glanceclient` Python package. Open a new
+terminal window and run the following commands:
+
+    $ cd /tmp
+    $ virtualenv -p python2 venv
+    $ . venv/bin/activate
+    $ pip install python-novaclient python-glanceclient
+
+Now we need to obtain OpenStack RC file. Simply login to your OpenStack
+dashboard and follow "Access & Security" -> "API Access". There should be a
+couple buttons at the upper-right part of the page that download RC settings.
+
+After we download the settings (we will assume that the RC file has been
+downloaded to `/tmp/project-openrc.sh`), we need to source it:
+
+    $ cd /tmp
+    $ . project-openrc.sh
+
+When prompted, input password, and you should be set to use the `nova` command.
+
+To obtain the available flavours, call:
+
+    $ nova flavor-list
+
+You should obtain a table with the available options and note down the
+respective values in the `ID` column.
+
+To obtain a list of the available images, call:
+
+    $ glance image-list
+
+In the table displayed by the command should contain entries such as
+`centos-7 x86_64` and `ubuntu-14.04 x86_64` in the `Name` column. Note down
+their respective values in the `Name` column.
+
+Please note that this output will be specific to your OpenStack installation. If
+none of the images contain the needed Ubuntu 14.04 or Centos 7 OS, then please
+ask your OpenStack administrator to upload suitable Cloud images.
+
+[Go back to Prerequisites](#prerequisites)
+
+#### FCO
+
+For obtaining the needed parameters, we will use the [FCO web console]. There,
+switch to the "Servers" page in the navigation and look for existing servers
+in your cluster that independently have the properties that we need: one of the
+three suitable compute sizes, one of the three disk sizes, and is either Ubuntu
+14.04 or Centos 7. If for any of the size or OS type there is no existing
+server, simply create a new temporary one.
+
+Then click on the link with the name of each server to open the server's details
+page. Switch to the "Information" tab.
+
+* For Product Offer, note down the value in the "UUID" column of the Product
+  offer row.
+* For Disk's Product Offer, look for the "Disk" entry in the "Information" tab
+  and click the link (either the name or the UUID) of the disk. Then switch to
+  "Information" tab and look for the Product offer. Note down the UUID value in
+  this row.
+* While in the "Information" tab of the disk's details, also look for the row
+  with item Image. Check the "Name" value, and if it is one of the Ubuntu 14.04
+  or CentOS 7, then note down the "UUID" value.
+
+The following items are only relevant if you are setting up a new instance
+of the Cloudify Manager:
+
+* SSH key ID for the ssh key (the Agent key) that the Cloudify Manager will use
+  for connecting to orchestrated VMs: switch to "SSH keys" at the top level
+  navigation. Look for the key you would like to use (if one does not exist yet,
+  see instructions below, then continue here). Click on the selected key to open
+  the details page, then switch to the "Information" tab. In the table, look for
+  the row with "SSH key" item and note down the value in the "UUID" column.
+* Customer UUID: open details of a Server created by the FCO user whose
+  credentials will be used by Cloudify. Switch to "Information" tab
+  and look for the UUID value in the Customer row.
+* VDC: open details of a Server created in the cluster belonging to the target
+  VDC. Switch to "Information" tab and look for the UUID value in the VDC row.
+* Network UUID: in the same server's "Information" tab, find the server's NIC
+  and click on the link. This will open the NIC's detail page. Switch to
+  the "Information" tab and look for the "Network" item. Note down the value
+  in the UUID column.
+* User account UUID: the best practice is to create and assign an API Key
+  instead of an actual user to Cloudify. Open the "Users" page at the top level
+  navigation. Feel free to click on the "Create API key" and select your new
+  user name (which is _not_ what we need for configuring Cloudify) and password.
+  Note down the password. Then open the selected user's details and switch to
+  the "Information" tab. The username UUID is at the "User" item row's "UUID" column.
+
+To **create a new SSH key**, execute:
+
+    $ mkdir -p ~/cfy-manager && cd ~/cfy-manager
+    $ ssh-keygen
+
+and follow the instructions. When asked about file, enter `cfy-agent`. Make sure
+you create SSH key with no password, since tools do not support password
+protected keys. This will create two files: `cfy-agent` is the private key,
+and `cfy-agent.pub` is its public key counterpart.
+Now that we have a fresh key, we need to register public key into FCO.  We
+must navigate to FCO's management interface and the click "SSH keys" ->
+"create". Now we name the key and paste the contents of `cfy-agent.pub` into
+proper field. After the key is created, we need to open its detail page and
+select "Information" tab on the left and take note of the UUID of the key, since
+we will need it later.
+
+[Go back to Prerequisites](#prerequisites)
+
+[FCO web console]: https://cp.diceproject.flexiant.net
+
+### Cloudify Manager
+
+**Existing Cloudify Manager**: in the next steps, we will need the credentials
+to access Cloudify Manager `CFY_USERNAME` and `CFY_PASSWORD`. We also need
+to obtain the Cloudify Manager's service certificate. This can either be an
+existing path `CLOUDIFY_SSL_CERT`.
+
+If this certificate is not available, download it directly from the server:
+
+    $ export CLOUDIFY_SSL_CERT=/tmp/cfy.crt
+    $ openssl s_client -connect $CFY_ADDRESS:$CFY_PORT < /dev/null 2> /dev/null \
+        | openssl x509 -out $CLOUDIFY_SSL_CERT
+
+**New Cloudify Manager installation**: the steps depend on the infrastructure
+where we want to install the Cloudify Manager:
+
+* [OpenStack](Cloudify.md)
+* [Amazon EC2](Cloudify.md)
+* [FCO](Cloudify-FCO.md)
 
 ## Cloudify command line tool installation
+
+If you arrived here from having just installed Cloudify Manager, you can skip
+ahead to [Cloudify command line tool installation](#cloudify-command-line-tool-installation).
 
 The recommended way of installing the DICE Deployment service is by using
 Cloudify. This requires that the workstation we are installing from has the
@@ -90,7 +260,7 @@ If everything went well, we are now ready to start service installation.
 First, we need to download the DICE deployment tools. We will be using git in
 this documentation, but you can also download released tarball from Github.
 
-    $ git clone --depth 1 --branch develop \
+    $ git clone --depth 1 --branch master \
         https://github.com/dice-project/DICE-Deployment-Service.git
     $ cd DICE-Deployment-Service
 
