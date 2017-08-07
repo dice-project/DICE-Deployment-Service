@@ -2,12 +2,12 @@
 # DDS host settings
 
 # Medium disk type is only used by FCO platform. Set this to the id of the
-# disk offer that should be used when creating instance. For OpenStack and
-# AWS, set to some dummy value.
+# product offer of the disk that should be used when creating instance. For
+# OpenStack and AWS, set to some dummy value.
 medium_disk_type: dummy
 
 # On OpenStack, this is flavor id; on AWS, instance type (AWS_INSTANCE_TYPE in
-# aws-config.inc.sh); and on FCO, instance offer id.
+# aws-config.inc.sh); and on FCO, product offer id.
 medium_instance_type: flavor_id
 
 # Next input selects platform that we are using to deploy DDS. Valid values

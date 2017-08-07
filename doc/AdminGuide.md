@@ -272,11 +272,11 @@ The platform inputs consist of the following information:
     On OpenStack and FCO platform, this is UUID of the image. On Amazon EC2,
     this is AMI ID - use [Ubuntu AMI locator] and [CentOS AWS wiki page].
   * `{ small | medium | large }_instance_type`: the UUID of the flavour to
-    be used when provisioning the VMs. A small instance normally has 512 MB of
-    RAM, the medium instance has 1 GB or 2 GB of RAM, a large instance has at
-    least 4 GB of RAM.
+    be used when provisioning the VMs. In FCO, this is called a product offer
+    ID. A small instance normally has 512 MB of RAM, the medium instance has
+    1 GB or 2 GB of RAM, a large instance has at least 4 GB of RAM.
   * `{ small | medium | large }_disk_type`: The name of the small, medium and
-    large storage type as defined in the FCO. For Amazon and OpenStack
+    large disk product offers as defined in the FCO. For Amazon and OpenStack
     platforms, these inputs can be set to arbitrary values, since they are
     ignored by the orchestrator.
 
