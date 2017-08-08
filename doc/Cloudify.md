@@ -46,7 +46,40 @@ instructions for all supported platforms.
 
 ### FCO
 
-**TODO:** Prepare script for FCO.
+First, create and start a suitable Server using the FCO's web console.
+**TODO** instructions how.
+
+Next, we must prepare configuration for the preparation script. The simplest
+thing to do is to copy `~/dds/install/fco-config.inc.sh` file from deployment
+service sources to working directory and edit it:
+
+    $ cp ~/dds/install/fco-config.inc.sh .
+    $ $EDITOR fco-config.inc.sh
+
+Carefully examine all the variables and update them with the valid values that
+apply to your test bed.
+
+Now we can source the configuration by running:
+
+    $ . fco-config.inc.sh
+
+Now we can run the preparation script:
+
+    $ ~/dds/install/aws-prepare.sh
+    Waiting for instance to start accepting ssh connections ...
+      Attempt 0 ...
+    Creating DICE plug-in configuration ...
+    Preparing the keys
+    Uploading DICE configuration to manager VM ...
+    dice-fco.yaml                                 100%  393     8.7KB/s   00:00
+    cfy-agent.pem                                 100% 1675    36.7KB/s   00:00
+    Creating bootstrap inputs template ...
+    Creating cfy environment file ...
+
+The script, among other steps, also created an environment templates for
+Cloudify's command line client configuration `cloudify.inc.sh` and bootstrap
+inputs that we will both use later on. And lastly, configuration, needed by
+the DICE TOSCA Library has also been copied to the manager instance for us.
 
 
 ### EC2
