@@ -20,19 +20,40 @@ In this document we will describe specifics of bootstrap procedure for Cloudify
 
 ## Creating bootstrap environment
 
+First we need to install prerequisites for Cloudify's CLI client. For Red Hat
+related GNU/Linux distributions, following packages need to be installed:
+`python-virtualenv`, `python-devel` and `openssl-devel`. Adjust properly for
+Ubuntu and the gang.
+
 When we perform Cloudify Manager bootstrap, we will need some scratch space to
-install required clients and configuration files. We can create new folder and
-create python's virtual environment using next couple of commands:
+install required clients and configuration files. We also need the DICE
+Deployment Service source files available. We combine this preparation as
+follows:
+
+    $ mkdir ~/dds && cd ~/dds
+    $ virtualenv venv
+    $ . venv/bin/activate
+    $ pip install cloudify==3.4.2
+    $ pip install -U requests[security]
+
+    $ git clone --depth 1 --branch master \
+        https://github.com/dice-project/DICE-Deployment-Service.git
+    $ cd DICE-Deployment-Service
+    $ export DDS_PATH=$PWD
 
     $ mkdir ~/cfy-manager && cd ~/cfy-manager
-    $ virtualenv -p python2 venv
-    $ . venv/bin/activate
 
-In this documentation, we will also assume that DICE Deployment Service
-sources are available at `~/dds`. Adjust commands accordingly or create a
-symbolic link to make your life a bit easier:
+As a result, we now have:
 
-    $ ln -s /path/to/dice/deployment/service/sources ~/dds
+* `~/dds` folder, containing:
+  * `~/dds/venv` - a Python virtual environment with Cloudify client libraries
+    that is currently active,
+  * `~/dss/DICE-Deployment-Service` - the sources of the DICE Deployment Service
+    with various convenience scripts and files we will use in the following
+    steps. Also an environment variable `DDS_PATH` points to this path for
+    easier usage.
+* `~/cfy-manager` - our current folder, that is empty, but will soon contain
+  working files and Cloudify Manager deployment files.
 
 This being out of the way, we can start preparing our platform.
 
@@ -50,10 +71,10 @@ First, create and start a suitable Server using the FCO's web console.
 **TODO** instructions how.
 
 Next, we must prepare configuration for the preparation script. The simplest
-thing to do is to copy `~/dds/install/fco-config.inc.sh` file from deployment
+thing to do is to copy `$DDS_PATH/install/fco-config.inc.sh` file from deployment
 service sources to working directory and edit it:
 
-    $ cp ~/dds/install/fco-config.inc.sh .
+    $ cp $DDS_PATH/install/fco-config.inc.sh .
     $ $EDITOR fco-config.inc.sh
 
 Carefully examine all the variables and update them with the valid values that
@@ -63,9 +84,9 @@ Now we can source the configuration by running:
 
     $ . fco-config.inc.sh
 
-Now we can run the preparation script:
+Next, we can run the preparation script:
 
-    $ ~/dds/install/aws-prepare.sh
+    $ $DDS_PATH/install/fco-prepare.sh
     Waiting for instance to start accepting ssh connections ...
       Attempt 0 ...
     Creating DICE plug-in configuration ...
@@ -85,8 +106,8 @@ the DICE TOSCA Library has also been copied to the manager instance for us.
 ### EC2
 
 Preparing infrastructure on Amazon EC2 is automated using
-`~/dds/install/aws-prepare.sh` script. Before we can use this script, we must
-install AWS command line client by running:
+`$DDS_PATH/install/aws-prepare.sh` script. Before we can use this script, we
+must install AWS command line client by running:
 
     $ pip install awscli
 
@@ -111,10 +132,10 @@ use policy similar to the one shown below:
 After new user is created, write down both access keys that are shown.
 
 Next, we must prepare configuration for the preparation script. The simplest
-thing to do is to copy `~/dds/install/aws-config.inc.sh` file from deployment
+thing to do is to copy `$DDS_PATH/install/aws-config.inc.sh` file from deployment
 service sources to working directory and edit it:
 
-    $ cp ~/dds/install/aws-config.inc.sh .
+    $ cp $DDS_PATH/install/aws-config.inc.sh .
     $ $EDITOR aws-config.inc.sh
 
 Note that there are default values listed for most of the configuration, so to
@@ -155,7 +176,7 @@ but that is also a valid result.
 If the configuration has been done properly, we should see something similar
 to the output above. Now we can run the preparation script:
 
-    $ ~/dds/install/aws-prepare.sh
+    $ $DDS_PATH/install/aws-prepare.sh
     Creating VPC ...
     Creating subnet ...
     Creating gateway ...
@@ -213,18 +234,9 @@ to any of the provisioned VMs.
 
 ## Installing Cloudify resources
 
-First we need to install prerequisites for Cloudify's CLI client. For Red Hat
-related GNU/Linux distributions, following packages need to be installed:
-`python-virtualenv`, `python-devel` and `openssl-devel`. Adjust properly for
-Ubuntu and the gang.
+We will obtain official blueprints for manager and checkout the **3.4.2** tag:
 
-After this is done, we can install client using pip:
-
-    $ pip install cloudify==3.4.2
-
-Next, we need to obtain official blueprints for manager and checkout the
-**3.4.2** tag:
-
+    $ cd ~/cfy-manager
     $ git clone https://github.com/cloudify-cosmo/cloudify-manager-blueprints
     $ cd cloudify-manager-blueprints
     $ git checkout -b v3.4.2 tags/3.4.2
@@ -234,11 +246,6 @@ by manager blueprint. We do this by executing
 
     $ cfy init
     $ cfy local install-plugins -p simple-manager-blueprint.yaml
-
-In order to prevent `requests` experiencing a fit when confronted with some
-certificates, we reinstall them using `security` flag:
-
-    $ pip install -U requests[security]
 
 We can move to the server certificate creation now.
 
@@ -250,7 +257,8 @@ document. If you need help with this, consult
 [certificate instructions](certificates.md#creating-self-signed-certificates).
 
 After certificate is ready, place it (along with generated key) into
-`resources/ssl` folder and change their names to `server.crt` and `server.key`
+`~/cfy-manager/cloudify-manager-blueprints/resources/ssl` folder and change
+their names to `server.crt` (for the public key) and `server.key` (private key)
 respectively. Now we can proceed to actually executing bootstrap procedure.
 
 
@@ -261,6 +269,7 @@ environment variables that will inform cfy command about various settings that
 we used. After this is done, we can bootstrap the manager. Commands that
 perform all described actions are:
 
+    $ cd ~/cfy-manager/cloudify-manager-blueprints
     $ . ../cloudify.inc.sh
     $ cfy bootstrap -p simple-manager-blueprint.yaml -i ../inputs.yaml
 
@@ -291,7 +300,8 @@ be similar to this:
     +--------------------------------+---------+
 
 Another way to test if manager is working is to point our web browser to
-server's IP address, where we should be greeted by Cloudify's UI.
+server's IP address, where we should be greeted by Cloudify's UI. We can refer
+to `~/cfy-manager/cloudify.inc.sh` for the username and password.
 
 
 ## Granting access to the Cloudify Manager
@@ -315,10 +325,9 @@ modifying certificate path in `cloudify.inc.sh` and executing:
 
 To remove all resources created during bootstrap, execute:
 
-    $ . aws-config.inc.sh
-    $ ~/dds/install/aws-teardown.sh # for AWS
-    $ ~/dds/install/fco-teardown.sh # for FCO
-    $ ~/dds/install/openstack-teardown.sh # for OpenStack
+    $ . aws-config.inc.sh && $DDS_PATH/install/aws-teardown.sh # for AWS
+    $ . fco-config.inc.sh && $DDS_PATH/install/fco-teardown.sh # for FCO
+    $ . openstack-config.inc.sh && $DDS_PATH/install/openstack-teardown.sh # for OpenStack
 
 This will remove all traces of Cloudify manager from selected platform. Note
 that you should execute uninstall workflow on all blueprints before removing
@@ -331,3 +340,9 @@ during blueprint deployments.
 For further reference, the following links point to the official documentation:
 
 * [How to bootstrap Cloudify Manager v.3.4.2](http://docs.getcloudify.org/3.4.2/manager/bootstrapping/)
+
+
+# Next steps
+
+To continue with installing the DICE Deployment Service, follow
+[this link](AdminGuide.md#dice-deployment-service-installation).

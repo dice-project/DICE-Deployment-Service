@@ -209,7 +209,7 @@ where we want to install the Cloudify Manager:
 ## Cloudify command line tool installation
 
 If you arrived here from having just installed Cloudify Manager, you can skip
-ahead to [Cloudify command line tool installation](#cloudify-command-line-tool-installation).
+ahead to [DICE Deployment service installation](#dice-deployment-service-installation).
 
 The recommended way of installing the DICE Deployment service is by using
 Cloudify. This requires that the workstation we are installing from has the
@@ -223,12 +223,20 @@ We can install cfy tool using the next sequence of commands:
     $ pip install cloudify==3.4.2
     $ pip install -U requests[security]
 
+Build the configuration environment for your Cloudify Manager instance, making
+sure to replace `CFY_USERNAME` and `CFY_PASSWORD` with the actual values:
+
+    $ mkdir ~/cfy-manager && cd ~/cfy-manager
+    $ cp $CLOUDIFY_SSL_CERT cfy.crt
+    $ echo "export CLOUDIFY_USERNAME=CFY_USERNAME" > cloudify.inc.sh
+    $ echo "export CLOUDIFY_PASSWORD=CFY_PASSWORD" >> cloudify.inc.sh
+    $ echo "export CLOUDIFY_SSL_CERT=$PWD/cfy.crt" >> cloudify.inc.sh
+
 In order to configure the tool we need to execute:
 
+    $ . ~/cfy-manager/cloudify.inc.sh
+    $ cd ~/dds
     $ cfy init
-    $ export CLOUDIFY_USERNAME=CFY_USERNAME
-    $ export CLOUDIFY_PASSWORD=CFY_PASSWORD
-    $ export CLOUDIFY_SSL_CERT="/path/to/CFY_CERT"
     $ cfy use -t CFY_ADDRESS --port CFY_PORT
 
 Make sure you replace `CFY_*` placeholders with Cloudify Manager data. To test
@@ -257,15 +265,36 @@ If everything went well, we are now ready to start service installation.
 
 ## DICE Deployment service installation
 
-First, we need to download the DICE deployment tools. We will be using git in
-this documentation, but you can also download released tarball from Github.
+### Installation from new Cloudify Manager
 
+Previously we have created a `~/dds` folder. We also have a `~/cfy-manager`
+folder containing our Cloudify Manager instance's settings and files. Now, we
+need to switch to the DICE Deployment Service's project:
+
+    $ cd ~/dds/DICE-Deployment-Service
+
+If this folder does not exist for you yet, obtain it:
+
+    $ cd ~/dds
     $ git clone --depth 1 --branch master \
         https://github.com/dice-project/DICE-Deployment-Service.git
     $ cd DICE-Deployment-Service
 
+We need to make sure that the proper Python virtual environment is activated and
+that the Cloudify related environment variables are set:
+
+    $ . ../venv/bin/activate
+    $ . ~/dds/cloudify.inc.sh
+
+Now copy the Cloudify's service certificate into the DICE Deployment Service's
+resource folder:
+
+    $ cp $CLOUDIFY_SSL_CERT install/cfy.crt
+
 We have tested the blueprints on Ubuntu 14.04 cloud install images, using a
 flavour equivalent to 512 MB of RAM, 1 VCPU and 10 GB of storage.
+
+### Configuring the installation
 
 Next, we must prepare the parameters in the respective inputs file. There is an
 `inputs-example.yaml` file in the `install` subfolder that we will use as a
@@ -277,19 +306,7 @@ Now we must open this file, follow the comments, which explain the meaning of
 each property, replace the generic values with the actual ones, and save the
 inputs file.
 
-Please pay special attention to the parameter `cfy_manager_cacert`, because it
-requires that the file referenced by the parameter is placed in the `install/`
-folder. If you have previously bootstrapped the Cloudify Manager, then you
-can copy the certificate created in that process, e.g.:
-
-    $ cp ~/cfy-manager/cloudify-manager-blueprints/resources/ssl/server.crt \
-        install/cfy.crt
-
-If Cloudify Manager bootstrap files are not available any longer, download it
-directly from the server:
-
-    $ openssl s_client -connect $CFY_ADDRESS:$CFY_PORT < /dev/null 2> /dev/null \
-        | openssl x509 -out install/cfy.crt
+### Running the installation
 
 All that is left now is to start the installation.
 
