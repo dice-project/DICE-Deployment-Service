@@ -212,7 +212,7 @@ where we want to install the Cloudify Manager:
 ## Cloudify command line tool installation
 
 If you arrived here from having just installed Cloudify Manager, you can skip
-ahead to [DICE Deployment service installation](#dice-deployment-service-installation).
+ahead to [Configuring cfy tool](#configuring-cfy-cli).
 
 The recommended way of installing the DICE Deployment service is by using
 Cloudify. This requires that the workstation we are installing from has the
@@ -234,6 +234,8 @@ sure to replace `CFY_USERNAME` and `CFY_PASSWORD` with the actual values:
     $ echo "export CLOUDIFY_USERNAME=CFY_USERNAME" > cloudify.inc.sh
     $ echo "export CLOUDIFY_PASSWORD=CFY_PASSWORD" >> cloudify.inc.sh
     $ echo "export CLOUDIFY_SSL_CERT=$PWD/cfy.crt" >> cloudify.inc.sh
+
+#### Configuring cfy tool
 
 In order to configure the tool we need to execute:
 
@@ -287,7 +289,7 @@ We need to make sure that the proper Python virtual environment is activated and
 that the Cloudify related environment variables are set:
 
     $ . ../venv/bin/activate
-    $ . ~/dds/cloudify.inc.sh
+    $ . ~/cfy-manager/cloudify.inc.sh
 
 Now copy the Cloudify's service certificate into the DICE Deployment Service's
 resource folder:
@@ -317,14 +319,14 @@ apply to your test bed.
 
 Next, source the configuration by running:
 
-    $ . fco-dds-config.sh
+    $ . dds-config.sh
 
 ### Running the installation
 
 To start the installation, choose a name for the deployment (or leave the
 default name `dice_deploy`) and run the installation script for your platform:
 
-    $ install/install-dds.sh
+    $ install/install-dds.sh dice_deploy
     Creating deployment inputs for DICE Deployment Service
     Running installation
     install/
@@ -591,11 +593,6 @@ information.
 ## Removing the service
 
 Tearing down the deployment service is then as easy as running the `dw.sh`
-script:
+script and providing the name of the deployment as the parameter:
 
-    $ ./dw.sh
-
-By default, this script will remove the deployment and blueprint named
-`dice_deploy`. It is possible to supply a different name as a parameter, e.g.:
-
-    $ ./dw.sh staging_deployment
+    $ ./dw.sh dice_deploy
