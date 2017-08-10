@@ -299,58 +299,69 @@ flavour equivalent to 512 MB of RAM, 1 VCPU and 10 GB of storage.
 
 ### Configuring the installation
 
-Next, we must prepare the parameters in the respective inputs file. There is an
-`inputs-example.yaml` file in the `install` subfolder that we will use as a
-reference. We need to copy this file to the repository's root directory:
+Next, we must prepare the parameters in the respective inputs file. Copy the
+configuration file template for your platform into the working directory and
+edit it. E.g., for FCO, use the the following commands:
 
-    $ cp install/inputs-example.yaml inputs.yaml
+    $ cp install/fco-dds-config.sh .
+    $ $EDITOR fco-dds-config.sh
 
-Now we must open this file, follow the comments, which explain the meaning of
-each property, replace the generic values with the actual ones, and save the
-inputs file.
+Carefully examine all the variables and update them with the valid values that
+apply to your test bed.
+
+Next, source the configuration by running:
+
+    $ . fco-dds-config.sh
 
 ### Running the installation
 
-All that is left now is to start the installation.
+To start the installation, choose a name for the deployment (or leave the
+default name `dice_deploy`) and run the installation script for your platform:
 
-    $ ./up.sh inputs.yaml
+    $ install/install-fco.sh
+    Creating deployment inputs for DICE Deployment Service
+    Running installation
+    install/
+    install/fco-config.inc.sh
+    install/dds.tar.gz
+    install/aws-prepare.sh
+    install/fco-prepare.sh
+    install/blueprint.yaml
+    install/install-fco.sh
+    [...]
+    Obtaining outputs
+    Creating DICE Deployment Service's runtime inputs
 
-The last step will take a while. When it is done, it will print the URL to
-the deployment service. If this does not happen because the deployment takes
-longer than the preconfigured time, use `cfy` to learn the outputs:
+    ----------------------------------------------------------------------------
+    SUMMARY:
+      DICE Deployment Service URL: https://10.50.51.34
+      Admin username: admin
+      Admin password: 0Ny2VXtEqA7ZD5xZTXFHDBXXheBYtP4F
+    ----------------------------------------------------------------------------
 
-    $ cfy deployments outputs -d dice_deploy
-    Getting outputs for deployment: dice_deploy [manager=10.10.20.115]
-     - "http_endpoint":
-      *  Description: Web server external endpoint
-      *  Value: https://10.10.20.35
-     - "dns_server":
-      *  Description: Address of the internal DNS server
-      *  Value: 192.168.50.33
+The last step will take a while. When it is done, the summary section will
+contain the data on the newly created DICE Deployment Service instance. Note
+them down, because the URL and the password are dynamic, and the password
+cannot be retrieved later.
 
-Let us store the newly created address in an environment variable:
+The script also produces two files:
 
-    $ export DDS_ADDRESS=10.10.20.35
+* `inputs.yaml` - the inputs file for the DICE Deployment Service's blueprint.
+  The script has already consumed this file in the process of the service
+  installation.
+* `dds_inputs.json` - contains the inputs that the DICE Deployment Service should
+  supply with each blueprint deployment. We will use this file later.
 
-Also take notice of the `dns_server` value that will be useful later on.
 Now the RESTful interface is running and the Web interface is available. We
 can visit the address listed above with our browser and we should be greeted
-by a login form.
+by a login form. Use the Admin username and password that are also listed above
+to log in.
 
 ![DICE deployment service GUI login prompt](images/DICEDeploymentServiceGUILogin.png)
 
-To log in, we can use the credentials set earlier in the inputs file, i.e.,
-the values of the `superuser_username` and `superuser_password`.
-
-If additional instances of the service are needed, then we need to name each
-deployment differently. By default, calling `./up.sh inputs.yaml` will create
-a blueprint and deployment named `dice_deploy`. If we need an instance that is
-named differently, we can provide the name as a second argument to the `up.sh`
-tool, e.g.:
-
-    $ ./up.sh inputs.yaml staging_deployment
-
-Now we must configure the service.
+Next, we will configure the DICE Deployment Service instance with the inputs
+that the service will include with the deployment. We will do that using the
+command line client.
 
 
 ## DICE deployment command line client configuration
@@ -410,29 +421,26 @@ application is being deployed. Considering that this configuration is
 relatively static for each instance of the DICE deployment service, the
 administrator has to load it only once, but before the first application can
 be deployed. The inputs needed therefore depend on the target platform
-(OpenStack, FCO, etc.). It is of course possible to provide additional inputs
-depending on the needs of the application blueprints. In the following
-subsections we provide the minimum inputs list that is common to all the DICE
-technology library supported blueprints.
+(OpenStack, FCO, etc.).
 
-To get a template of required inputs, we can use `tools/blueprint-helper.py`
-script. To generate it, we execute
-
-    $ tools/blueprint-helper.py example/test-server.yaml \
-        inputs --format dice > dds_inputs.json
-
-Now we must open the generated file and fill in the details. Required inputs
-can be found by simply searching for the string `REPLACE_ME` in the file.
-Detailed description of each input can be found in the sections below.
-
-When we have our inputs ready, we can proceed and upload them to DICE
-deployment service by executing
+If you followed the steps of the DICE Deployment Service installation, your
+working directory should contain a `dds_inputs.json` file. We upload it by
+executing:
 
     $ tools/dice-deploy-cli set-inputs dds_inputs.json
     [INFO] - Checking DICE Deployment Service URL
     [INFO] - Checking DICE Deployment Service authentication data
     [INFO] - Replacing service inputs
     [INFO] - Successfully updated inputs
+
+Please note that the command replaces any previous values of the inputs in the
+`dds_inputs.json` while removing any inputs that are not present in the uploaded
+file.
+
+It is of course possible to provide additional inputs
+depending on the needs of the application blueprints. In the following
+subsections we provide the minimum inputs list that is common to all the DICE
+technology library supported blueprints.
 
 And this is it. We successfully configured DICE deployment service that is now
 fully operational.
@@ -478,11 +486,15 @@ The platform inputs consist of the following information:
 ### Monitoring inputs
 
 DICE TOSCA Library has integrated support for application monitoring. In order
-to use monitoring, we must have access to Dmon server that applications will
-report to. Setting up Dmon server is out of scope for this document. Consult
-[monitoring tool documentation][dmon-docs] for more information about Dmon.
+to use monitoring, we must have access to DICE Monitoring server that
+applications will report to. Setting up DICE Deployment Service server is out of
+scope for this document. Consult
+[monitoring tool documentation][dmon-docs] for more information about DICE
+Monitoring Service.
 
-Pieces of configuration data that we need from Dmon are:
+When installing Cloudify and DICE Deployment Service, these inputs are present,
+but are set to a generic value. Once DICE Deployment Service is set up at a
+known internal address, update the following items in the `dds_inputs.json`:
 
   * `dmon_address`: Main dmon address (eg. 10.50.51.4:5001).
   * `logstash_graphite_address`: Graphite address (eg. 10.50.51.4:5002).

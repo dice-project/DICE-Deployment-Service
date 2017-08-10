@@ -174,3 +174,14 @@ Finish the updating by a regular push of changes of the local wiki repository
 into the github's master branch.
 
 [integration-docs]: ../tests/README.md
+
+## Generating `inputs.json`
+
+To get a template of required inputs, we can use `tools/blueprint-helper.py`
+script. To generate it, we execute
+
+    $ tools/blueprint-helper.py example/test-server.yaml \
+        inputs --format dice > dds_inputs.json
+
+Now we must open the generated file and fill in the details. Required inputs
+can be found by simply searching for the string `REPLACE_ME` in the file.
