@@ -13,7 +13,7 @@ export AWS_MANAGER_GROUP_NAME=cloudify-manager-grp
 # access to the manager.
 export AWS_DEFAULT_GROUP_NAME=cloudify-default-grp
 
-# CentOS 7 AMI. YOu can get the latest available AMI ID using this command:
+# CentOS 7 AMI. You can get the latest available AMI ID using this command:
 # aws ec2 describe-images \
 #     --owners aws-marketplace \
 #     --filters Name=product-code,Values=aw0evgkw8e5c1q413zgy5pjce \
