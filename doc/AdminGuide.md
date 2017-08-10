@@ -301,10 +301,16 @@ flavour equivalent to 512 MB of RAM, 1 VCPU and 10 GB of storage.
 
 Next, we must prepare the parameters in the respective inputs file. Copy the
 configuration file template for your platform into the working directory and
-edit it. E.g., for FCO, use the the following commands:
+edit it. E.g., for Amazon EC2, use the the following command:
 
-    $ cp install/fco-dds-config.sh .
-    $ $EDITOR fco-dds-config.sh
+    $ cp install/aws-dds-config.sh dds-config.sh
+
+For FCO, copy `install/fco-dds-config.sh` and for OpenStack
+`install/openstack-dds-config.sh`.
+
+Now open the copy for editing:
+
+    $ $EDITOR dds-config.sh
 
 Carefully examine all the variables and update them with the valid values that
 apply to your test bed.
@@ -318,7 +324,7 @@ Next, source the configuration by running:
 To start the installation, choose a name for the deployment (or leave the
 default name `dice_deploy`) and run the installation script for your platform:
 
-    $ install/install-fco.sh
+    $ install/install-dds.sh
     Creating deployment inputs for DICE Deployment Service
     Running installation
     install/
@@ -327,7 +333,7 @@ default name `dice_deploy`) and run the installation script for your platform:
     install/aws-prepare.sh
     install/fco-prepare.sh
     install/blueprint.yaml
-    install/install-fco.sh
+    install/install-dds.sh
     [...]
     Obtaining outputs
     Creating DICE Deployment Service's runtime inputs
