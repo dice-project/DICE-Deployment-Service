@@ -49,7 +49,7 @@ As a result, we now have:
   * `~/dds/venv` - a Python virtual environment with Cloudify client libraries
     that is currently active,
   * `~/dss/DICE-Deployment-Service` - the sources of the DICE Deployment Service
-    with various convenience scripts and files we will use in the following
+    with various convenience scripts and files we will use in the upcoming
     steps. Also an environment variable `DDS_PATH` points to this path for
     easier usage.
 * `~/cfy-manager` - our current folder, that is empty, but will soon contain

@@ -16,6 +16,8 @@ do
 	done
 done
 
+set +e
+
 cfy executions start -d $DEPLOY_NAME -w uninstall
 cfy deployments delete -d $DEPLOY_NAME
 cfy blueprints delete -b $DEPLOY_NAME

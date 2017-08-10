@@ -10,12 +10,15 @@ Table of Contents:
     1. [Cloudify Manager](#cloudify-manager)
 1. [Cloudify command line tool installation](#cloudify-command-line-tool-installation)
 1. [DICE Deployment service installation](#dice-deployment-service-installation)
+    1. [Preparing working environment](#preparing-working-environment)
+    1. [Configuring the installation](#configuring-the-installation)
+    1. [Running the installation](#running-the-installation)
 1. [DICE deployment command line client configuration](#dice-deployment-command-line-client-configuration)
 1. [DICE deployment service configuration](#dice-deployment-service-configuration)
     1. [General inputs](#general-inputs)
     1. [Platform inputs](#platform-inputs)
     1. [Monitoring inputs](#monitoring-inputs)
-1. [Container management](#container-management)
+1. [Virtual Deployment Container management](#virtual-deployment-container-management)
 1. [Testing installation](#testing-installation)
 1. [Monitoring support](#monitoring-support)
 1. [Removing the service](#removing-the-service)
@@ -190,7 +193,7 @@ we will need it later.
 
 **Existing Cloudify Manager**: in the next steps, we will need the credentials
 to access Cloudify Manager `CFY_USERNAME` and `CFY_PASSWORD`. We also need
-to obtain the Cloudify Manager's service certificate. This can either be an
+to obtain the Cloudify Manager's service certificate. This can be an
 existing path `CLOUDIFY_SSL_CERT`.
 
 If this certificate is not available, download it directly from the server:
@@ -265,7 +268,7 @@ If everything went well, we are now ready to start service installation.
 
 ## DICE Deployment service installation
 
-### Installation from new Cloudify Manager
+### Preparing working environment
 
 Previously we have created a `~/dds` folder. We also have a `~/cfy-manager`
 folder containing our Cloudify Manager instance's settings and files. Now, we
@@ -361,7 +364,8 @@ in this document also.
 
 First thing we need to do is obtain server certificate. We can use web browser
 for this (export certificate that server identified itself with) or do some
-command line magic (replace IP with your own in the next command):
+command line magic (`$DDS_ADDRESS` with IP of your instance in the next
+command):
 
     $ openssl s_client -showcerts -connect $DDS_ADDRESS:443 < /dev/null \
         | openssl x509 -out dds.crt
@@ -372,10 +376,10 @@ executing
     $ openssl x509 -in dds.crt -text -noout
 
 Now that we have server certificate available, we can configure the tool. This
-is done by executing next sequence of commands (replace or set `$DDS_USERNAME`
-and `$DDS_PASSWORD` with DICE Deployment Service credentials for super user,
-set in inputs file for `superuser_username` and `superuser_password`,
-respectively):
+is done by executing the following sequence of commands (replace or set
+`$DDS_USERNAME` and `$DDS_PASSWORD` with DICE Deployment Service credentials for
+super user, set in inputs file for `superuser_username` and
+`superuser_password`, respectively):
 
     $ tools/dice-deploy-cli cacert dds.crt
     [INFO] - Settings server certificate
@@ -391,6 +395,7 @@ respectively):
     [INFO] - Authenticating
     [INFO] - Authorization succeeded
 
+The configuration is stored in the `.dds.conf` file.
 If anything went wrong, tool will inform us about the error. To get even more
 details, we can also consult log file `.dds.log`. And this concludes tool
 configuration. Now we need to set server's inputs.
@@ -486,7 +491,7 @@ Pieces of configuration data that we need from Dmon are:
   * `logstash_udp_address`: Logstash udp address (eg. 10.50.51.4:25826).
 
 
-## Container management
+## Virtual Deployment Container management
 
 With the Cloudify Manager installed and the DICE deployment service installed
 and configured, the users can now start using the service. But to be able to
