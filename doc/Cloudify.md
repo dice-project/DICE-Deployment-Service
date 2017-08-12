@@ -224,21 +224,63 @@ the manager instance for us.
 
 ### OpenStack
 
-To create a new SSH key, execute `ssh-keygen` and follow the instructions.
-When asked about file, enter `cfy-agent`. Make sure you create SSH key with
-no password, since tools do not support password protected keys. This will
-create two files: `cfy-agent` is the private key, and `cfy-agent.pub` is
-its public key counterpart. Next, name this key pair (e.g., `cloudify-agent`)
-and register its public key with OpenStack:
+Preparing infrastructure on OpenStack is automated using
+`$DDS_PATH/install/openstack-prepare.sh` script. Before we can use this
+script, we must install OpenStack command line client by running:
 
-    $ nova keypair-add --pub-key cfy-agent.pub cloudify-agent
+    $ pip install python-openstackclient
 
-Note down the key pair name. Also save the public and private keys somewhere so
-that you will be able to use it in case you will at some point want to connect
-to any of the provisioned VMs.
+Now we need to configure the client by downloading RC file from OpenStack
+dashboard. We will find the link to the RC file under "Access & Security" ->
+"API Access".
 
+Next, we must prepare configuration for the preparation script. We will copy
+`$DDS_PATH/install/openstack-config.inc.sh` file from deployment service
+sources to working directory and edit it:
 
-**TODO:** Prepare similar script as for EC2.
+    $ cp $DDS_PATH/install/openstack-config.inc.sh .
+    $ $EDITOR openstack-config.inc.sh
+
+Carefully examine all the variables and update them with the valid values that
+apply to your test bed.
+
+Now we can source the configuration by running:
+
+    $ . openstack-config.inc.sh
+
+Next, we can run the preparation script:
+
+    $ $DDS_PATH/install/openstack-prepare.sh
+    Creating network ...
+    Creating subnet ...
+    Creating router ...
+    Adding subnet to router ...
+    Creating SSH key ...
+    Creating default security group ...
+    Creating Manager security group ...
+    Creating manager instance ...
+    Adding floating IP to manager ...
+    Waiting for manager to start accepting ssh connections ...
+      Attempt 0 ... failed. Retrying in 10 seconds.
+      Attempt 1 ... 
+    Connection to 10.10.43.16 closed.
+    Activating swap on manager instance ...
+    Creating DICE-plugin configuration ...
+    Uploading DICE configuration to manager VM ...
+    Creating bootstrap inputs template ...
+    Creating cfy environment file ...
+
+    --------------------------------------------------------------------------
+    SUMMARY:
+      Manager VM public address: 10.10.43.16
+      Manager VM private address: 10.50.51.3
+      SSH access to VM: ssh -i cfy-key.pem centos@10.10.43.16
+    --------------------------------------------------------------------------
+
+The script, among other steps, also created an environment templates for
+Cloudify's command line client configuration `cloudify.inc.sh` and bootstrap
+inputs that we will both use later on. And lastly, configuration, needed by
+the DICE TOSCA Library has also been copied to the manager instance for us.
 
 
 ## Installing Cloudify resources
