@@ -19,4 +19,10 @@ Vagrant.configure(2) do |config|
     v.memory = 4096
     v.cpus = 1
   end
+
+  config.vm.provider "libvirt" do |domain, override|
+    override.vm.box = "RX14/trusty64"
+    domain.memory = 4096
+    domain.cpus = 1
+  end
 end
