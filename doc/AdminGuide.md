@@ -207,7 +207,7 @@ where we want to install the Cloudify Manager:
 
 * [OpenStack](Cloudify.md)
 * [Amazon EC2](Cloudify.md)
-* [FCO](Cloudify-FCO.md)
+* [FCO](Cloudify.md)
 
 ## Cloudify command line tool installation
 
