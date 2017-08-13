@@ -67,8 +67,15 @@ instructions for all supported platforms.
 
 ### FCO
 
-First, create and start a suitable Server using the FCO's web console.
-**TODO** instructions how.
+Preparing infrastructure on FCO is automated using
+`$DDS_PATH/install/fco-prepare.sh` script. Before we can use this script, we
+must install FCO command line client by running:
+
+    $ pip install fcoclient
+
+Now we need to configure the client by running the `fco configure` command and
+typing in the required information. You can obtain this information from your
+FCO control panel under users section.
 
 Next, we must prepare configuration for the preparation script. The simplest
 thing to do is to copy `$DDS_PATH/install/fco-config.inc.sh` file from deployment
@@ -87,10 +94,12 @@ Now we can source the configuration by running:
 Next, we can run the preparation script:
 
     $ $DDS_PATH/install/fco-prepare.sh
+    Creating SSH key ...
+    Creating manager firewall template ...
+    Creating manager instance ...
     Waiting for instance to start accepting ssh connections ...
       Attempt 0 ...
     Creating DICE plug-in configuration ...
-    Preparing the keys
     Uploading DICE configuration to manager VM ...
     dice-fco.yaml                                 100%  393     8.7KB/s   00:00
     cfy-agent.pem                                 100% 1675    36.7KB/s   00:00
