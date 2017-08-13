@@ -1,7 +1,6 @@
 #!/bin/bash
 
 declare -r -A env_vars=(
-  [CENTOS_USERNAME]="Linux username for the CentOS"
   [CFY_ADDRESS]="Address of the VM to contain the Cloudify Manager"
   [CFY_PORT]="Port of the Cloudify Manager's web interface"
   [FCO_CUSTOMER_UUID]="Customer UUID"
@@ -71,7 +70,7 @@ while [[ $i -lt 10 ]]
 do
   echo -n "  Attempt $i ... "
   sshi -o ConnectTimeout=1 -o BatchMode=yes -o StrictHostKeyChecking=no \
-    $CENTOS_USERNAME@$public_ip "echo test" &> /dev/null && break
+    centos@$public_ip "echo test" &> /dev/null && break
   echo "failed. Retrying in 10 seconds."
   sleep 10
   i=$(( i + 1 ))
@@ -84,11 +83,11 @@ echo
 if [[ $FCO_ACTIVATE_SWAP == "true" ]]
 then
   echo "Activating swap on manager instance ..."
-  sshi $CENTOS_USERNAME@$public_ip "sudo dd if=/dev/zero of=/swapfile bs=1MB count=6144"
-  sshi $CENTOS_USERNAME@$public_ip "sudo chmod 0600 /swapfile"
-  sshi $CENTOS_USERNAME@$public_ip "sudo mkswap /swapfile"
-  sshi $CENTOS_USERNAME@$public_ip "sudo swapon /swapfile"
-  sshi $CENTOS_USERNAME@$public_ip \
+  sshi centos@$public_ip "sudo dd if=/dev/zero of=/swapfile bs=1MB count=6144"
+  sshi centos@$public_ip "sudo chmod 0600 /swapfile"
+  sshi centos@$public_ip "sudo mkswap /swapfile"
+  sshi centos@$public_ip "sudo swapon /swapfile"
+  sshi centos@$public_ip \
     "echo /swapfile none swap defaults 0 0 | sudo tee -a /etc/fstab"
 fi
 
@@ -112,12 +111,12 @@ cp_key "$CFY_MANAGER_SSH_KEY_PATH" cfy-manager.pem
 cp_key "$CFY_AGENT_SSH_KEY_PATH" cfy-agent.pem
 
 echo "Uploading DICE configuration to manager VM ..."
-sshi $CENTOS_USERNAME@$public_ip "sudo mkdir -p /etc/dice"
-scpi dice-fco.yaml cfy-agent.pem $CENTOS_USERNAME@$public_ip:.
-sshi $CENTOS_USERNAME@$public_ip "sudo mv dice-fco.yaml /etc/dice/dice.yaml"
-sshi $CENTOS_USERNAME@$public_ip "sudo chmod 444 /etc/dice/dice.yaml"
-sshi $CENTOS_USERNAME@$public_ip "sudo mv cfy-agent.pem /root/.ssh/dice.key"
-sshi $CENTOS_USERNAME@$public_ip "sudo chmod 400 /root/.ssh/dice.key"
+sshi centos@$public_ip "sudo mkdir -p /etc/dice"
+scpi dice-fco.yaml cfy-agent.pem centos@$public_ip:.
+sshi centos@$public_ip "sudo mv dice-fco.yaml /etc/dice/dice.yaml"
+sshi centos@$public_ip "sudo chmod 444 /etc/dice/dice.yaml"
+sshi centos@$public_ip "sudo mv cfy-agent.pem /root/.ssh/dice.key"
+sshi centos@$public_ip "sudo chmod 400 /root/.ssh/dice.key"
 rm dice-fco.yaml
 
 
@@ -126,7 +125,7 @@ readonly cfy_admin_pass=$(openssl rand -base64 24 | tr "/+=" "_.-")
 cat <<EOF > inputs.yaml
 public_ip: $CFY_ADDRESS
 private_ip: $CFY_ADDRESS
-ssh_user: '$CENTOS_USERNAME'
+ssh_user: 'centos'
 ssh_key_filename: $PWD/cfy-manager.pem
 
 security_enabled: true

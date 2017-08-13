@@ -1,6 +1,3 @@
-# Linux username for the CentOS
-export CENTOS_USERNAME=centos
-
 # Address of the VM to contain the Cloudify Manager
 export CFY_ADDRESS=109.231.122.170
 
