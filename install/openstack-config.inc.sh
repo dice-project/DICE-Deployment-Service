@@ -27,4 +27,4 @@ export OS_FLAVOR_ID=93e4960e-9b6d-454f-b422-0d50121b01c6
 
 # If the instance type has less than 8 GB of RAM, set this to true. If the
 # instance is large enough, set this to false.
-export OS_ACTIVATE_SWAP=false
+export OS_ACTIVATE_SWAP=true

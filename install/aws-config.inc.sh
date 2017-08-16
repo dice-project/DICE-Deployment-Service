@@ -32,4 +32,4 @@ export AWS_SECRET_ACCESS_KEY="AWS secret access key"
 
 # If the instance type has less than 8 GB of RAM, set this to true. If the
 # instance is large enough, set this to false.
-export AWS_ACTIVATE_SWAP=false
+export AWS_ACTIVATE_SWAP=true

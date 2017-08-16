@@ -24,4 +24,4 @@ export FCO_MANAGER_TEMPLATE_NAME=cfy-manager-secgrp
 
 # If the instance type has less than 8 GB of RAM, set this to true. If the
 # instance is large enough, set this to false.
-export FCO_ACTIVATE_SWAP=false
+export FCO_ACTIVATE_SWAP=true
