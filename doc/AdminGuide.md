@@ -147,6 +147,8 @@ page. Switch to the "Information" tab.
 The following items are only relevant if you are setting up a new instance
 of the Cloudify Manager:
 
+* FCO URL: the API URL should be known to you or your administrator. Here is an
+  example API URL: `https://cp.diceproject.flexiant.net`.
 * SSH key ID for the ssh key (the Agent key) that the Cloudify Manager will use
   for connecting to orchestrated VMs: switch to "SSH keys" at the top level
   navigation. Look for the key you would like to use (if one does not exist yet,
