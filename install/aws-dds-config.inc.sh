@@ -20,7 +20,7 @@ export SMALL_INSTANCE_ID=m3.medium
 # Instance type for a medium server
 export MEDIUM_INSTANCE_ID=m3.medium
 
-# Product offer UUID for a large flavoured server
+# Instance type for a large flavoured server
 export LARGE_INSTANCE_ID=m3.large
 
 # AMI of the Ubuntu 14.04 OS image. Use Ubuntu AMI locator:
