@@ -396,4 +396,4 @@ For further reference, the following links point to the official documentation:
 # Next steps
 
 To continue with installing the DICE Deployment Service, follow
-[this link](AdminGuide.md#dice-deployment-service-installation).
+[this link](AdminGuide.md#configuring-cfy-tool).

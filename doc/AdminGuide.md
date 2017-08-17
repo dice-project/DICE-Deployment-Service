@@ -239,7 +239,8 @@ sure to replace `CFY_USERNAME` and `CFY_PASSWORD` with the actual values:
 
 #### Configuring cfy tool
 
-In order to configure the tool we need to execute:
+In order to configure the tool we need to execute (important even if you have
+ran the steps in another folder before):
 
     $ . ~/cfy-manager/cloudify.inc.sh
     $ cd ~/dds
@@ -530,16 +531,16 @@ Continuous Integration to validate the master branch of the development.
 ![Added a new container](images/DICEDeploymentServiceGUIAddContainer.png)
 
 Each container is identified by a UUID. In the image above, the UUID is
-circled in red: `62e8ffa3-4f2c-426e-bcd7-4ce54c572305`. Provide this UUID to
+circled in red: `0d6bd448-e9bd-42a3-a7b6-45a763293367`. Provide this UUID to
 the developers or use it in the CI job.
 
 Using the command line interface, adding a new container can be done with the
 following call:
 
 ```bash
-$ dice-deploy-cli create "Fraud detection master"
+$ dice-deploy-cli create "Test"
 DONE.
-Container UUID: 75570440-545c-42ed-a677-c54732783e67
+Container UUID: 11a5d39-dcad-44db-94d4-4d15fb18901b
 ```
 
 In this case we receive the UUID of the newly created container in the console.
@@ -589,7 +590,7 @@ information.
 [Links-and-References-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Links-and-References
 [Changelog-wiki]: https://github.com/dice-project/DICE-Deployment-Service/wiki/Changelog
 [dmon-docs]: https://github.com/dice-project/DICE-Knowledge-Repository/wiki/DICE-Knowledge-Repository#monitoring
-[blue-monitored]: https://github.com/dice-project/DICE-Deployment-Examples/blob/master/storm/storm-openstack-monitored.yaml
+[blue-monitored]: https://github.com/dice-project/DICE-Deployment-Examples/blob/master/storm/storm-monitored.yaml
 
 
 ## Removing the service
