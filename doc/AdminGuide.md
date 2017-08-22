@@ -424,6 +424,77 @@ If anything went wrong, tool will inform us about the error. To get even more
 details, we can also consult log file `.dds.log`. And this concludes tool
 configuration. Now we need to set server's inputs.
 
+## (Optional) Installing DICE Monitoring Platform
+
+The [DICE Monitoring Platform] is a service that can complement the
+functionality of the deployment service. It oversees the runtime of the deployed
+applications, monitoring their performance and other metrics. The DICE
+Deployment Service arranges proper registrations and deregistrations of the
+applications with the DICE Monitoring Platform.
+
+First, obtain the DICE Monitoring Platform's source code:
+
+    $ mkdir -p ~/dmon && cd ~/dmon
+    $ git clone --depth 1 --branch master \
+        https://github.com/dice-project/DICE-Monitoring.git
+    $ cd DICE-Monitoring/bootstrap
+
+Ensure that the Cloudify command line tool is properly configured:
+
+    $ . ~/cfy-manager/cloudify.inc.sh
+    $ cfy init
+    $ cfy use -t CFY_ADDRESS --port 443
+
+Edit to update the DICE Monitoring Platform configuration and source the result:
+
+    $ $EDITOR config.inc.sh
+    $ . config.inc.sh
+
+Install an instance of the DICE Monitoring Platform:
+
+    $ ./install-dmon.sh dmon
+    Creating deployment inputs for DICE Monitoring Service
+    Running installation
+    Publishing blueprint
+    Uploading blueprint blueprint.yaml...
+    Blueprint uploaded. The blueprint's id is dmon
+    Creating deploy
+    Processing inputs source: inputs.yaml
+    Creating new deployment from blueprint dmon...
+    Deployment created. The deployment's id is dmon
+    Starting execution
+    Executing workflow install on deployment dmon [timeout=900 seconds]
+    Deployment environment creation is in progress...
+    [...]
+    Finished executing workflow install on deployment dmon
+    Outputs:
+    Retrieving outputs for deployment dmon...
+     - "kibana_url":
+         Description: Address of the Kibana web interface
+         Value: http://10.10.43.194:5601
+     - "dmon_address":
+         Description: Internal address of the DICE Monitoring services host
+         Value: 10.50.51.8
+
+    Obtaining outputs
+    Creating DICE Deployment Service's runtime inputs - the DMon values
+
+    -----------------------------------------------------------------------------
+    SUMMARY:
+      Kibana URL: http://10.10.43.194:5601
+      Private DMon address: 10.50.51.8
+    -----------------------------------------------------------------------------
+
+We can now visit the displayed Kibana URL with our browser. The script also
+created `dmon_inputs.json`, which we need to merge with the DICE Deployment
+Service's `dds_inputs.json` file:
+
+    $ cd ~/dds/DICE-Deployment-Service
+    $ mv dds_inputs.json dds_inputs_original.json
+    $ tools/merge-inputs.sh ~/dmon/DICE-Monitoring/bootstrap/dmon_inputs.json \
+        dds_inputs_original.json dds_inputs.json
+
+[DICE Monitoring Platform]: https://github.com/dice-project/DICE-Monitoring/wiki
 
 ## DICE deployment service configuration
 
