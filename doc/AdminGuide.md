@@ -9,11 +9,13 @@ Table of Contents:
         1. [FCO](#fco)
     1. [Cloudify Manager](#cloudify-manager)
 1. [Cloudify command line tool installation](#cloudify-command-line-tool-installation)
+        1. [Configuring cfy tool](#configuring-cfy-tool)
 1. [DICE Deployment service installation](#dice-deployment-service-installation)
     1. [Preparing working environment](#preparing-working-environment)
     1. [Configuring the installation](#configuring-the-installation)
     1. [Running the installation](#running-the-installation)
 1. [DICE deployment command line client configuration](#dice-deployment-command-line-client-configuration)
+1. [(Optional) Installing DICE Monitoring Platform](#optional-installing-dice-monitoring-platform)
 1. [DICE deployment service configuration](#dice-deployment-service-configuration)
     1. [General inputs](#general-inputs)
     1. [Platform inputs](#platform-inputs)
@@ -308,26 +310,26 @@ Next, we must prepare the parameters in the respective inputs file. Copy the
 configuration file template for your platform into the working directory and
 edit it. E.g., for Amazon EC2, use the the following command:
 
-    $ cp install/aws-dds-config.sh dds-config.sh
+    $ cp install/aws-dds-config.inc.sh dds-config.inc.sh
 
-For FCO, copy `install/fco-dds-config.sh` and for OpenStack
-`install/openstack-dds-config.sh`.
+For FCO, copy `install/fco-dds-config.inc.sh` and for OpenStack
+`install/openstack-dds-config.inc.sh`.
 
 Now open the copy for editing:
 
-    $ $EDITOR dds-config.sh
+    $ $EDITOR dds-config.inc.sh
 
 Carefully examine all the variables and update them with the valid values that
 apply to your test bed.
 
 Next, source the configuration by running:
 
-    $ . dds-config.sh
+    $ . dds-config.inc.sh
 
 ### Running the installation
 
 To start the installation, choose a name for the deployment (or leave the
-default name `dice_deploy`) and run the installation script for your platform:
+default name `dice_deploy`) and run the installation script:
 
     $ install/install-dds.sh dice_deploy
     Creating deployment inputs for DICE Deployment Service

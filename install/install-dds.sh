@@ -33,7 +33,7 @@ USAGE:
 
   $NAME [DEPLOY_NAME]
 
-  Prepares the inputs for deployment of the DICE Deployment Service on the FCO,
+  Prepares the inputs for deployment of the DICE Deployment Service,
   runs the deployment, and sets up the runtime inputs at the new DICE Deployment
   Service instance.
 
@@ -114,6 +114,7 @@ then
   exit $?
 fi
 
+# Here we obtain DDS_DNS_SERVER and DDS_HTTP_ENDPOINT
 eval $OUTPUTS_TO_EVAL
 
 echo "Creating DICE Deployment Service's runtime inputs"
@@ -223,6 +224,7 @@ cat <<EOF
 -----------------------------------------------------------------------------
 SUMMARY:
   DICE Deployment Service URL: $DDS_HTTP_ENDPOINT
+  Private address of the service: $DDS_DNS_SERVER
   Admin username: $dds_admin_user
   Admin password: $dds_admin_pass
 -----------------------------------------------------------------------------
