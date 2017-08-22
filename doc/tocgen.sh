@@ -2,15 +2,17 @@
 
 function filter-lines()
 {
-  grep -E "^#{2,3}" "$1" \
+  grep -E "^#{2,4} " "$1" \
     | sed -r -e 's/^## +(.+[^ ]) *$/1. [\1]/' \
-             -e 's/^### +(.+[^ ]) *$/    1. [\1]/'
+             -e 's/^### +(.+[^ ]) *$/    1. [\1]/' \
+             -e 's/^#### +(.+[^ ]) *$/        1. [\1]/'
 }
 
 function produce-link()
 {
   # Next $1 is naked on purpose to get rid of multiple spaces.
-  echo ${1,,} | grep -Eo "\[.+\]" | sed -e 's/\[/(#/' -e 's/\]/)/' -e 's/ /-/g'
+  echo ${1,,} | grep -Eo "\[.+\]" | sed -e 's/[()]//g' \
+    -e 's/\[/(#/' -e 's/\]/)/' -e 's/ /-/g'
 }
 
 function main() {
