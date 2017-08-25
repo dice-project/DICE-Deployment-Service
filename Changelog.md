@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.5
+
+* Improved documentation and additional helper scripts for installing DICE
+  Deployment Service
+* Included steps for installing DICE Monitoring Framework during setup of
+  Cloudify Manager and DICE Deployment Service
+* Enabled the use libvirt Vagrant provider that does not clash with
+  Docker/Kubernetes
+* Added installation helpers for OpenStack, AWS and FCO
+* Added metadata upload capability to deploy endpoint
+* The CLI enables passing the application's metadata with the deploy.
+* AWS instance will now use a boot volume that is large enough for swap file
+
+
 ## 0.3.4
 
 * Added option for application registration with DMon
