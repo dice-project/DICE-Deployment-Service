@@ -173,22 +173,6 @@ of the Cloudify Manager:
   Note down the password. Then open the selected user's details and switch to
   the "Information" tab. The username UUID is at the "User" item row's "UUID" column.
 
-To **create a new SSH key**, execute:
-
-    $ mkdir -p ~/cfy-manager && cd ~/cfy-manager
-    $ ssh-keygen
-
-and follow the instructions. When asked about file, enter `cfy-agent`. Make sure
-you create SSH key with no password, since tools do not support password
-protected keys. This will create two files: `cfy-agent` is the private key,
-and `cfy-agent.pub` is its public key counterpart.
-Now that we have a fresh key, we need to register public key into FCO.  We
-must navigate to FCO's management interface and the click "SSH keys" ->
-"create". Now we name the key and paste the contents of `cfy-agent.pub` into
-proper field. After the key is created, we need to open its detail page and
-select "Information" tab on the left and take note of the UUID of the key, since
-we will need it later.
-
 [Go back to Prerequisites](#prerequisites)
 
 [FCO web console]: https://cp.diceproject.flexiant.net

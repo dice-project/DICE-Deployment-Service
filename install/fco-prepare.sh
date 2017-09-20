@@ -53,12 +53,12 @@ function validate_env()
 
 function sshi()
 {
-  ssh -i ${CFY_MANAGER_SSH_KEY_PATH} -o IdentitiesOnly=yes "$@"
+  ssh -i $FCO_KEY_NAME.pem -o IdentitiesOnly=yes "$@"
 }
 
 function scpi()
 {
-  scp -i ${CFY_MANAGER_SSH_KEY_PATH} -o IdentitiesOnly=yes "$@"
+  scp -i $FCO_KEY_NAME.pem -o IdentitiesOnly=yes "$@"
 }
 
 function wrap()
@@ -167,21 +167,23 @@ readonly public_ip=$(wrap server get $instance_id \
 wrap firewalltemplate apply -w $firewall_id $public_ip &> /dev/null
 wrap server start -w $instance_id &> /dev/null
 
-echo "Waiting for instance to start accepting ssh connections ..."
+echo "Waiting for instance at $public_ip to start accepting ssh connections ..."
 i=0
-while [[ $i -lt 10 ]]
+while [[ $i -lt 20 ]]
 do
   echo -n "  Attempt $i ... "
   sshi -o ConnectTimeout=1 -o BatchMode=yes -o StrictHostKeyChecking=no \
     centos@$public_ip "echo test" &> /dev/null && break
-  echo "failed. Retrying in 10 seconds."
-  sleep 10
+  echo "failed. Retrying in 20 seconds."
+  sleep 20
   i=$(( i + 1 ))
 done
 echo
 [[ $i -eq 10 ]] && echo "Failed to get instance response in time." && exit 1
 
-# TODO disable "Defaults    requiretty" in /etc/sudoers
+# disable "Defaults    requiretty" in /etc/sudoers in CentOS
+sshi centos@$public_ip -t \
+  'sudo sed -i "s/^\(Defaults.\+requiretty\)/#\1/" /etc/sudoers'
 
 if [[ $FCO_ACTIVATE_SWAP == "true" ]]
 then
@@ -195,10 +197,12 @@ then
 fi
 
 echo "Creating DICE plug-in configuration ..."
-cat <<EOF > dice-fco.yaml
+readonly config_file=dice-fco.yaml
+
+cat <<EOF > $config_file
 fco:
   auth:
-    url: $(jq .username .fco.conf)
+    url: $(jq .url .fco.conf)
     verify: false
     customer: $(jq .customer .fco.conf)
     password: $(jq .password .fco.conf)
@@ -211,8 +215,8 @@ EOF
 
 echo "Uploading DICE configuration to manager VM ..."
 sshi centos@$public_ip "sudo mkdir -p /etc/dice"
-scpi dice-fco.yaml ${FCO_KEY_NAME}.pem centos@$public_ip:.
-sshi centos@$public_ip "sudo mv dice-fco.yaml /etc/dice/dice.yaml"
+scpi $config_file ${FCO_KEY_NAME}.pem centos@$public_ip:.
+sshi centos@$public_ip "sudo mv $config_file /etc/dice/dice.yaml"
 sshi centos@$public_ip "sudo chmod 444 /etc/dice/dice.yaml"
 sshi centos@$public_ip "sudo mv ${FCO_KEY_NAME}.pem /root/.ssh/dice.key"
 sshi centos@$public_ip "sudo chmod 400 /root/.ssh/dice.key"

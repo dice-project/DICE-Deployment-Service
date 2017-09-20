@@ -51,7 +51,7 @@ details.
 * [User guide](doc/UserGuide.md) contains instructions for the DICE deployment
   service's end users (developers, etc.)
 * [Notes for developers](doc/DevNotes.md) provide instructions and notes about
-  development and testing of the DICE ceployment service.
+  development and testing of the DICE deployment service.
 
 ## Acknowledgement
 
