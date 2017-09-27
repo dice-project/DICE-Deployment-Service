@@ -23,7 +23,7 @@ export OS_MANAGER_GROUP_NAME=cfy-manager-secgrp
 # Manager server properties.
 export OS_SERVER_NAME=cfy-server
 export OS_IMAGE_ID=840a776a-f077-4360-a6ef-a5a90ca3cdf9
-export OS_FLAVOR_ID=93e4960e-9b6d-454f-b422-0d50121b01c6
+export OS_FLAVOR_ID=c07a0957-f45b-44dc-8346-e79481298ac1
 
 # If the instance type has less than 8 GB of RAM, set this to true. If the
 # instance is large enough, set this to false.

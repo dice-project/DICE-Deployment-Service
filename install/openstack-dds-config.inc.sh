@@ -17,10 +17,10 @@ export ADMIN_EMAIL=matej.artac@xlab.si
 export SMALL_INSTANCE_ID=627144d1-cad6-4511-b192-4b24a56eb6ee
 
 # Instance type ID for a medium server
-export MEDIUM_INSTANCE_ID=93e4960e-9b6d-454f-b422-0d50121b01c6
+export MEDIUM_INSTANCE_ID=c07a0957-f45b-44dc-8346-e79481298ac1
 
 # Instance type ID for a large server
-export LARGE_INSTANCE_ID=30734cac-0a4e-4487-94e7-fd44d82027a1
+export LARGE_INSTANCE_ID=58ba86b2-4eb7-4463-b1eb-ba2a05d1a618
 
 # ID of an image with Ubuntu 14.04. openstack image list
 export UBUNTU_IMAGE_UUID=ca290f2d-5163-483b-9dd5-fafe21517c0a
