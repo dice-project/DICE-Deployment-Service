@@ -389,7 +389,7 @@ To remove all resources created during bootstrap, execute:
 
     $ . aws-config.inc.sh && $DDS_PATH/install/aws-teardown.sh # for AWS
     $ . fco-config.inc.sh && $DDS_PATH/install/fco-teardown.sh # for FCO
-    $ . openstack-config.inc.sh && $DDS_PATH/install/openstack-fix-rc.inc.sh && $DDS_PATH/install/openstack-teardown.sh # for OpenStack
+    $ . openstack-config.inc.sh && $DDS_PATH/install/openstack-teardown.sh # for OpenStack
 
 This will remove all traces of Cloudify manager from selected platform. Note
 that you should execute uninstall workflow on all blueprints before removing
