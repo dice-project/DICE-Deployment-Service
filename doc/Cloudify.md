@@ -243,7 +243,13 @@ script, we must install OpenStack command line client by running:
 
 Now we need to configure the client by downloading RC file from OpenStack
 dashboard. We will find the link to the RC file under "Access & Security" ->
-"API Access".
+"API Access". For example, if this file is named `dice-openrc.sh`, we have to
+source it:
+
+    $ . dice-openrc.sh
+    Please enter your OpenStack Password:
+
+When prompted, we type in our OpenStack password.
 
 Next, we must prepare configuration for the preparation script. We will copy
 `$DDS_PATH/install/openstack-config.inc.sh` file from deployment service
