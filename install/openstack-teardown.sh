@@ -2,48 +2,69 @@
 
 set -e
 
+readonly logfile=openstack-teardown-$(date "+%Y-%m-%d-%H-%M-%S").log
+
+function log()
+{
+  echo "$@" | tee -a $logfile
+}
+
 function if_defined()
 {
   local arg=$1; shift
 
   [[ -z ${!arg} ]] && return
-  openstack "$@" ${!arg}
+  "$@" ${!arg} &>> $logfile
 }
 
-echo "Checking for state ..."
+function delete_instance()
+{
+  nova delete $1
+  while nova show $1
+  do
+    sleep 1
+  done
+}
+
+function delete_key()
+{
+  nova keypair-delete $1
+  rm -f $1.pem
+}
+
+log "Checking for state ..."
 [[ -f .state.inc.sh ]] || exit 1
 
-echo "Loading state file ..."
+log "Loading state file ..."
 . .state.inc.sh
 
-echo "Terminating instance ..."
-if_defined instance_id server delete --wait
+log "Terminating instance ..."
+if_defined instance_id delete_instance
 
-echo "Releasing floating IP address ..."
-if_defined public_ip floating ip delete
+log "Releasing floating IP address ..."
+if_defined public_ip_id neutron floatingip-delete
 
-echo "Deleting manager security group ..."
-if_defined manager_group_id security group delete
+log "Deleting manager security group ..."
+if_defined manager_group_id neutron security-group-delete
 
-echo "Deleting default security group ..."
-if_defined default_group_id security group delete
+log "Deleting default security group ..."
+if_defined default_group_id neutron security-group-delete
 
-echo "Removing router from subnet"
-[[ -z ${router_id+x} ]] || [[ -z ${subnet_id+x} ]] || \
-  openstack router remove subnet $router_id $subnet_id
+log "Removing router from subnet"
+[[ -n $router_id ]] && [[ -n $subnet_id ]] && \
+  neutron router-interface-delete $router_id $subnet_id &> $logfile
 
-echo "Deleting router"
-if_defined router_id router delete
+log "Deleting router"
+if_defined router_id neutron router-delete
 
-echo "Deleting subnet ..."
-if_defined subnet_id subnet delete
+log "Deleting subnet ..."
+if_defined subnet_id neutron subnet-delete
 
-echo "Deleting network ..."
-if_defined network_id network delete
+log "Deleting network ..."
+if_defined network_id neutron net-delete
 
-echo "Deleting SSH key ..."
-[[ -n $key_name ]] && \
-  openstack keypair delete $key_name && rm -f $key_name.pem
+log "Deleting SSH key ..."
+if_defined key_name delete_key
 
-echo "Cleaning up state ..."
+log "Cleaning up state ..."
 rm -f .state.inc.sh inputs.yaml cloudify.inc.sh

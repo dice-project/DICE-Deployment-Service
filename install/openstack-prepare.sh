@@ -16,7 +16,14 @@ declare -r -A env_vars=(
   [OS_FLAVOR_ID]="Instance flavor with at least 4 GB of RAM"
 )
 
+readonly logfile=openstack-prepare-$(date "+%Y-%m-%d-%H-%M-%S").log
+
 # Helpers
+function log()
+{
+  echo "$@" | tee -a $logfile
+}
+
 function reset_state()
 {
   echo > .state.inc.sh
@@ -32,9 +39,14 @@ function validate_env()
 {
   local success=true
 
-  if ! openstack network list &> /dev/null
+  if ! neutron net-list &> /dev/null
   then
-    echo "OpenStack command is not working. Did you source the rc file?"
+    echo "neutron command is not working. Did you source the rc file?"
+    success=false
+  fi
+  if ! nova list --minimal &> /dev/null
+  then
+    echo "nova command is not working. Did you source the rc file?"
     success=false
   fi
 
@@ -66,9 +78,14 @@ function scpi()
   scp -i ${OS_KEY_NAME}.pem -o IdentitiesOnly=yes "$@"
 }
 
-function os()
+function os_neutron()
 {
-  openstack "$@" -f value -c id
+  neutron "$@" -f value -c id 2>> $logfile
+}
+
+function os_nova()
+{
+  nova "$@" 2>> $logfile | grep -E "\bid\b" | cut -d"|" -f3 | tr -d " "
 }
 
 function os_get_id()
@@ -80,17 +97,19 @@ function os_get_id()
 
 function os_get_private_ip()
 {
-  local inst_id=$1
-
-  openstack server show $inst_id -f value -c addresses \
-    | sed 's/=/ /' | awk '{print $2}'
+  nova show $1 2>> $logfile | grep -E "\bnetwork\b" \
+    | cut -d"|" -f3 | tr -d " "
 }
 
 function os_get_floating_ip_address()
 {
-  local floating_ip=$1
+  neutron floatingip-show $1 -f value -c floating_ip_address 2>> $logfile
+}
 
-  openstack floating ip show $floating_ip -f value -c floating_ip_address
+function os_get_port_id()
+{
+  neutron port-list 2>> $logfile | grep $1 | grep "$2" \
+    | cut -d"|" -f2 | tr -d " "
 }
 
 # Fix for broken rc files
@@ -111,104 +130,97 @@ set -e
 validate_env
 reset_state
 
-readonly external_network_id=$(os network show $OS_EXTERNAL_NETWORK_NAME)
+readonly external_network_id=$(os_neutron net-show $OS_EXTERNAL_NETWORK_NAME)
 
-echo "Creating network ..."
-readonly network_id=$(os network create $OS_NETWORK_NAME)
+log "Creating network ..."
+readonly network_id=$(os_neutron net-create $OS_NETWORK_NAME)
 state network_id
 
-echo "Creating subnet ..."
-set +e # workaround for 'NoneType' object is not iterable error
-openstack subnet create \
-  --subnet-range $OS_SUBNET_CIDR \
-  --network $network_id \
+log "Creating subnet ..."
+readonly subnet_id=$(os_neutron subnet-create \
+  --name $OS_SUBNET_NAME \
   --dns-nameserver $OS_DNS1 \
   --dns-nameserver $OS_DNS2 \
-  $OS_SUBNET_NAME
-set -e
-readonly subnet_id=$(os_get_id $OS_SUBNET_NAME subnet list)
+  $network_id $OS_SUBNET_CIDR
+)
 state subnet_id
 
-echo "Creating router ..."
-set +e # workaround for 'NoneType' object is not iterable error
-openstack router create $OS_ROUTER_NAME
-set -e
-readonly router_id=$(os_get_id $OS_ROUTER_NAME router list)
+log "Creating router ..."
+readonly router_id=$(os_neutron router-create $OS_ROUTER_NAME)
 state router_id
-set +e # workaround for 'NoneType' object is not iterable error
-openstack router set \
-  --external-gateway $external_network_id \
-  $OS_ROUTER_NAME
-set -e
+neutron router-gateway-set $router_id $external_network_id &>> $logfile
 
-echo "Adding subnet to router ..."
-openstack router add subnet $router_id $subnet_id
+log "Adding subnet to router ..."
+neutron router-interface-add $router_id $subnet_id &>> $logfile
 state router_has_subnet true
 
-echo "Creating SSH key ..."
-openstack keypair create $OS_KEY_NAME > $OS_KEY_NAME.pem
+log "Creating SSH key ..."
+nova keypair-add $OS_KEY_NAME > $OS_KEY_NAME.pem 2>> $logfile
 state key_name $OS_KEY_NAME
 chmod 400 $OS_KEY_NAME.pem
 
-echo "Creating default security group ..."
-readonly default_group_id=$(os security group create \
+log "Creating default security group ..."
+readonly default_group_id=$(os_neutron security-group-create \
   --description $OS_DEFAULT_GROUP_NAME \
   $OS_DEFAULT_GROUP_NAME
 )
 state default_group_id
-openstack security group rule create \
-  --remote-ip "0.0.0.0/0" \
-  --dst-port 20 \
+neutron security-group-rule-create \
+  --remote-ip-prefix "0.0.0.0/0" \
+  --port-range-min 22 \
+  --port-range-max 22 \
   --protocol tcp \
-  --ingress \
-  $default_group_id
+  --direction ingress \
+  $default_group_id &>> $logfile
 
-echo "Creating Manager security group ..."
-readonly manager_group_id=$(os security group create \
+log "Creating manager security group ..."
+readonly manager_group_id=$(os_neutron security-group-create \
   --description $OS_MANAGER_GROUP_NAME \
   $OS_MANAGER_GROUP_NAME
 )
 state manager_group_id
 for port in 80 443
 do
-  openstack security group rule create \
-    --remote-ip "0.0.0.0/0" \
-    --dst-port $port \
+  neutron security-group-rule-create \
+    --remote-ip-prefix "0.0.0.0/0" \
+    --port-range-min $port \
+    --port-range-max $port \
     --protocol tcp \
-    --ingress \
-    $manager_group_id
+    --direction ingress \
+    $manager_group_id &>> $logfile
 done
 for port in 5672 8101 53229
 do
-  openstack security group rule create \
-    --remote-group $default_group_id \
-    --dst-port $port \
+  neutron security-group-rule-create \
+    --remote-group-id $default_group_id \
+    --port-range-min $port \
+    --port-range-max $port \
     --protocol tcp \
-    --ingress \
-    $manager_group_id
+    --direction ingress \
+    $manager_group_id &>> $logfile
 done
 
-echo "Creating manager instance ..."
-readonly instance_id=$(os server create \
+log "Creating manager instance ..."
+readonly instance_id=$(os_nova boot \
   --image $OS_IMAGE_ID \
   --flavor $OS_FLAVOR_ID \
-  --security-group $default_group_id \
-  --security-group $manager_group_id \
   --key-name $OS_KEY_NAME \
+  --security-groups ${default_group_id},${manager_group_id} \
   --nic net-id=$network_id \
-  --wait \
+  --poll \
   $OS_SERVER_NAME
 )
 state instance_id
 readonly private_ip=$(os_get_private_ip $instance_id)
 
-echo "Adding floating IP to manager ..."
-readonly public_ip=$(os floating ip create $external_network_id)
-state public_ip
-readonly public_ip_address=$(os_get_floating_ip_address $public_ip)
-openstack server add floating ip $instance_id $public_ip_address
+log "Adding floating IP to manager ..."
+readonly public_ip_id=$(os_neutron floatingip-create $external_network_id)
+state public_ip_id
+readonly public_ip_address=$(os_get_floating_ip_address $public_ip_id)
+neutron floatingip-associate $public_ip_id \
+  $(os_get_port_id $subnet_id $private_ip) &>> $logfile
 
-echo "Waiting for manager to start accepting ssh connections ..."
+log "Waiting for manager to start accepting ssh connections ..."
 # TODO the script could get to a screeching halt here if the $public_ip_address
 # has previously been added to the known_hosts. Consider adding something like
 #ssh-keygen -f "~/.ssh/known_hosts" -R $public_ip_address

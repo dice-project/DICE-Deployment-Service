@@ -239,7 +239,7 @@ Preparing infrastructure on OpenStack is automated using
 `$DDS_PATH/install/openstack-prepare.sh` script. Before we can use this
 script, we must install OpenStack command line client by running:
 
-    $ pip install python-openstackclient
+    $ pip install python-novaclient python-neutronclient
 
 Now we need to configure the client by downloading RC file from OpenStack
 dashboard. We will find the link to the RC file under "Access & Security" ->
