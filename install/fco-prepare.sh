@@ -53,12 +53,22 @@ function validate_env()
 
 function sshi()
 {
-  ssh -i $FCO_KEY_NAME.pem -o IdentitiesOnly=yes "$@"
+  ssh -i $FCO_KEY_NAME.pem \
+    -o IdentitiesOnly=yes \
+    -o BatchMode=yes \
+    -o UserKnownHostsFile=/dev/null \
+    -o StrictHostKeyChecking=no \
+    "$@"
 }
 
 function scpi()
 {
-  scp -i $FCO_KEY_NAME.pem -o IdentitiesOnly=yes "$@"
+  scp -i $FCO_KEY_NAME.pem \
+    -o IdentitiesOnly=yes \
+    -o BatchMode=yes \
+    -o UserKnownHostsFile=/dev/null \
+    -o StrictHostKeyChecking=no \
+    "$@"
 }
 
 function wrap()

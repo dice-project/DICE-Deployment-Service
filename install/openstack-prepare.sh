@@ -70,12 +70,22 @@ function validate_env()
 
 function sshi()
 {
-  ssh -i ${OS_KEY_NAME}.pem -o IdentitiesOnly=yes "$@"
+  ssh -i ${OS_KEY_NAME}.pem \
+    -o IdentitiesOnly=yes \
+    -o BatchMode=yes \
+    -o UserKnownHostsFile=/dev/null \
+    -o StrictHostKeyChecking=no \
+    "$@" &>> $logfile
 }
 
 function scpi()
 {
-  scp -i ${OS_KEY_NAME}.pem -o IdentitiesOnly=yes "$@"
+  scp -i ${OS_KEY_NAME}.pem \
+    -o IdentitiesOnly=yes \
+    -o BatchMode=yes \
+    -o UserKnownHostsFile=/dev/null \
+    -o StrictHostKeyChecking=no \
+    "$@" &>> $logfile
 }
 
 function os_neutron()
@@ -221,16 +231,11 @@ neutron floatingip-associate $public_ip_id \
   $(os_get_port_id $subnet_id $private_ip) &>> $logfile
 
 log "Waiting for manager to start accepting ssh connections ..."
-# TODO the script could get to a screeching halt here if the $public_ip_address
-# has previously been added to the known_hosts. Consider adding something like
-#ssh-keygen -f "~/.ssh/known_hosts" -R $public_ip_address
-# (but by asking the user nicely first) ... except that if I use this I get
-# an odd error about mktemp
 i=0
 while [[ $i -lt 10 ]]
 do
   echo -n "  Attempt $i ... "
-  sshi -o ConnectTimeout=1 -o BatchMode=yes -o StrictHostKeyChecking=no \
+  sshi -o ConnectTimeout=1 \
     centos@$public_ip_address "echo test" &> /dev/null && break
   echo "failed. Retrying in 10 seconds."
   sleep 10

@@ -48,12 +48,22 @@ function validate_env()
 
 function sshi()
 {
-  ssh -i ${AWS_KEY_NAME}.pem -o IdentitiesOnly=yes "$@"
+  ssh -i ${AWS_KEY_NAME}.pem \
+    -o IdentitiesOnly=yes \
+    -o BatchMode=yes \
+    -o UserKnownHostsFile=/dev/null \
+    -o StrictHostKeyChecking=no \
+    "$@"
 }
 
 function scpi()
 {
-  scp -i ${AWS_KEY_NAME}.pem -o IdentitiesOnly=yes "$@"
+  scp -i ${AWS_KEY_NAME}.pem \
+    -o IdentitiesOnly=yes \
+    -o BatchMode=yes \
+    -o UserKnownHostsFile=/dev/null \
+    -o StrictHostKeyChecking=no \
+    "$@"
 }
 
 # Prepare env
