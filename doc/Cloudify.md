@@ -404,6 +404,51 @@ For further reference, the following links point to the official documentation:
 * [How to bootstrap Cloudify Manager v.3.4.2](http://docs.getcloudify.org/3.4.2/manager/bootstrapping/)
 
 
+## (Advanced) Supporting Ubuntu 16.04
+
+Cloudify 3.4.x does not officially support Ubuntu 16.04, but there is a way to
+make things work by manually updating a few packages, creating Ubuntu image
+with python 2 installed and creating custom agent.
+
+First, we need to update paramiko and dependencies on Cloudify Manager's
+management worker. This step is needed because sshd on Ubntu 16.04 dropped
+some of the insecure crypto algorithms for key exchange and old paramiko
+package does not support newer, more secure ones. We need to ssh into Cloudify
+Manager VM and run:
+
+    $ sudo su -
+    $ systemctl stop cloudify-mgmtworker
+    $ /opt/mgmtworker/env/bin/pip install -U "paramiko<2"
+    $ systemctl start cloudify-mgmtworker
+
+Creation process for custom Ubuntu images with python 2 depends on the
+platform being used, but in most cases, we need to start new VM using stock
+Ubuntu 16.04 image, ssh into it and install python, shut down the VM and make
+a snapshot that will serve as an Ubuntu 16.04 image for Coudify.
+
+Last thing we need to do is create Cloudify agent for Ubuntu 16.04. First, we
+need to create new Ubuntu instance from the snapshot we created in the
+previous step. Next, we need to copy agent creation script to the instance by
+running
+
+    $ scp $DDS_PATH/install/create-agent.py ubunut@10.10.1.34:.
+
+Now we need to ssh into VM, install prerequisites and create agent:
+
+    $ sudo apt update
+    $ sudo apt install -y python python-pip python-virtualenv
+    $ sudo pip install cloudify-agent-packager==3.5.3
+    $ ./create-agent.py
+
+When this process ends, `Ubuntu-xenial-agent.tar.gz` file will be in the home
+folder. Now we need to perform some `scp` rounds to get agent package onto
+Cloudify Manager and place it into `/opt/manager/resources/packages/agents`,
+which is left as an exercise for the reader. After file is placed into proper
+folder, we must adjust ownership and permissions on the package to match other
+agent packages and we are done. Ubuntu machine that we used to create agent
+package can now be safely retired.
+
+
 # Next steps
 
 To continue with installing the DICE Deployment Service, follow
