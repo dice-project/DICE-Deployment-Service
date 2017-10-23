@@ -7,9 +7,9 @@ Table of Contents:
         1. [Amazon EC2](#amazon-ec2)
         1. [OpenStack](#openstack)
         1. [FCO](#fco)
-    1. [Cloudify Manager](#cloudify-manager)
+        1. [Cloudify Manager](#cloudify-manager)
 1. [Cloudify command line tool installation](#cloudify-command-line-tool-installation)
-        1. [Configuring cfy tool](#configuring-cfy-tool)
+    1. [Configuring cfy tool](#configuring-cfy-tool)
 1. [DICE Deployment service installation](#dice-deployment-service-installation)
     1. [Preparing working environment](#preparing-working-environment)
     1. [Configuring the installation](#configuring-the-installation)
@@ -177,7 +177,7 @@ of the Cloudify Manager:
 
 [FCO web console]: https://cp.diceproject.flexiant.net
 
-### Cloudify Manager
+#### Cloudify Manager
 
 **Existing Cloudify Manager**: in the next steps, we will need the credentials
 to access Cloudify Manager `CFY_USERNAME` and `CFY_PASSWORD`. We also need
@@ -223,7 +223,7 @@ sure to replace `CFY_USERNAME` and `CFY_PASSWORD` with the actual values:
     $ echo "export CLOUDIFY_PASSWORD=CFY_PASSWORD" >> cloudify.inc.sh
     $ echo "export CLOUDIFY_SSL_CERT=$PWD/cfy.crt" >> cloudify.inc.sh
 
-#### Configuring cfy tool
+### Configuring cfy tool
 
 In order to configure the tool we need to execute (important even if you have
 ran the steps in another folder before):
