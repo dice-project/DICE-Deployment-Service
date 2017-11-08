@@ -165,6 +165,13 @@ do
 done
 
 echo "Creating manager instance ..."
+# Fix for newer, backwards incompatible CentOS images
+readonly cloudinit_file=$(mktemp)
+cat <<EOF > $cloudinit_file
+#!/bin/bash
+sed -i -re 's/^verify=(platform_default|enable)/verify=disable/' \\
+  /etc/python/cert-verification.cfg
+EOF
 readonly instance_id=$(aws ec2 run-instances \
   --image-id $AWS_AMI_ID \
   --count 1 \
@@ -172,6 +179,7 @@ readonly instance_id=$(aws ec2 run-instances \
   --key-name $AWS_KEY_NAME \
   --security-group-ids $default_group_id $manager_group_id \
   --subnet-id $subnet_id \
+  --user-data file://$cloudinit_file \
   --block-device-mappings \
       'DeviceName=/dev/sda1,Ebs={VolumeSize=20,DeleteOnTermination=true}' \
   --query 'Instances[0].InstanceId'
@@ -183,6 +191,7 @@ readonly private_ip=$(aws ec2 describe-instances \
     --query 'Reservations[0].Instances[0].PrivateIpAddress' \
   | tr -d '"'
 )
+rm $cloudinit_file
 
 echo "Adding elastic IP to manager ..."
 readonly allocation_id=$(aws ec2 allocate-address \

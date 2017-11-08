@@ -211,17 +211,26 @@ do
 done
 
 log "Creating manager instance ..."
+# Fix for newer, backwards incompatible CentOS images
+readonly cloudinit_file=$(mktemp)
+cat <<EOF > $cloudinit_file
+#!/bin/bash
+sed -i -re 's/^verify=(platform_default|enable)/verify=disable/' \\
+  /etc/python/cert-verification.cfg
+EOF
 readonly instance_id=$(os_nova boot \
   --image $OS_IMAGE_ID \
   --flavor $OS_FLAVOR_ID \
   --key-name $OS_KEY_NAME \
   --security-groups ${default_group_id},${manager_group_id} \
   --nic net-id=$network_id \
+  --user-data $cloudinit_file \
   --poll \
   $OS_SERVER_NAME
 )
 state instance_id
 readonly private_ip=$(os_get_private_ip $instance_id)
+rm $cloudinit_file
 
 log "Adding floating IP to manager ..."
 readonly public_ip_id=$(os_neutron floatingip-create $external_network_id)
