@@ -53,6 +53,23 @@ details.
 * [Notes for developers](doc/DevNotes.md) provide instructions and notes about
   development and testing of the DICE deployment service.
 
+
+## License
+
+Copyright 2017 XLAB d.o.o.
+
+Licensed under the Apache License, Version 2.0 (the "License"). You
+may not use this file except in compliance with the License. A copy of
+the License is located at
+
+    https://www.apache.org/licenses/LICENSE-2.0.txt
+
+or in the "LICENSE" file accompanying this file. This file is
+distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ANY KIND, either express or implied. See the License for the specific
+language governing permissions and limitations under the License.
+
+
 ## Acknowledgement
 
 This project has received funding from the European Union’s
