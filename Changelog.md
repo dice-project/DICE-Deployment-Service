@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.6
+
+* Fortified the setup scripts that are now more robust.
+* Replaced OpenStack clients in preparation script.
+* Removed the need for modification of `~/.ssh/known_hosts` file.
+* Added instructions for Cloudify Xenial agent preparation.
+* Added fix for regression in CentOS' urllib library.
+* Added license to repository.
+* Removed unused blueprints from test folder.
+* Fixed bogus error when registering application to DMon.
+
 ## 0.3.5
 
 * Improved documentation and additional helper scripts for installing DICE

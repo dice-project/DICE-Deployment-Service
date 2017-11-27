@@ -2,7 +2,7 @@ tosca_definitions_version: cloudify_dsl_1_3
 
 
 imports:
-  - https://github.com/dice-project/DICE-Deployment-Cloudify/releases/download/0.7.1/full.yaml
+  - https://github.com/dice-project/DICE-Deployment-Cloudify/releases/download/0.7.6/full.yaml
 
 
 inputs:
@@ -45,7 +45,7 @@ inputs:
       default bootstrap script does) or remote URL in which case file will be
       downloaded for you (in 99% of cases this will be link to git tarball on
       Github).
-    default: https://github.com/dice-project/DICE-Deployment-Service/archive/0.3.3.tar.gz
+    default: https://github.com/dice-project/DICE-Deployment-Service/archive/0.3.6.tar.gz
 
   enable_debug:
     description: >
