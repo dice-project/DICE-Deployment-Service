@@ -265,7 +265,7 @@ def register_app(container_id):
     url = "http://{}/dmon/v1/overlord/application/{}"
     response = requests.put(url.format(dmon_address.value, id),
                             json=metadata)
-    if response.status_code != 200:
+    if response.status_code not in (200, 201):
         msg = "Application registration failed: '{}'"
         blueprint.log_error(msg.format(response.text))
 
